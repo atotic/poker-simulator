@@ -1,0 +1,292 @@
+<!doctype html>
+<title>PokerEngine test</title>
+<body>
+<h3>Poker engine test</h3>
+<pre id="error" style="color:red"></pre>
+<pre id="log"></pre>
+<script src="pokerEngine.js"></script>
+<script>
+
+  window.addEventListener("error", ev => {
+    log(`Unexpected error: ${ev.message}`);
+    alert("js error");
+  });
+
+  function error(msg) {
+    document.getElementById('error').appendChild(document.createTextNode(msg + "\n"));
+    console.trace();
+  }
+
+  function log(msg) {
+    document.getElementById('log').appendChild(document.createTextNode(msg + "\n"));
+  }
+
+  function assert_true(t, msg) {
+    if (!t)
+      error(`${msg}   assertion is false`);
+  }
+
+  function assert_equal(a, b, msg) {
+    if (a != b)
+      error(`${msg}  ${a} != ${b}`);
+  }
+</script>
+<script>
+
+let mostEngine = new PokerEngine({ holeCardRules: 'atMost2' });
+let exactEngine = new PokerEngine({ holeCardRules: 'exactly2' });
+let fourCardEngine = new PokerEngine({ holeCardRules: 'exactly2', holeCardCount: 4 });
+
+function testComputeAllPossibleStraights() {
+  log("testComputeAllPossibleStraights");
+  let straights = mostEngine.computeAllPossibleStraights(['3H', '4H', '5H', '6H', 'QD'], ["2H+", "AH+"]);
+  assert_equal(JSON.stringify(straights), '[["2H+","3H","4H","5H","6H"],["AH+","2H+","3H","4H","5H"]]', "Aces moved to front");
+}
+
+function testStraightFlush() {
+  log("testStraightFlush");
+  let bestHand;
+  bestHand = mostEngine.scoreHighHand(["4S", "5S", "6S", "4H", "5H"], ["2S+", "3S+"]);
+  assert_equal(JSON.stringify(bestHand), '{"type":"straightFlush","cards":["2S+","3S+","4S","5S","6S"]}', "Straight flush");
+  bestHand = mostEngine.scoreHighHand(["4S", "5S", "6S", "7S", "8D"], ["2S+", "3S+"]);
+  assert_equal(JSON.stringify(bestHand), '{"type":"straightFlush","cards":["3S+","4S","5S","6S","7S"]}', "Best straight flush");
+}
+
+function testQuads() {
+  log("testQuads ");
+  let bestHand;
+  bestHand = mostEngine.scoreHighHand(["2D", "2C", "3H", "4H", "5H"], ["2S+", "2H+"]);
+  assert_equal(JSON.stringify(bestHand), '{"type":"quads","cards":["2S+","2H+","2D","2C","5H"]}', 
+    "Quads, 2 out of atMost2");
+  // exactly 2
+  bestHand = exactEngine.scoreHighHand(["2D", "2C", "3H", "4H", "5H"], ["2S+", "2H+"]);
+  assert_equal(JSON.stringify(bestHand), '{"type":"quads","cards":["2S+","2H+","2D","2C","5H"]}', 
+    "Quads, exactly2, high cards from community");
+
+  bestHand = exactEngine.scoreHighHand(["2D", "2C", "2H", "4H", "5H"], ["2S+", "3H+"]);
+  assert_equal(JSON.stringify(bestHand), '{"type":"quads","cards":["2S+","2D","2C","2H","3H+"]}',
+    "Quads, exactly2, high card comes from hole pile")
+
+  bestHand = fourCardEngine.scoreHighHand(["5D", "7C", "3H", "4H", "5H"], ["2S+", "2H+", "2D+", "2C+"]);
+  assert_equal(JSON.stringify(bestHand), '{"type":"twoPairs","cards":["5D","5H","2S+","2H+","4H"]}',
+    "Quads, exactly2, 4 cards are hole, can't make it");
+
+}
+
+function testFullHouse() {
+  log("testFullHouse");
+  let bestHand;
+  bestHand = mostEngine.scoreHighHand(["2S", "2H", "2D", "3S", "3H"], ["4S+", "5S+"]); 
+  assert_equal(JSON.stringify(bestHand), '{"type":"fullHouse","cards":["2S","2H","2D","3S","3H"]}',
+    "fullHouse, community");
+  bestHand = mostEngine.scoreHighHand(["2S", "2H", "2D", "3D", "3H"], ["3S+", "5S+"]); 
+  assert_equal(JSON.stringify(bestHand), '{"type":"fullHouse","cards":["3D","3H","3S+","2S","2H"]}',
+    "fullHouse, double trips");
+  bestHand = exactEngine.scoreHighHand(["2S", "2H", "2D", "3S", "3H"], ["4S+", "5S+"]);
+  assert_equal(JSON.stringify(bestHand), '{"type":"trips","cards":["2S","2H","2D","5S+","4S+"]}',
+    "fullHouse, cant make exact2");
+}
+
+function testFlush() {
+  log("testFlush");
+  let bestHand;
+  bestHand = mostEngine.scoreHighHand(["2H","3H","7H","8H","TH"], ["2D+","3D+"])
+  assert_equal(JSON.stringify(bestHand), '{"type":"flush","cards":["2H","3H","7H","8H","TH"]}',
+    "flush, community");
+  bestHand = mostEngine.scoreHighHand(["2H", "3H", "7H", "8H", "TH"], ["AH+", "3D+"])
+  assert_equal(JSON.stringify(bestHand), '{"type":"flush","cards":["3H","7H","8H","TH","AH+"]}',
+    "flush, 4 community, 1 hole");
+  bestHand = mostEngine.scoreHighHand(["2H", "3H", "7H", "8H", "TH"], ["AH+", "KH+"])
+  assert_equal(JSON.stringify(bestHand), '{"type":"flush","cards":["7H","8H","TH","KH+","AH+"]}',
+    "flush, 3 community, 2 hole");
+
+  bestHand = mostEngine.scoreHighHand(["AH", "5H", "6H", "8D", "QD"], ["4H+", "5H+"]);
+  assert_equal(JSON.stringify(bestHand), '{"type":"flush","cards":["4H+","5H","5H+","6H","AH"]}',
+    "flush, 3 community, 2 hole with ace");
+
+  bestHand = exactEngine.scoreHighHand(["2H", "3H", "7H", "8H", "TH"], ["2D+", "3D+"]);
+  assert_equal(JSON.stringify(bestHand), '{"type":"twoPairs","cards":["3H","3D+","2H","2D+","TH"]}',
+    "flush, not enough cards for exact flush");
+  bestHand = exactEngine.scoreHighHand(["2H", "3H", "7H", "8H", "TH"], ["AH+", "3D+"]);
+  assert_equal(JSON.stringify(bestHand), '{"type":"pair","cards":["3H","3D+","AH+","TH","8H"]}',
+    "flush, not enough cards for exact flush");
+  bestHand = exactEngine.scoreHighHand(["2H", "3H", "7H", "8H", "TH"], ["AH+", "KH+"])
+  assert_equal(JSON.stringify(bestHand), '{"type":"flush","cards":["7H","8H","TH","KH+","AH+"]}',
+    "flush, exact2");
+
+  let fourCardEngine  = new PokerEngine({ holeCardRules: 'exactly2', holeCardCount:4 });
+  bestHand = fourCardEngine.scoreHighHand(["2H", "3H", "7H", "8H", "TD"], ["AH+", "KH+", "5H+", "9D+"])
+  assert_equal(JSON.stringify(bestHand), '{"type":"flush","cards":["3H","7H","8H","KH+","AH+"]}',
+    "flush, exact2, 4 card hole");
+  bestHand = fourCardEngine.scoreHighHand(["2H", "3H", "7H", "8H", "6D"], ["AH+", "KH+", "5H+", "6H+"])
+  assert_equal(JSON.stringify(bestHand), '{"type":"flush","cards":["3H","7H","8H","KH+","AH+"]}',
+    "flush, exact2, 4 card hole");
+}
+
+function testStraights() {
+  log("testStraights");
+  let bestHand;
+  bestHand = mostEngine.scoreHighHand(['3D', '4S', '5H', '6H', 'QD'], ["2H+", "AH+"]);
+  assert_equal(JSON.stringify(bestHand), '{"type":"straight","cards":["2H+","3D","4S","5H","6H"]}',
+    "straight, one hole");
+  bestHand = mostEngine.scoreHighHand(['3D', '4S', '5H', 'QH', 'QD'], ["2H+", "AH+"]);
+  assert_equal(JSON.stringify(bestHand), '{"type":"straight","cards":["AH+","2H+","3D","4S","5H"]}',
+    "straight, two hole");
+  bestHand = mostEngine.scoreHighHand(['TD', 'JS', 'QH', 'QH', 'QD'], ["KH+", "AH+"]);
+  assert_equal(JSON.stringify(bestHand), '{"type":"straight","cards":["TD","JS","QH","KH+","AH+"]}',
+    "straight, two hole, to the ace");
+
+  bestHand = exactEngine.scoreHighHand(['3D', '4S', '5H', '6H', 'QD'], ["2H+", "AH+"]);
+  assert_equal(JSON.stringify(bestHand), '{"type":"straight","cards":["AH+","2H+","3D","4S","5H"]}',
+    "straight, exact two hole");
+  bestHand = exactEngine.scoreHighHand(['3D', '4S', '5H', 'AH', 'QD'], ["2H+", "QH+"]);
+  assert_equal(JSON.stringify(bestHand), '{"type":"pair","cards":["QD","QH+","2H+","AH","5H"]}',
+    "straight, not enough holes");
+}
+
+function testTrips() {
+  log("testTrips");
+  let bestHand;
+  bestHand = fourCardEngine.scoreHighHand(["3S","3H","4D","5S","QC"], ["TD+","TH+","TS+","AS+"]);
+  assert_equal(JSON.stringify(bestHand), '{"type":"twoPairs","cards":["TD+","TH+","3S","3H","QC"]}',
+    "trips, hole card only trips do not work")
+  bestHand = fourCardEngine.scoreHighHand(["3S", "3H", "4D", "5S", "TC"], ["TD+", "TH+", "TS+", "AS+"]);
+  assert_equal(JSON.stringify(bestHand), '{"type":"trips","cards":["TC","TH+","TS+","5S","4D"]}',
+    "trips, one community")
+}
+
+function testTwoPairs() {
+  log("testTwoPairs");
+  let bestHand;
+  bestHand = mostEngine.scoreHighHand(["3S","3D","4S","4D","KH"], ["5S+","5D+"]);
+  assert_equal(JSON.stringify(bestHand), '{"type":"twoPairs","cards":["5S+","5D+","4S","4D","KH"]}',
+    "twoPairs, hole pair");
+  bestHand = mostEngine.scoreHighHand(["3S", "8H", "4S", "4D", "KH"], ["3H+", "5D+"]);
+  assert_equal(JSON.stringify(bestHand), '{"type":"twoPairs","cards":["4S","4D","3S","3H+","KH"]}',
+    "twoPairs, hole+community pair");
+  bestHand = exactEngine.scoreHighHand(["3S", "8H", "4S", "4D", "KH"], ["3H+", "5D+"]);
+  assert_equal(JSON.stringify(bestHand), '{"type":"twoPairs","cards":["4S","4D","3S","3H+","5D+"]}',
+    "twoPairs, exact hole+community pair");
+
+  bestHand = fourCardEngine.scoreHighHand(["3S", "3D", "4S", "4D", "KH"], ["5S+", "5D+", "5C+","5H+"]);
+  assert_equal(JSON.stringify(bestHand), '{"type":"twoPairs","cards":["5S+","5D+","4S","4D","KH"]}',
+    "twoPairs, hole has quads");
+}
+
+function testPair() {
+  log("testPair");
+  let bestHand;
+
+  bestHand = mostEngine.scoreHighHand(["2C","3C","5H","9S","TD"],["AH+","AD+"]);
+  assert_equal(JSON.stringify(bestHand), '{"type":"pair","cards":["AH+","AD+","TD","9S","5H"]}',
+    "pair, hole");
+  
+  bestHand = exactEngine.scoreHighHand(["2C", "3C", "5H", "9S", "TD"], ["AH+", "AD+"]);
+  assert_equal(JSON.stringify(bestHand), '{"type":"pair","cards":["AH+","AD+","TD","9S","5H"]}',
+    "pair, exact hole");
+
+  bestHand = exactEngine.scoreHighHand(["2C", "3C", "5H", "9S", "AD"], ["AH+", "KD+"]);
+  assert_equal(JSON.stringify(bestHand), '{"type":"pair","cards":["AD","AH+","KD+","9S","5H"]}',
+    "pair, exact hole + community");
+}
+
+function testHighCard() {
+  log("testHighCard");
+  let bestHand;
+
+  bestHand = mostEngine.scoreHighHand(["AD","2C", "3C", "5H", "9S", "TD"], ["KH+", "QD+"]);
+  assert_equal(JSON.stringify(bestHand), '{"type":"highCard","cards":["AD","KH+","QD+","TD","9S"]}',
+    "highCard, hole");
+}
+
+function testLowHand() {
+  log("testLowHand");
+  let lowEngine = new PokerEngine({ holeCardRules: 'exactly2', holeCardCount: 4 });
+  let bestHand;
+
+  bestHand = lowEngine.scoreLowHand(["AS", "3S", "5S", "7S", "8S"], ["2H+","4H+", "6H+", "JH+"]);
+  assert_equal(JSON.stringify(bestHand), '["AS","2H+","3S","4H+","5S"]', 
+    'simple best low card');
+
+  bestHand = lowEngine.scoreLowHand(["AS", "2S", "3S", "4S", "5S"], ["AH+", "2H+", "3H+", "4H+"]);
+  assert_equal(JSON.stringify(bestHand), '["AS","2S","3H+","4H+","5S"]',
+    'many hole cards, all dupes');
+
+  bestHand = lowEngine.scoreLowHand(["6S", "8S", "7S", "5S", "QS"], ["AH+", "2H+", "3H+", "4H+"]);
+  assert_equal(JSON.stringify(bestHand), '["AH+","2H+","5S","6S","7S"]',
+    'many low cards, need to swap higher community');
+
+  bestHand = lowEngine.scoreLowHand(["AS", "2S", "3S", "4S", "5S"], ["AH+", "KH+", "QH+", "8H+"]);
+  assert_equal(JSON.stringify(bestHand), '["AH+","2S","3S","4S","8H+"]',
+    'low card not in bottom five');
+
+  bestHand = lowEngine.scoreLowHand(["AS", "3S", "5S", "7S", "8S"], ["9H+", "TH+", "JH+", "QH+"]);
+  assert_equal(JSON.stringify(bestHand), 'null',
+    'hole has no low cards');
+
+  bestHand = lowEngine.scoreLowHand(["AS", "3S", "5S", "7S", "8S"], ["3H+", "TH+", "JH+", "QH+"]);
+  assert_equal(JSON.stringify(bestHand), 'null',
+    'hole has one low card');
+}
+
+function testCompareHands() {
+  log("testCompareHands");
+  let cmp = PokerEngine.compareHighHands({ type: "pair", cards: ["KH"] }, { type: "pair", cards: ["KS"] });
+  assert_equal(cmp, 0, "hands are equal");
+  cmp = PokerEngine.compareHighHands(
+    { type: "straight", cards: ["AH", "2H", "3H", "4C", "5H"] }, 
+    { type: "straight", cards: ["2H", "3H", "4C", "5H", "6H"] });
+  assert_equal(cmp, -1, "Straight starting with A is less than one starting with 2");
+}
+
+function testEliminateDuplicateRank() {
+  log("testEliminateDuplicateRank");
+  let a = ["2C", "AS", "AD", "KH", "KC", "2S", "AC"];
+  let dupes = PokerEngine.eliminateDuplicateRank(a);
+  assert_equal(a.length, 3, "eliminate multiples")
+  assert_equal(JSON.stringify(dupes), '["2S","AC","AD","KC"]', "returned correct duplicates");
+}
+function testPerformance() {
+  log("testPerformance");
+  let start = Date.now();
+  let count = 5000;
+  for(let i = 0; i < count; i++) {
+    let results = mostEngine.playGame();
+  }
+  let elapsed = Date.now() - start;
+  let gameTime = elapsed / count;
+  log(`${count} games took ${elapsed}ms; ${gameTime}ms per game`);
+}
+
+testComputeAllPossibleStraights();
+testStraightFlush();
+testQuads();
+testFullHouse();
+testFlush();
+testStraights();
+testTrips();
+testTwoPairs();
+testPair();
+testHighCard();
+testCompareHands();
+testLowHand();
+  testEliminateDuplicateRank();
+testPerformance();
+log("Done!");
+
+// console.time('1000games');
+
+// let wins = 0;
+// let engine = new PokerEngine({playerCount: 2, holeCardRules: 'atMost2'});
+// for (let i=0; i<10000; i++) {
+//   // let playerCards = [["JD","JS"], ["6C","6H" ]];
+//   let playerCards = [["KD","JS"], ["6C","6H" ]];
+//   let results = engine.playGame(playerCards);
+//   if (results.bestHands[0].player == 0) {
+//     console.log(results.bestHands[0].bestHand.type, results.bestHands[0].bestHand.cards);
+//     wins++;
+//   }
+// }
+// console.log(wins, ' wins');
+// console.timeEnd('10,000 games');
+</script>

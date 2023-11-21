@@ -1,0 +1,1074 @@
+<!doctype html>
+<meta charset="UTF-8">
+<!--
+	Coding style:
+		- fatal errors throw
+	TODO
+	- new github project
+	- adjust graphics for small screen
+	- view on iPhone
+	- stats
+	- typescript usage
+	- installable as an app
+	- run stats as a thread
+	- better show error
+	- save status GUI
+	- a11y
+	DONE
+	- drag n drop
+-->
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>poker odds</title>
+<script src="pokerEngine.js"></script>
+<style>
+	/* 
+	 Main page styles
+	https://css-tricks.com/snippets/css/complete-guide-grid/ 
+	Single DIV poker chips
+	https://codepen.io/pmk/pen/GgrJRq
+	Simple PWA starter kit
+	https://github.com/nikkifurls/simplepwa/blob/master/style.css
+Poker odds
+https://www.cardschat.com/poker/strategy/odds/
+https://flopturnriver.com/poker-strategy/basic-poker-odds-19146/
+	*/
+	* {
+		box-sizing:border-box;
+	}
+	html, body {
+		margin: 0;
+		padding: 0;
+	}
+	body {
+		height: 100vh;
+		--card-width: 72px;
+	}
+	.hidden {
+		display:none;
+	}
+	#main {
+		display: grid;
+		grid-template-columns: 1fr;
+		grid-template-rows: minmax(min-content, 64px) 1fr minmax(64px, max-content) max-content;
+		grid-template-areas:
+			"toolbar"
+			"table"
+			"deck"
+			"stats";
+		height:100%;
+		max-height: 1050px;
+	}
+	@media (min-width: 780px) {
+		#main {
+			grid-template-columns: 1fr max-content;
+			grid-template-areas:
+				"toolbar stats"
+				"table stats"
+				"deck deck";
+		}		
+	}
+	#toolbar {
+		grid-area: toolbar;
+		padding:16px;
+		background: #DDD;
+		display:flex;
+		align-items:center;
+		justify-content: center;
+		user-select: none;
+	}
+	#resetButton {
+		font-size:24px;
+		position:absolute;
+		left: 16px;
+		padding:8px;
+		text-decoration: none;
+	}
+
+	#pokerTablePanel {
+		grid-area: table;
+		padding: 16px;
+		position: relative;
+		max-height: 800px;
+		user-select: none;
+	}
+	#pokerTablePanel > player-hand {
+		position:absolute;
+		display:flex;
+		justify-content: center;
+		align-items:center;
+	}
+	#pokerTablePanel > player-hand {
+		position:absolute;
+		flex:none;
+		justify-content: center;
+	}
+	/* Poker table 
+	  /--5--2--8--\
+		3           7
+		|           |
+		6           4
+		\--9--1-10--/
+	*/
+	  
+	#pokerTablePanel > player-hand:nth-child(1) {
+		bottom: 0;
+		left: 0;
+		width: 100%;
+	}
+	#pokerTablePanel > player-hand:nth-child(2) {
+		top: 0;
+		left: 0;
+		width: 100%;
+	}
+	#pokerTablePanel > player-hand:nth-child(3) {
+		left: 0;
+		top: 0;
+		height: 66%;
+	}
+	#pokerTablePanel > player-hand:nth-child(4) {
+		right: 0;
+		top: 0;
+		height: 66%;
+	}
+	#pokerTablePanel > player-hand:nth-child(5) {
+		left: 0;
+		top: 0;
+		width: 50%;
+	}
+	#pokerTablePanel > player-hand:nth-child(6) {
+		left: 0;
+		bottom: 0;
+		height: 66%;
+	}
+	#pokerTablePanel > player-hand:nth-child(7) {
+		right: 0;
+		bottom: 0;
+		height: 66%;
+	}
+	#pokerTablePanel > player-hand:nth-child(8) {
+		right: 0;
+		top: 0;
+		width: 50%;
+	}
+	#pokerTablePanel > player-hand:nth-child(9) {
+		left: 0;
+		bottom: 0;
+		width: 50%;
+	}
+	#pokerTablePanel > player-hand:nth-child(10) {
+		right: 0;
+		bottom: 0;
+		width: 50%;
+	}
+
+	#tableTop {
+		display:flex;
+		justify-content: center;
+		align-items: center;
+		align-content:center;
+		flex-wrap:wrap;
+		gap:16px;
+		box-sizing:border-box;
+		width:100%;
+		max-width:1280px;
+		height: 100%;
+		max-height: 800px;
+		background: #C9EED0;
+		border: 32px solid #F6E6C2 ;
+		border-radius:72px;
+	}
+
+	@media (min-width: 780px) {
+		#tableTop {
+			border-radius:144px;
+		}	
+	}
+
+	#deckPanel {
+		grid-area: deck;
+		user-select: none;
+		/* background: rgb(122, 122, 157); */
+		display:flex;
+		flex-wrap:wrap;
+		align-items:flex-start;
+		justify-content: center;
+		user-select: none;
+	}
+	#deckPanel > playing-card {
+		width: 50px; 
+		min-width: 36px;
+		/* flex-grow: 0;
+		flex-shrink: 0; */
+	}
+	#deckPanel > div > a {
+		text-decoration: none;
+		color: black;
+		font-size:72px;
+		display: inline-block;
+	}
+	#deckPanelSuits > a.selected {
+		transform:scale(1.2);
+	}
+	#statsPanel {
+		grid-area: stats;
+		background: rgb(234 254 231);
+		min-width: 200px;
+	}
+	.error {
+		border: 2px solid red;
+		color: rgb(212, 26, 26);
+	}
+
+	@keyframes dropCancel {
+		to {
+			transform: translate(0px , 0px);
+		}
+	}
+	.dropCancel {
+		animation: dropCancel;
+		animation-duration: 0.1s;
+	}
+</style>
+<style>
+	/* playing-card, playing-hand styles */
+	playing-card {
+		display: inline-block;
+		position: relative;
+		width: var(--card-width);
+		min-width: 36px;
+		border: 1px solid #000;
+		border-radius: 8px;
+		aspect-ratio: 1 / 1.4;
+		background: repeating-linear-gradient(45deg,
+				/* https://css-tricks.com/stripes-css/ */
+				#606dbc,
+				#606dbc 10px,
+				#465298 10px,
+				#465298 20px);
+	}
+
+	playing-card[data-suit] {
+		background: white;
+	}
+
+	playing-card[data-rank] {
+		background: white;
+	}
+
+	playing-card::before {
+		position: absolute;
+		bottom: 0;
+		display: block;
+		width: 100%;
+		text-align: center;
+		font-size: 24px;
+		content: '';
+	}
+
+	playing-card[data-suit="♠"]::before {
+		content: "♠";
+	}
+
+	playing-card[data-suit="♥"]::before {
+		color: red;
+		content: "♥";
+	}
+
+	playing-card[data-suit="♦"]::before {
+		color: red;
+		content: "♦";
+	}
+
+	playing-card[data-suit="♣"]::before {
+		content: "♣";
+	}
+
+	playing-card::after {
+		position: absolute;
+		top: 0;
+		display: block;
+		width: 100%;
+		text-align: center;
+		font-size: 24px;
+		content: '';
+	}
+
+	playing-card[data-rank="2"]::after {
+		content: "2";
+	}
+
+	playing-card[data-rank="3"]::after {
+		content: "3";
+	}
+
+	playing-card[data-rank="4"]::after {
+		content: "4";
+	}
+
+	playing-card[data-rank="5"]::after {
+		content: "5";
+	}
+
+	playing-card[data-rank="6"]::after {
+		content: "6";
+	}
+
+	playing-card[data-rank="7"]::after {
+		content: "7";
+	}
+
+	playing-card[data-rank="8"]::after {
+		content: "8";
+	}
+
+	playing-card[data-rank="9"]::after {
+		content: "9";
+	}
+
+	playing-card[data-rank="10"]::after {
+		content: "10";
+	}
+
+	playing-card[data-rank="J"]::after {
+		content: "J";
+	}
+
+	playing-card[data-rank="Q"]::after {
+		content: "Q";
+	}
+
+	playing-card[data-rank="K"]::after {
+		content: "K";
+	}
+
+	playing-card[data-rank="A"]::after {
+		content: "A";
+	}
+	playing-card.inUse {
+		opacity: 0.3;
+	}
+
+	player-hand {
+		display: block;
+		min-width: var(--card-width);
+		min-height: var(--card-width);
+	}
+</style>
+<body>
+<div id="main">
+	<div id="toolbar">
+		<label>Players <select id="playerCount">
+			<option>2</option>
+			<option>3</option>
+			<option>4</option>
+			<option>5</option>
+			<option>6</option>
+			<option>7</option>
+			<option>8</option>
+			<option>9</option>
+			<option selected>10</option>
+		</select></label>
+		<label>Game <select id="scoring">
+			<option selected>high</option>
+			<option value="highlow">high-low</option>
+		</select></label>
+		<label>Hole cards<select id="holeCardCount">
+				<option selected>2</option>
+				<option>3</option>
+				<option>4</option>
+				<option>5</option>
+		</select></label>
+		<a id="resetButton" href="javascript:UI.clear()" title="clear all">❌</a>
+
+	</div>
+	<div id="pokerTablePanel">
+		<player-hand><!-- 1 --></player-hand>
+		<player-hand><!-- 2 --></player-hand>
+		<player-hand><!-- 3 --></player-hand>
+		<player-hand><!-- 4 --></player-hand>
+		<player-hand><!-- 5 --></player-hand>
+		<player-hand><!-- 6 --></player-hand>
+		<player-hand><!-- 7 --></player-hand>
+		<player-hand><!-- 8 --></player-hand>
+		<player-hand><!-- 9 --></player-hand>
+		<player-hand><!-- 10 --></player-hand>
+		<div id="tableTop">
+			<div id="flop" style="display:flex;gap:8px">
+				<playing-card title="flop" class="community"></playing-card>
+				<playing-card title="flop" class="community"></playing-card>
+				<playing-card title="flop" class="community"></playing-card>
+			</div>
+			<div id="turn">
+				<playing-card title="turn" class="community"></playing-card>
+			</div>
+			<div id="river">
+				<playing-card title="river" class="community"></playing-card>
+			</div>
+		</div>
+	</div>
+	<div id="deckPanel">
+		<playing-card data-rank="2" class="deck" tabindex=0></playing-card>
+		<playing-card data-rank="3" class="deck" tabindex=0></playing-card>
+		<playing-card data-rank="4" class="deck" tabindex=0></playing-card>
+		<playing-card data-rank="5" class="deck" tabindex=0></playing-card>
+		<playing-card data-rank="6" class="deck" tabindex=0></playing-card>
+		<playing-card data-rank="7" class="deck" tabindex=0></playing-card>
+		<playing-card data-rank="8" class="deck" tabindex=0></playing-card>
+		<playing-card data-rank="9" class="deck" tabindex=0></playing-card>
+		<playing-card data-rank="10" class="deck" tabindex=0></playing-card>
+		<playing-card data-rank="J" class="deck" tabindex=0></playing-card>
+		<playing-card data-rank="Q" class="deck" tabindex=0></playing-card>
+		<playing-card data-rank="K" class="deck" tabindex=0></playing-card>	
+		<playing-card data-rank="A" class="deck" tabindex=0></playing-card>
+		<div id="deckPanelSuits" style="display:inline-block">
+			<a href="javascript:UI.setDeckSuit('♠')" title="spades">♠</a>
+			<a href="javascript:UI.setDeckSuit('♥')" title="hearts" style="color:red">♥</a>
+			<a href="javascript:UI.setDeckSuit('♦')" title="diamonds" style="color:red">♦</a>
+			<a href="javascript:UI.setDeckSuit('♣')" title="clubs">♣</a>
+		</div>
+  </div>
+	<div id="statsPanel">
+		<button onClick="UI.runSimulation()">Simulate</button>
+		<div class="error"></div>
+		<table class="hiStats">
+			<tr><td>Win</td><td class="hiWin stat"></td></tr>
+			<tr><td>Lose</td><td class="hiLose stat"></td></tr>
+			<tr><td>Draw</td><td class="hiDraw stat"></td></tr>
+		</table>
+		<table class="lowStats">
+			<tr><td>Win</td><td class="lowWin stat"></td></tr>
+			<tr><td>Lose</td><td class="lowLose stat"></td></tr>
+			<tr><td>Draw</td><td class="lowDraw stat"></td></tr>
+			<tr><td>No low</td><td class="lowNone stat"></td></tr>
+		</table>
+	</div>
+</div>
+
+<script>
+class PlayingCard extends HTMLElement {
+	static observedAttributes = ["data-suit", "data-rank"];
+
+	static SuitToEmoji = new Map([
+		['S', '♠'],
+		['H', '♥'],
+		['D', '♦'],
+		['C', '♣'],
+	]);
+	static EmojiToSuit = new Map([
+		['♠', 'S'],
+		['♥', 'H'],
+		['♦', 'D'],
+		['♣', 'C']
+	]);
+
+	constructor() {
+		super();
+	}
+	connectedCallback() {
+	}
+	attributeChangedCallback(name, oldValue, newValue) {
+
+	}
+	clear() {
+		this.removeAttribute('data-suit');
+		this.removeAttribute('data-rank');
+	}
+	// str is in the PokerEngine card format: "2S"
+	setValueFromString(str) {
+		if (typeof str != 'string' || str.length < 2)
+			this.clear();
+		else {
+			let rank = str[0];
+			if (rank == "T")
+				rank = "10";
+			let suit = PlayingCard.SuitToEmoji.get(str[1]);
+			this.setAttribute('data-suit', suit);
+			this.setAttribute('data-rank', rank);
+		}
+	}
+	valueAsString() {
+		let rank = this.getAttribute('data-rank');
+		let suit = this.getAttribute('data-suit');
+		if (!rank && !suit)
+			return "";
+		if (rank == "10")
+			rank = "T";
+		return `${rank}${PlayingCard.EmojiToSuit.get(suit)}`;
+	}
+}
+customElements.define("playing-card", PlayingCard);
+
+class PlayerHand extends HTMLElement {
+	static observedAttributes = ["data-hole-count"]
+	connectedCallback() {
+	}
+	setHoleCardCount(count) {
+		let playingCards = Array.from(this.querySelectorAll('playing-card'));
+		let currentCards = playingCards.length;
+		while (currentCards > count) {
+			let el = playingCards.pop();
+			el.remove();
+			--currentCards;
+		}
+		while (currentCards < count) {
+			this.append(document.createElement('playing-card'));
+			++currentCards;
+		}
+	}
+	attributeChangedCallback(name, oldValue, newValue) {
+		if (name == 'data-hole-count')
+			this.setHoleCardCount(Number.parseInt(newValue));
+		else
+			console.warn(`Attribute ${name} not handled`);
+	}
+}
+customElements.define("player-hand", PlayerHand);
+
+class UIModel {
+	communityCards = [];
+	playerCards = [];
+	holeCardCount = 0;
+	playerCount = 0;
+	holeCardRules = 'atMost2';
+	scoring = 'high';
+	reset() {
+		this.communityCards = [];
+		this.playerCards = [];
+	}
+	setPlayerCount(count) {
+		this.playerCount = parseInt(count);
+		this.playerCards.splice(count);
+	}
+	setHoleCardCount(count) {
+		this.holeCardCount = count;
+		for (let p of this.playerCards) 
+			p.splice(count);
+	}
+	setScoring(scoring) {
+		if (scoring != 'high' && scoring != 'highlow')
+			throw `Illegal scoring value ${scoring}`;
+		this.scoring = scoring;
+		if (this.scoring == 'high')
+			this.holeCardRules = 'atMost2';
+		else
+			this.holeCardRules = 'exactly2';
+	}
+
+	getAllCardsInUse() {
+		return new Array(...this.communityCards, ...this.playerCards.flat(2));
+	}
+	removeCommunityCard(c) {
+		let i = this.communityCards.indexOf(c);
+		if (i == -1) {
+			console.error(`Community card not found ${c} ${this.communityCards}`);
+			return;
+		}
+		this.communityCards.splice(i, 1);
+	}
+	// except player specified by index
+	removeFromPlayers(c, except=-1) {
+		for (let i=0; i<this.playerCards.length; ++i) {
+			if (i == except)
+				continue;
+			let ci = this.playerCards[i].indexOf(c);
+			if (ci != -1)
+				this.playerCards[i].splice(ci,1);
+		}
+	}
+	// Enforces consistent state by removing card from players
+	addCommunityCard(card, cardIndex) {
+		if (!card) {
+			console.error(`null community card ${card}`);
+			return;
+		}
+		let i = this.communityCards.indexOf(card);
+		if (i == -1) {	
+			// Card not in community
+			if (this.communityCards.length <= cardIndex)
+				this.communityCards.push(card);
+			else
+				this.communityCards.splice(cardIndex, 1, card);
+		} else { 
+			// Card in community, reorder
+			this.communityCards.splice(i, 1);
+			this.communityCards.splice(cardIndex, 0, card);
+		}
+		this.removeFromPlayers(card);
+	}
+	removeCommunityCard(card) {
+		if (!card) {
+			console.error(`null community card ${card}`);
+			return;
+		}
+		let i = this.communityCards.indexOf(card);
+		if (i == -1)
+			return; // not there
+		this.communityCards.splice(i,1);
+	}
+	// Enforces consistent state by removing card from other players + community
+	addPlayerCard(card, playerIndex, cardIndex) {
+		while (this.playerCards.length <= playerIndex)
+			this.playerCards.push([]);
+		let cards = this.playerCards[playerIndex];
+		let ci = cards.indexOf(card);
+		if (ci == -1) {
+			if (cards.length <= cardIndex)
+				cards.push(card);
+			else {
+				cards.splice(cardIndex, 1, card);
+			}
+		} else { // card moved within a hand
+			cards.splice(ci, 1);
+			cards.splice(cardIndex, 0, card);
+		}
+		this.removeFromPlayers(card, playerIndex);
+		this.removeCommunityCard(card);
+	}
+	removePlayerCard(card, playerIndex) {
+		if (!this.playerCards[playerIndex])
+			return;
+		let ci = this.playerCards[playerIndex].indexOf(card);
+		if (ci == -1) {
+			console.warn(`removePlayerCard ${card} not there`);
+			return;
+		}
+		this.playerCards[playerIndex].splice(ci, 1);
+	}
+}
+
+// Odds testing:
+// https://homes.luddy.indiana.edu/kapadia/nofoldem/10_wins.stats
+class PokerRunStats {
+	pokerEngine;
+	communityCards;
+	playerCards;
+
+	hi = { win: 0, lose: 0, draw: 0};
+	low = { win: 0, lose: 0, draw: 0, noLow: 0};
+	totalGames = 0;
+
+	constructor(pokerEngine, communityCards, playerCards) {
+		this.pokerEngine = pokerEngine;
+		this.communityCards = communityCards;
+		this.playerCards = playerCards;
+		this.winningHandStats = new Map();
+		this.losingHandStats = new Map();
+		for (let k of PokerEngine.HandRank.keys()) {
+			this.losingHandStats.set(k, 0);
+			this.winningHandStats.set(k, 0);
+		}
+	}
+
+	recordGame(result) {
+		++this.totalGames;
+		if (result.highWinners.indexOf(0) == -1) {
+			++this.hi.lose;
+			let t = result.bestHands[0].bestHighHand.type;
+			this.losingHandStats.set(t, this.winningHandStats.get(t) + 1);
+		} else if (result.highWinners.length > 1) {
+			++this.hi.draw;
+		} else {
+			let t = result.bestHands[0].bestHighHand.type;
+			this.winningHandStats.set(t, this.winningHandStats.get(t) + 1);
+			++this.hi.win;
+		}
+		if (result.lowWinners) {
+			if (result.lowWinners.length == 0) {
+				++this.low.noLow; 
+			} else if (result.lowWinners.indexOf(0) == -1) {
+				++this.low.lose;
+			} else if (result.lowWinners.length > 1) {
+				++this.low.draw;
+			} else {
+				++this.low.win;
+			}
+		}
+	}
+
+	asPercent(count) {
+		return `${Math.round((100*count / this.totalGames)).toFixed()}%`;
+	}
+}
+
+class UI {
+	static dragSource;	// element
+	static dragStartX;
+	static dragStartY;
+	static dropTarget; // element
+	static dropTargetOldSuit;
+	static dropTargetOldRank;
+	static model = new UIModel;
+
+	static init() {
+		// window.addEventListener("error", ev => { console.log(ev.message); alert("js error"); });
+
+		document.querySelector("#playerCount").addEventListener('input', UI.playersChanged);
+		document.querySelector("#holeCardCount").addEventListener('input', UI.holeCardCountChanged);
+		document.querySelector("#scoring").addEventListener('input', UI.scoringChanged);
+		UI.holeCardCountChanged();
+		UI.playersChanged();
+		UI.scoringChanged();
+		UI.setDeckSuit('♥');
+		UI.initDragAndDrop();
+	}
+	static initDragAndDrop() {
+		document.body.addEventListener('pointerdown', UI.handlePointerDown);
+		// document.body.addEventListener('pointermove', UI.handlePointerMove);
+		document.body.addEventListener('pointerup', UI.handlePointerUp);
+		document.body.addEventListener('pointerleave', UI.handlePointerLeave);
+	}
+
+	static showError(msg) {
+		let errEl = document.querySelector("#statsPanel .error");
+		errEl.classList.remove("hidden");
+		errEl.innerText = msg;
+	}
+
+	static clearError() {
+		document.querySelector("#statsPanel .error").classList.add("hidden");
+	}
+
+	static handlePointerDown(ev) {
+		// console.log('pointerdown', ev);
+		// Because player-hands might overlap cards, need to search 
+		let dragSource = UI.getDragSource(ev);
+		if (!dragSource)
+			return;
+		UI.startDrag(ev, dragSource);
+		document.body.addEventListener('pointermove', UI.handlePointerMove);
+	}
+	static handlePointerUp(ev) {
+		UI.endDrag(ev);
+		document.body.removeEventListener('pointermove', UI.handlePointerMove);
+		// console.log('pointerup');
+	}
+	static handlePointerLeave(ev) {
+		UI.endDrag(ev);
+		document.body.removeEventListener('pointermove', UI.handlePointerMove);
+		// console.log('pointerleave');
+	}
+	static handlePointerMove(ev) {
+		UI.dragMove(ev);
+		// console.log('pointermove', ev);
+	}
+	static getDragSource(ev) {
+		// All playing cards can be dragged
+		if (ev.target.tagName == 'PLAYING-CARD' &&
+				ev.target.valueAsString() != "")
+			return ev.target;
+		// Find them even when obscured
+		let candidates = document.elementsFromPoint(ev.pageX, ev.pageY);
+		for (let c of candidates)
+			if (c.tagName == 'PLAYING-CARD' && c.valueAsString() != "")
+				return c;
+		return null;
+	}
+	static getDropTarget(ev) {
+		let candidates = document.elementsFromPoint(ev.pageX, ev.pageY);
+		// console.log(candidates);
+		for (let c of candidates)
+			if (c.tagName == 'PLAYING-CARD' && c != UI.dragSource) {
+				// console.log(c);
+				return c;
+			}
+		return null;
+	}
+
+	static isDroppable(el) {
+		if (el.nodeName != 'PLAYING-CARD')
+			return false;
+	}
+	static startDrag(ev, dragSource) {
+		UI.dragSource = dragSource;
+		UI.dragStartX = ev.screenX;
+		UI.dragStartY = ev.screenY;
+		UI.dragSource.style.zIndex = "1";
+	}
+	static dragMove(ev) {
+		if (!UI.dragSource)
+			console.error("dragMove, no target!");
+		let x = ev.screenX - UI.dragStartX;
+		let y = ev.screenY - UI.dragStartY;
+		UI.dragSource.style.transform = `translate(${x}px , ${y}px)`;
+		// let dropTarget = UI.getDropTarget(ev);
+		UI.showDropTarget(ev, UI.getDropTarget(ev));
+	}
+	static showDropTarget(ev, dropTarget) {
+		if (dropTarget == UI.dropTarget || dropTarget == UI.dragSource)
+			return;
+		if (UI.dropTarget) {	// restore old state
+			if (!UI.dropTargetOldRank)
+				UI.dropTarget.removeAttribute('data-rank');
+			else
+				UI.dropTarget.setAttribute('data-rank', UI.dropTargetOldRank);
+			if (!UI.dropTargetOldSuit)
+				UI.dropTarget.removeAttribute('data-suit');
+			else
+				UI.dropTarget.setAttribute('data-suit', UI.dropTargetOldSuit);
+			UI.dropTarget = null;
+		}
+		if (dropTarget) {
+			UI.dropTargetOldRank = dropTarget.getAttribute('data-rank');
+			UI.dropTargetOldSuit = dropTarget.getAttribute('data-suit');
+			UI.dropTarget = dropTarget;
+			let srcRank = UI.dragSource.getAttribute('data-rank');
+			let srcSuit = UI.dragSource.getAttribute('data-suit');
+			if (!srcRank || !srcSuit) {
+				console.error(`dragSource missing attributes ${srcRank} ${srcSuit}`);
+				return;
+			}
+			if (!dropTarget.classList.contains("deck")) {
+				UI.dropTarget.setAttribute('data-rank', srcRank);
+				UI.dropTarget.setAttribute('data-suit', srcSuit);
+			}
+		}
+	}
+	static endDrag(ev) {
+		if (!UI.dragSource)
+			return;
+		if (UI.dropTarget) {
+			UI.moveCard(UI.dragSource, UI.dropTarget);
+			UI.dropTarget = null;
+			UI.dropTargetOldSuit = null;
+			UI.dropTargetOldRank = null;	
+			UI.dragSource.style.transform = '';
+		} else {
+			UI.dragSource.addEventListener('animationend', UI.endDragAnimationEnd);
+			UI.dragSource.classList.add("dropCancel");
+		}
+		// UI.dragSource.style.transform = "";
+		UI.dragSource.style.zIndex = "";
+		UI.dragSource = undefined;
+		UI.dragStartX = undefined;
+		UI.dragStartY = undefined;
+	}
+
+	static endDragAnimationEnd(ev) {
+		// console.log("Animation ended", ev);
+		ev.target.style.transform = '';
+		ev.target.classList.remove('dropCancel');
+	}
+
+ 	static playersChanged() {
+		UI.model.setPlayerCount(document.querySelector("#playerCount").value);
+		UI.syncUIToModel();
+	}
+	static holeCardCountChanged() {
+		UI.model.setHoleCardCount(document.querySelector("#holeCardCount").value);
+		UI.syncUIToModel();
+	}
+	static scoringChanged() {
+		UI.model.setScoring(document.querySelector("#scoring").value);
+		UI.syncUIToModel();
+	}
+	static setDeckSuit(suit) {
+		for (let c of document.querySelectorAll("#deckPanel > playing-card")) {
+			c.setAttribute("data-suit", suit);
+		}
+		for (let a of document.querySelectorAll("#deckPanelSuits a")) {
+			if (a.innerText == suit)
+				a.classList.add("selected");
+			else
+				a.classList.remove("selected");
+		}
+		UI.syncUIToModel();
+	}
+	static cardAddressFromElement(el) {
+		// address is one of:
+		// { location: 'deck'; value: pokerEngineCardValue }
+		// { location: 'community'; value: pokerEngineCardValue }
+		// { location: 'player'; playerIndex; cardIndex; value: pokerEngineCardValue;  }
+		if (el.tagName != 'PLAYING-CARD')
+			throw `Unknown card address ${el}`;
+		if (el.classList.contains("deck"))
+			return {
+				location: 'deck',
+				value: el.valueAsString()
+			};
+		if (el.classList.contains("community")) {
+			let communityIndex = Array.from(document.querySelectorAll("#tableTop playing-card")).indexOf(el);
+			if (communityIndex == -1)
+				throw `Could not find community card index ${el}`;
+			return {
+				location: 'community',
+				value: el.valueAsString(),
+				cardIndex: communityIndex
+			};
+		}
+		// player hand
+		let hand = el.parentElement;
+		let handCards = Array.from(el.parentElement.querySelectorAll('playing-card'));
+
+		let tableHands = Array.from(document.querySelectorAll('#pokerTablePanel player-hand'));
+		if (tableHands.indexOf(hand) == -1)
+			throw `Cannot find table hand ${hand}`;
+		if (handCards.indexOf(el) == -1)
+			throw `Cannot find hand card ${hand}`;
+		return {
+			location: 'player',
+			playerIndex: tableHands.indexOf(hand),
+			cardIndex: handCards.indexOf(el),
+			value: el.valueAsString()
+		}
+	}
+	// src/dest are elements
+	// returns true if card was moved.
+	static moveCard(srcEl, destEl) {
+		let src = UI.cardAddressFromElement(srcEl);
+		let dest = UI.cardAddressFromElement(destEl);
+		switch(src.location) {
+			case 'deck':
+				switch(dest.location) {
+					case 'deck':
+						break;	// do nothing
+					case 'community':
+						UI.model.addCommunityCard(src.value, dest.cardIndex);
+						break;
+					case 'player':
+						UI.model.addPlayerCard(src.value, dest.playerIndex, dest.cardIndex);
+						break;
+				}
+				break;
+			case 'community':
+				switch (dest.location) {
+					case 'deck':
+						UI.model.removeCommunityCard(src.value);
+						break;
+					case 'community':
+						UI.model.addCommunityCard(src.value, dest.cardIndex);
+						break;
+					case 'player':
+						UI.model.addPlayerCard(src.value, dest.playerIndex, dest.cardIndex);
+						break;
+				}				
+				break;
+			case 'player':
+				switch (dest.location) {
+					case 'deck':
+						UI.model.removePlayerCard(src.value, src.playerIndex);
+						break;
+					case 'community':
+						UI.model.addCommunityCard(src.value, dest.cardIndex);
+						break;
+					case 'player':
+						UI.model.addPlayerCard(src.value, dest.playerIndex, dest.cardIndex);
+						break;
+				}
+				break;
+		}
+		UI.syncUIToModel();
+	}
+	static syncUIToModel() {
+		UI.clearError();
+		// Only show hands in play, with correct number of hole cards
+		let i = 1;
+		for (let el of document.querySelectorAll("#pokerTablePanel > player-hand")) {
+			if (i++ <= UI.model.playerCount)
+				el.style.display = "";
+			else
+				el.style.display = "none";
+			el.setAttribute('data-hole-count', UI.model.holeCardCount);
+		}
+		// Sync community cards
+		let communityElements = document.querySelectorAll("#tableTop playing-card");
+		for (let i=0; i<communityElements.length; ++i) {
+			if (UI.model.communityCards.length <= i) {
+				communityElements[i].clear();
+			} else {
+				communityElements[i].setValueFromString(UI.model.communityCards[i]);
+			}
+		}
+		// Sync player cards
+		let playerHandElements = document.querySelectorAll("#pokerTablePanel player-hand");
+		for (let h=0; h<playerHandElements.length; ++h) {
+			playerHandElements[h].setAttribute('data-hole-count', UI.model.holeCardCount);
+			let cardElements = playerHandElements[h].querySelectorAll("playing-card");
+			let cards = UI.model.playerCards[h];
+			for (let c=0; c<cardElements.length; ++c) {
+				let cardValue = cards ? cards[c] : undefined;
+				cardElements[c].setValueFromString(cardValue);
+			}
+		}
+		// Gray out deck cards that are used
+		let allCards = UI.model.getAllCardsInUse();
+		for (let el of document.querySelectorAll("#deckPanel playing-card")) {
+			if (allCards.indexOf(el.valueAsString()) == -1)
+				el.classList.remove("inUse");
+			else
+				el.classList.add("inUse");
+		}
+	}
+
+	static syncUIToStats(pokerRunStats) {
+		document.querySelector(".hiStats").classList.remove("hidden");
+		document.querySelector(".hiStats .hiWin").innerText = pokerRunStats.asPercent(pokerRunStats.hi.win);
+		document.querySelector(".hiStats .hiDraw").innerText = pokerRunStats.asPercent(pokerRunStats.hi.draw);
+		document.querySelector(".hiStats .hiLose").innerText = pokerRunStats.asPercent(pokerRunStats.hi.lose);
+		if (pokerRunStats.pokerEngine.scoring == 'high')
+			document.querySelector(".lowStats").classList.add("hidden");
+		else {
+			document.querySelector(".lowStats").classList.remove("hidden");
+			document.querySelector(".lowStats .lowWin").innerText = pokerRunStats.asPercent(pokerRunStats.low.win);
+			document.querySelector(".lowStats .lowDraw").innerText = pokerRunStats.asPercent(pokerRunStats.low.draw);
+			document.querySelector(".lowStats .lowLose").innerText = pokerRunStats.asPercent(pokerRunStats.low.lose);
+			document.querySelector(".lowStats .lowNone").innerText = pokerRunStats.asPercent(pokerRunStats.low.noLow);
+		}
+		let winners = 0;
+		for (let k of pokerRunStats.winningHandStats.keys()) {
+			winners += pokerRunStats.winningHandStats.get(k);
+		}
+		console.log("winners");
+		for (let k of pokerRunStats.winningHandStats.keys()) {
+			console.log(k, `${(100 * pokerRunStats.winningHandStats.get(k) / winners).toFixed(1)}%`);
+		}
+		let losers = 0;
+		for (let k of pokerRunStats.losingHandStats.keys()) {
+			losers += pokerRunStats.losingHandStats.get(k);
+		}
+		console.log("losers");
+		for (let k of pokerRunStats.losingHandStats.keys()) {
+			console.log(k, `${(100 * pokerRunStats.losingHandStats.get(k) / losers).toFixed(1)}%`);
+		}
+	}
+
+	static runSimulation() {
+		console.log("Run simulation");
+		for (let s of document.querySelectorAll(".stat"))
+			s.innerText = "";
+		let engine = new PokerEngine({ 
+			playerCount: UI.model.playerCount,
+			holeCardCount: UI.model.holeCardCount,
+			holeCardRules: UI.model.holeCardRules,
+			scoring: UI.model.scoring
+		});
+		window.setTimeout( _ => {
+			let count = 5000;
+			let stats = new PokerRunStats(engine);
+			let start = Date.now();
+			try {
+			for (let i = 0; i < count; i++) {
+				let results = engine.playGame(UI.model.playerCards, UI.model.communityCards);
+				stats.recordGame(results);
+			}
+			} catch(err) {
+				UI.showError(err);
+				console.error(err);
+				return;
+			}
+			let elapsed = Date.now() - start;
+			let gameTime = elapsed / count;
+			console.log(`${count} games took ${elapsed}ms; ${gameTime}ms per game`);
+			UI.syncUIToStats(stats);
+		}, 0);
+
+	}
+
+	static clear() {
+		UI.model.reset();
+		UI.syncUIToModel();
+	}
+}
+
+UI.init();
+</script>
+</body>
