@@ -4,9 +4,16 @@
 	Coding style:
 		- fatal errors throw
 	TODO
-	- new github project
-	- adjust graphics for small screen
-	- view on iPhone
+	- phone problems
+		- touch-action: none; only if we are dragging
+		- drag-n-drop: should enlarge the card, give it shadow for that drag look
+		- i should not be able to drag suit anchors
+	  - toolbar is too big
+			- hi/low button
+		- other players are too big
+		- community cards are too large
+		- use figma for design ideas?
+		
 	- stats
 	- typescript usage
 	- installable as an app
@@ -16,6 +23,7 @@
 	- a11y
 	DONE
 	- drag n drop
+	- view on iPhone
 -->
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>poker odds</title>
@@ -40,11 +48,15 @@ https://flopturnriver.com/poker-strategy/basic-poker-odds-19146/
 		padding: 0;
 	}
 	body {
-		height: 100vh;
+		height: 100%;	/* if body scrolls, can't do drag'n'drop on mobile */
+		overflow: hidden;
 		--card-width: 72px;
 	}
 	.hidden {
 		display:none;
+	}
+	.dragIsActive  {
+		touch-action: none;
 	}
 	#main {
 		display: grid;
@@ -194,7 +206,7 @@ https://flopturnriver.com/poker-strategy/basic-poker-odds-19146/
 		justify-content: center;
 		user-select: none;
 	}
-	#deckPanel > playing-card {
+	playing-card.deck {
 		width: 50px; 
 		min-width: 36px;
 		/* flex-grow: 0;
@@ -245,6 +257,11 @@ https://flopturnriver.com/poker-strategy/basic-poker-odds-19146/
 				#606dbc 10px,
 				#465298 10px,
 				#465298 20px);
+	}
+	
+	playing-card.isDragged {
+		transform: scale(1.3);
+		box-shadow: 4px 4px 12px 0px rgba(0,0,0,0.57);
 	}
 
 	playing-card[data-suit] {
@@ -698,13 +715,14 @@ class UI {
 	static dropTargetOldSuit;
 	static dropTargetOldRank;
 	static model = new UIModel;
-
+	
 	static init() {
 		// window.addEventListener("error", ev => { console.log(ev.message); alert("js error"); });
 
 		document.querySelector("#playerCount").addEventListener('input', UI.playersChanged);
 		document.querySelector("#holeCardCount").addEventListener('input', UI.holeCardCountChanged);
 		document.querySelector("#scoring").addEventListener('input', UI.scoringChanged);
+		UI.syncUIToStats();
 		UI.holeCardCountChanged();
 		UI.playersChanged();
 		UI.scoringChanged();
@@ -716,6 +734,11 @@ class UI {
 		// document.body.addEventListener('pointermove', UI.handlePointerMove);
 		document.body.addEventListener('pointerup', UI.handlePointerUp);
 		document.body.addEventListener('pointerleave', UI.handlePointerLeave);
+		window.addEventListener("contextmenu", ev => {
+			// On mobilie, long touch during drag will trigger context menu.
+			if (UI.isDragging())
+				ev.preventDefault();
+		});
 	}
 
 	static showError(msg) {
@@ -738,19 +761,23 @@ class UI {
 		document.body.addEventListener('pointermove', UI.handlePointerMove);
 	}
 	static handlePointerUp(ev) {
+		// console.log('pointerup');
 		UI.endDrag(ev);
 		document.body.removeEventListener('pointermove', UI.handlePointerMove);
-		// console.log('pointerup');
 	}
 	static handlePointerLeave(ev) {
+		// console.log('pointerleave');
 		UI.endDrag(ev);
 		document.body.removeEventListener('pointermove', UI.handlePointerMove);
-		// console.log('pointerleave');
 	}
 	static handlePointerMove(ev) {
-		UI.dragMove(ev);
 		// console.log('pointermove', ev);
+		UI.dragMove(ev);
 	}
+	static isDragging() {
+		return UI.dragSource != null;
+	}
+
 	static getDragSource(ev) {
 		// All playing cards can be dragged
 		if (ev.target.tagName == 'PLAYING-CARD' &&
@@ -780,16 +807,37 @@ class UI {
 	}
 	static startDrag(ev, dragSource) {
 		UI.dragSource = dragSource;
+		UI.dragSource.classList.add("isDragged");
 		UI.dragStartX = ev.screenX;
 		UI.dragStartY = ev.screenY;
 		UI.dragSource.style.zIndex = "1";
+	}
+	static endDrag(ev) {
+		if (!UI.dragSource)
+			return;
+		UI.dragSource.classList.remove("isDragged");
+		if (UI.dropTarget) {
+			UI.moveCard(UI.dragSource, UI.dropTarget);
+			UI.dropTarget = null;
+			UI.dropTargetOldSuit = null;
+			UI.dropTargetOldRank = null;
+			UI.dragSource.style.transform = '';
+		} else {
+			UI.dragSource.addEventListener('animationend', UI.endDragAnimationEnd);
+			UI.dragSource.classList.add("dropCancel");
+		}
+		// UI.dragSource.style.transform = "";
+		UI.dragSource.style.zIndex = "";
+		UI.dragSource = undefined;
+		UI.dragStartX = undefined;
+		UI.dragStartY = undefined;
 	}
 	static dragMove(ev) {
 		if (!UI.dragSource)
 			console.error("dragMove, no target!");
 		let x = ev.screenX - UI.dragStartX;
 		let y = ev.screenY - UI.dragStartY;
-		UI.dragSource.style.transform = `translate(${x}px , ${y}px)`;
+		UI.dragSource.style.transform = `scale(1.3) translate(${x}px , ${y}px)`;
 		// let dropTarget = UI.getDropTarget(ev);
 		UI.showDropTarget(ev, UI.getDropTarget(ev));
 	}
@@ -822,25 +870,6 @@ class UI {
 				UI.dropTarget.setAttribute('data-suit', srcSuit);
 			}
 		}
-	}
-	static endDrag(ev) {
-		if (!UI.dragSource)
-			return;
-		if (UI.dropTarget) {
-			UI.moveCard(UI.dragSource, UI.dropTarget);
-			UI.dropTarget = null;
-			UI.dropTargetOldSuit = null;
-			UI.dropTargetOldRank = null;	
-			UI.dragSource.style.transform = '';
-		} else {
-			UI.dragSource.addEventListener('animationend', UI.endDragAnimationEnd);
-			UI.dragSource.classList.add("dropCancel");
-		}
-		// UI.dragSource.style.transform = "";
-		UI.dragSource.style.zIndex = "";
-		UI.dragSource = undefined;
-		UI.dragStartX = undefined;
-		UI.dragStartY = undefined;
 	}
 
 	static endDragAnimationEnd(ev) {
@@ -1000,6 +1029,11 @@ class UI {
 	}
 
 	static syncUIToStats(pokerRunStats) {
+		if (!pokerRunStats) {
+			document.querySelector(".hiStats").classList.add("hidden");
+			document.querySelector(".lowStats").classList.add("hidden");
+			return;
+		}
 		document.querySelector(".hiStats").classList.remove("hidden");
 		document.querySelector(".hiStats .hiWin").innerText = pokerRunStats.asPercent(pokerRunStats.hi.win);
 		document.querySelector(".hiStats .hiDraw").innerText = pokerRunStats.asPercent(pokerRunStats.hi.draw);
