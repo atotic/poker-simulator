@@ -127,3 +127,7 @@
 	  min-width: var(--card-width);
 	  min-height: var(--card-width);
 	}
+
+	player-hand.mini playing-card {
+		width: 20px;
+	}

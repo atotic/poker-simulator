@@ -1,6 +1,8 @@
 <!doctype html>
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>poker odds</title>
 <!--
 	Coding style:
 		- fatal errors throw
@@ -27,8 +29,6 @@
 	- view on iPhone http://192.168.1.46:8080/poker.html
 	- 
 -->
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>poker odds</title>
 <script src="pokerEngine.js"></script>
 <style>
 	/* 
@@ -113,11 +113,7 @@ https://flopturnriver.com/poker-strategy/basic-poker-odds-19146/
 		display:flex;
 		justify-content: center;
 		align-items:center;
-	}
-	#pokerTablePanel > player-hand {
-		position:absolute;
 		flex:none;
-		justify-content: center;
 	}
 	/* Poker table 
 	  /--5--2--8--\
@@ -245,9 +241,9 @@ https://flopturnriver.com/poker-strategy/basic-poker-odds-19146/
 		animation: dropCancel;
 		animation-duration: 0.1s;
 	}
-</style>
-<style>
-	
+	.isDragged {
+		opacity: 0.7;
+	}
 </style>
 <link rel="stylesheet" href="playing_card.css">
 </head>
@@ -280,15 +276,15 @@ https://flopturnriver.com/poker-strategy/basic-poker-odds-19146/
 	</div>
 	<div id="pokerTablePanel">
 		<player-hand><!-- 1 --></player-hand>
-		<player-hand><!-- 2 --></player-hand>
-		<player-hand><!-- 3 --></player-hand>
-		<player-hand><!-- 4 --></player-hand>
-		<player-hand><!-- 5 --></player-hand>
-		<player-hand><!-- 6 --></player-hand>
-		<player-hand><!-- 7 --></player-hand>
-		<player-hand><!-- 8 --></player-hand>
-		<player-hand><!-- 9 --></player-hand>
-		<player-hand><!-- 10 --></player-hand>
+		<player-hand class="mini"><!-- 2 --></player-hand>
+		<player-hand class="mini"><!-- 3 --></player-hand>
+		<player-hand class="mini"><!-- 4 --></player-hand>
+		<player-hand class="mini"><!-- 5 --></player-hand>
+		<player-hand class="mini"><!-- 6 --></player-hand>
+		<player-hand class="mini"><!-- 7 --></player-hand>
+		<player-hand class="mini"><!-- 8 --></player-hand>
+		<player-hand class="mini"><!-- 9 --></player-hand>
+		<player-hand class="mini"><!-- 10 --></player-hand>
 		<div id="tableTop">
 			<div id="flop" style="display:flex;gap:8px">
 				<playing-card title="flop" class="community"></playing-card>
