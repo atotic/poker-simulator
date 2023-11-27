@@ -1,0 +1,129 @@
+	/* playing-card, playing-hand styles */
+	playing-card {
+	  display: inline-block;
+	  position: relative;
+	  width: var(--card-width);
+	  min-width: 36px;
+	  border: 1px solid #000;
+	  border-radius: 8px;
+	  aspect-ratio: 1 / 1.4;
+	  background: repeating-linear-gradient(45deg,
+	      /* https://css-tricks.com/stripes-css/ */
+	      #606dbc,
+	      #606dbc 10px,
+	      #465298 10px,
+	      #465298 20px);
+	}
+
+	playing-card.isDragged {
+	  transform: scale(1.3);
+	  box-shadow: 4px 4px 12px 0px rgba(0, 0, 0, 0.57);
+	}
+
+	playing-card[data-suit] {
+	  background: white;
+	}
+
+	playing-card[data-rank] {
+	  background: white;
+	}
+
+	playing-card::before {
+	  position: absolute;
+	  bottom: 0;
+	  display: block;
+	  width: 100%;
+	  text-align: center;
+	  font-size: 24px;
+	  content: '';
+	}
+
+	playing-card[data-suit="♠"]::before {
+	  content: "♠";
+	}
+
+	playing-card[data-suit="♥"]::before {
+	  color: red;
+	  content: "♥";
+	}
+
+	playing-card[data-suit="♦"]::before {
+	  color: red;
+	  content: "♦";
+	}
+
+	playing-card[data-suit="♣"]::before {
+	  content: "♣";
+	}
+
+	playing-card::after {
+	  position: absolute;
+	  top: 0;
+	  display: block;
+	  width: 100%;
+	  text-align: center;
+	  font-size: 24px;
+	  content: '';
+	}
+
+	playing-card[data-rank="2"]::after {
+	  content: "2";
+	}
+
+	playing-card[data-rank="3"]::after {
+	  content: "3";
+	}
+
+	playing-card[data-rank="4"]::after {
+	  content: "4";
+	}
+
+	playing-card[data-rank="5"]::after {
+	  content: "5";
+	}
+
+	playing-card[data-rank="6"]::after {
+	  content: "6";
+	}
+
+	playing-card[data-rank="7"]::after {
+	  content: "7";
+	}
+
+	playing-card[data-rank="8"]::after {
+	  content: "8";
+	}
+
+	playing-card[data-rank="9"]::after {
+	  content: "9";
+	}
+
+	playing-card[data-rank="10"]::after {
+	  content: "10";
+	}
+
+	playing-card[data-rank="J"]::after {
+	  content: "J";
+	}
+
+	playing-card[data-rank="Q"]::after {
+	  content: "Q";
+	}
+
+	playing-card[data-rank="K"]::after {
+	  content: "K";
+	}
+
+	playing-card[data-rank="A"]::after {
+	  content: "A";
+	}
+
+	playing-card.inUse {
+	  opacity: 0.3;
+	}
+
+	player-hand {
+	  display: block;
+	  min-width: var(--card-width);
+	  min-height: var(--card-width);
+	}

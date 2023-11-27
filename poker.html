@@ -1,12 +1,12 @@
 <!doctype html>
+<head>
 <meta charset="UTF-8">
 <!--
 	Coding style:
 		- fatal errors throw
 	TODO
 	- phone problems
-		- touch-action: none; only if we are dragging
-		- drag-n-drop: should enlarge the card, give it shadow for that drag look
+		- cards too big
 		- i should not be able to drag suit anchors
 	  - toolbar is too big
 			- hi/low button
@@ -22,8 +22,10 @@
 	- save status GUI
 	- a11y
 	DONE
-	- drag n drop
-	- view on iPhone
+	- drag-n-drop: should enlarge the card, give it shadow for that drag look
+	- drag n drop: secret was to cancel drag by adding not passive event listener
+	- view on iPhone http://192.168.1.46:8080/poker.html
+	- 
 -->
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>poker odds</title>
@@ -46,11 +48,13 @@ https://flopturnriver.com/poker-strategy/basic-poker-odds-19146/
 	html, body {
 		margin: 0;
 		padding: 0;
+	 	min-height: 100vh;/* if body scrolls, can't do drag'n'drop on mobile */
+		height: 100vh;
+  	overflow: hidden;
 	}
 	body {
-		height: 100%;	/* if body scrolls, can't do drag'n'drop on mobile */
-		overflow: hidden;
 		--card-width: 72px;
+		background: yellow;
 	}
 	.hidden {
 		display:none;
@@ -60,6 +64,7 @@ https://flopturnriver.com/poker-strategy/basic-poker-odds-19146/
 	}
 	#main {
 		display: grid;
+		background: green;
 		grid-template-columns: 1fr;
 		grid-template-rows: minmax(min-content, 64px) 1fr minmax(64px, max-content) max-content;
 		grid-template-areas:
@@ -242,135 +247,10 @@ https://flopturnriver.com/poker-strategy/basic-poker-odds-19146/
 	}
 </style>
 <style>
-	/* playing-card, playing-hand styles */
-	playing-card {
-		display: inline-block;
-		position: relative;
-		width: var(--card-width);
-		min-width: 36px;
-		border: 1px solid #000;
-		border-radius: 8px;
-		aspect-ratio: 1 / 1.4;
-		background: repeating-linear-gradient(45deg,
-				/* https://css-tricks.com/stripes-css/ */
-				#606dbc,
-				#606dbc 10px,
-				#465298 10px,
-				#465298 20px);
-	}
 	
-	playing-card.isDragged {
-		transform: scale(1.3);
-		box-shadow: 4px 4px 12px 0px rgba(0,0,0,0.57);
-	}
-
-	playing-card[data-suit] {
-		background: white;
-	}
-
-	playing-card[data-rank] {
-		background: white;
-	}
-
-	playing-card::before {
-		position: absolute;
-		bottom: 0;
-		display: block;
-		width: 100%;
-		text-align: center;
-		font-size: 24px;
-		content: '';
-	}
-
-	playing-card[data-suit="♠"]::before {
-		content: "♠";
-	}
-
-	playing-card[data-suit="♥"]::before {
-		color: red;
-		content: "♥";
-	}
-
-	playing-card[data-suit="♦"]::before {
-		color: red;
-		content: "♦";
-	}
-
-	playing-card[data-suit="♣"]::before {
-		content: "♣";
-	}
-
-	playing-card::after {
-		position: absolute;
-		top: 0;
-		display: block;
-		width: 100%;
-		text-align: center;
-		font-size: 24px;
-		content: '';
-	}
-
-	playing-card[data-rank="2"]::after {
-		content: "2";
-	}
-
-	playing-card[data-rank="3"]::after {
-		content: "3";
-	}
-
-	playing-card[data-rank="4"]::after {
-		content: "4";
-	}
-
-	playing-card[data-rank="5"]::after {
-		content: "5";
-	}
-
-	playing-card[data-rank="6"]::after {
-		content: "6";
-	}
-
-	playing-card[data-rank="7"]::after {
-		content: "7";
-	}
-
-	playing-card[data-rank="8"]::after {
-		content: "8";
-	}
-
-	playing-card[data-rank="9"]::after {
-		content: "9";
-	}
-
-	playing-card[data-rank="10"]::after {
-		content: "10";
-	}
-
-	playing-card[data-rank="J"]::after {
-		content: "J";
-	}
-
-	playing-card[data-rank="Q"]::after {
-		content: "Q";
-	}
-
-	playing-card[data-rank="K"]::after {
-		content: "K";
-	}
-
-	playing-card[data-rank="A"]::after {
-		content: "A";
-	}
-	playing-card.inUse {
-		opacity: 0.3;
-	}
-
-	player-hand {
-		display: block;
-		min-width: var(--card-width);
-		min-height: var(--card-width);
-	}
 </style>
+<link rel="stylesheet" href="playing_card.css">
+</head>
 <body>
 <div id="main">
 	<div id="toolbar">
@@ -718,7 +598,6 @@ class UI {
 	
 	static init() {
 		// window.addEventListener("error", ev => { console.log(ev.message); alert("js error"); });
-
 		document.querySelector("#playerCount").addEventListener('input', UI.playersChanged);
 		document.querySelector("#holeCardCount").addEventListener('input', UI.holeCardCountChanged);
 		document.querySelector("#scoring").addEventListener('input', UI.scoringChanged);
@@ -729,7 +608,9 @@ class UI {
 		UI.setDeckSuit('♥');
 		UI.initDragAndDrop();
 	}
+
 	static initDragAndDrop() {
+
 		document.body.addEventListener('pointerdown', UI.handlePointerDown);
 		// document.body.addEventListener('pointermove', UI.handlePointerMove);
 		document.body.addEventListener('pointerup', UI.handlePointerUp);
@@ -750,7 +631,9 @@ class UI {
 	static clearError() {
 		document.querySelector("#statsPanel .error").classList.add("hidden");
 	}
-
+	static preventDefault(ev) {
+		ev.preventDefault();
+	}
 	static handlePointerDown(ev) {
 		// console.log('pointerdown', ev);
 		// Because player-hands might overlap cards, need to search 
@@ -758,17 +641,14 @@ class UI {
 		if (!dragSource)
 			return;
 		UI.startDrag(ev, dragSource);
-		document.body.addEventListener('pointermove', UI.handlePointerMove);
 	}
 	static handlePointerUp(ev) {
 		// console.log('pointerup');
 		UI.endDrag(ev);
-		document.body.removeEventListener('pointermove', UI.handlePointerMove);
 	}
 	static handlePointerLeave(ev) {
 		// console.log('pointerleave');
 		UI.endDrag(ev);
-		document.body.removeEventListener('pointermove', UI.handlePointerMove);
 	}
 	static handlePointerMove(ev) {
 		// console.log('pointermove', ev);
@@ -777,7 +657,6 @@ class UI {
 	static isDragging() {
 		return UI.dragSource != null;
 	}
-
 	static getDragSource(ev) {
 		// All playing cards can be dragged
 		if (ev.target.tagName == 'PLAYING-CARD' &&
@@ -806,6 +685,9 @@ class UI {
 			return false;
 	}
 	static startDrag(ev, dragSource) {
+		document.body.addEventListener('pointermove', UI.handlePointerMove);
+		document.body.addEventListener('touchmove', UI.preventDefault, {passive: false} );
+
 		UI.dragSource = dragSource;
 		UI.dragSource.classList.add("isDragged");
 		UI.dragStartX = ev.screenX;
@@ -813,6 +695,8 @@ class UI {
 		UI.dragSource.style.zIndex = "1";
 	}
 	static endDrag(ev) {
+		document.body.removeEventListener('pointermove', UI.handlePointerMove);
+		document.body.removeEventListener('touchmove', UI.preventDefault);
 		if (!UI.dragSource)
 			return;
 		UI.dragSource.classList.remove("isDragged");
@@ -837,7 +721,7 @@ class UI {
 			console.error("dragMove, no target!");
 		let x = ev.screenX - UI.dragStartX;
 		let y = ev.screenY - UI.dragStartY;
-		UI.dragSource.style.transform = `scale(1.3) translate(${x}px , ${y}px)`;
+		UI.dragSource.style.transform = `translate(${x}px , ${y}px) scale(1.3)`;
 		// let dropTarget = UI.getDropTarget(ev);
 		UI.showDropTarget(ev, UI.getDropTarget(ev));
 	}
