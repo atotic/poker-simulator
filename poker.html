@@ -44,6 +44,9 @@ Poker odds
 https://www.cardschat.com/poker/strategy/odds/
 https://flopturnriver.com/poker-strategy/basic-poker-odds-19146/
 	*/
+	:root {
+		--hilo-button-size: 40px;
+	}
 	* {
 		box-sizing:border-box;
 	}
@@ -93,6 +96,9 @@ https://flopturnriver.com/poker-strategy/basic-poker-odds-19146/
 		align-items:center;
 		justify-content: center;
 		user-select: none;
+	}
+	#toolbar select {
+	font-size:18px;
 	}
 	#resetButton {
 		font-size:24px;
@@ -146,8 +152,6 @@ https://flopturnriver.com/poker-strategy/basic-poker-odds-19146/
 	playing-card.deck {
 		width: 50px; 
 		min-width: 36px;
-		/* flex-grow: 0;
-		flex-shrink: 0; */
 	}
 	#deckPanel > div > a {
 		text-decoration: none;
@@ -180,13 +184,52 @@ https://flopturnriver.com/poker-strategy/basic-poker-odds-19146/
 	.isDragged {
 		opacity: 0.7;
 	}
+	#hiloCheckbox {
+		margin-left: 16px;
+		margin-right: 16px;
+		position: relative;
+		border: 1px solid black;
+		border-radius: calc(var(--hilo-button-size) / 2);
+		width: var(--hilo-button-size);
+		height: var(--hilo-button-size);
+		transform: rotateY(0deg);
+		transform-style: preserve-3d;
+		transition: transform 0.4s;
+	}
+	#hiloCheckbox.checked {
+		transform: rotateY(180deg);
+		transform-style: preserve-3d;
+		transition: transform 0.4s;
+	}
+	.hi {
+		background-color: black;
+		color: white;
+	}
+	.hilow {
+		background-color: white;
+		color: black;
+		transform: rotateY(180deg);
+	}
+	.hi, .hilow {
+		position:absolute;
+		width: var(--hilo-button-size);
+		height: var(--hilo-button-size);
+		border-radius: calc(var(--hilo-button-size) / 2);
+		backface-visibility: hidden;
+		white-space: nowrap;
+		font-family: sans-serif;
+		font-size: smaller;
+		text-align: center;
+		line-height: var(--hilo-button-size);
+		user-select:none;
+	}
 </style>
 <link rel="stylesheet" href="playing_card.css">
 </head>
 <body>
 <div id="main">
 	<div id="toolbar">
-		<label>Players <select id="playerCount">
+		<label title="players">👤 <select id="playerCount" >
 			<option>2</option>
 			<option>3</option>
 			<option>4</option>
@@ -197,10 +240,10 @@ https://flopturnriver.com/poker-strategy/basic-poker-odds-19146/
 			<option>9</option>
 			<option selected>10</option>
 		</select></label>
-		<label>Game <select id="scoring">
-			<option selected>high</option>
-			<option value="highlow">high-low</option>
-		</select></label>
+		<label><div id="hiloCheckbox">
+			<div class="hi">HI</div>
+			<div class="hilow">HI-LO</div>
+		</div></label>
 		<label>Hole cards<select id="holeCardCount">
 				<option selected>2</option>
 				<option>3</option>
@@ -208,7 +251,6 @@ https://flopturnriver.com/poker-strategy/basic-poker-odds-19146/
 				<option>5</option>
 		</select></label>
 		<a id="resetButton" href="javascript:UI.clear()" title="clear all">❌</a>
-
 	</div>
 	<div id="pokerTablePanel" class="tall">
 		<player-hand><!-- 1 --></player-hand>
@@ -356,8 +398,8 @@ customElements.define("player-hand", PlayerHand);
 class UIModel {
 	communityCards = [];
 	playerCards = [];
-	holeCardCount = 0;
-	playerCount = 0;
+	holeCardCount = 2;
+	playerCount = 10;
 	holeCardRules = 'atMost2';
 	scoring = 'high';
 	reset() {
@@ -672,7 +714,15 @@ class UI {
 		// window.addEventListener("error", ev => { console.log(ev.message); alert("js error"); });
 		document.querySelector("#playerCount").addEventListener('input', UI.playersChanged);
 		document.querySelector("#holeCardCount").addEventListener('input', UI.holeCardCountChanged);
-		document.querySelector("#scoring").addEventListener('input', UI.scoringChanged);
+		document.querySelector("#hiloCheckbox").addEventListener("click", ev => {
+			ev.currentTarget.classList.toggle("checked");
+			if (ev.currentTarget.classList.contains("checked"))
+				ev.currentTarget.value = "highlow";
+			else
+				ev.currentTarget.value = "high";
+			UI.scoringChanged();
+		});
+		document.querySelector("#hiloCheckbox").value = "high";
 		UI.syncUIToStats();
 		UI.holeCardCountChanged();
 		UI.playersChanged();
@@ -727,10 +777,17 @@ class UI {
 	}
 	static holeCardCountChanged() {
 		UI.model.setHoleCardCount(document.querySelector("#holeCardCount").value);
+		if (UI.model.holeCardCount == 5 && UI.model.playerCount == 10) {
+			document.querySelector("#playerCount").value = 9;
+			UI.playersChanged();
+			return;
+		}
 		UI.syncUIToModel();
 	}
 	static scoringChanged() {
-		UI.model.setScoring(document.querySelector("#scoring").value);
+		UI.model.setScoring(document.querySelector("#hiloCheckbox").value);
+		if (UI.model.scoring == 'highlow' && UI.model.holeCardCount < 4)
+			UI.model.setHoleCardCount(4);
 		UI.syncUIToModel();
 	}
 	static setDeckSuit(suit) {
@@ -837,6 +894,12 @@ class UI {
 	}
 	static syncUIToModel() {
 		UI.clearError();
+
+		// Sync toolbar
+		document.querySelector("#playerCount").value = UI.model.playerCount;
+		document.querySelector("#holeCardCount").value = UI.model.holeCardCount;
+		document.querySelector("#hiloCheckbox").value = UI.model.scoring;
+
 		// Only show hands in play, with correct number of hole cards
 		let i = 1;
 		for (let el of document.querySelectorAll("#pokerTablePanel > player-hand")) {
