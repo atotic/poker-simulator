@@ -1,9 +1,14 @@
-	/* playing-card, playing-hand styles */
+:root {
+	--card-width: 72px;
+	--mini-card-width: 36px;
+	--mini-card-rotation: 36;
+}
+/* playing-card, playing-hand styles */
 	playing-card {
 	  display: inline-block;
 	  position: relative;
 	  width: var(--card-width);
-	  min-width: 36px;
+	  /* min-width: 36px; */
 	  border: 1px solid #000;
 	  border-radius: 8px;
 	  aspect-ratio: 1 / 1.4;
@@ -122,12 +127,143 @@
 	  opacity: 0.3;
 	}
 
+	/* 
+	Player hand positioning 
+	10 fixed positions around the table.
+	/-3-2-4
+  5     6
+	7     8
+	9     10
+	   2
+*/
 	player-hand {
 	  display: block;
-	  min-width: var(--card-width);
-	  min-height: var(--card-width);
+		position:relative;
+		min-width: var(--mini-card-width);
+		width:max-content;
+  	height: calc(1.4 * var(--mini-card-width));
+	  /* min-width: var(--card-width);
+	  min-height: var(--card-width); */
+		white-space-collapse: collapse;
 	}
+player-hand:nth-child(1) {
+	bottom: 60px;
+	left: 50%;
+	position: absolute;
+	transform: translate(-50%);
+}
+player-hand:nth-child(2) {
+	top: 0;
+	left: 50%;
+	position: absolute;
+	transform: translate(-50%);
+}
+player-hand:nth-child(3) {
+	top: 0;
+	left: calc(calc(0.5 * var(--mini-card-width)));
+	position: absolute;
+}
+player-hand:nth-child(4) {
+	top: 0;
+	right: calc(0.5 * var(--mini-card-width));
+	position: absolute;
+}
+player-hand:nth-child(5) {
+	top: 20%;
+	left: calc(0.5 * var(--mini-card-width));
+	position: absolute;
+}
+player-hand:nth-child(6) {
+	top: 20%;
+	right: calc(0.5 * var(--mini-card-width));
+	position: absolute;
+}
+player-hand:nth-child(7) {
+	top: 40%;
+	left: calc(0.5 * var(--mini-card-width));
+	position: absolute;
+}
+player-hand:nth-child(8) {
+	top: 40%;
+	right: calc(0.5 * var(--mini-card-width));
+	position: absolute;
+}
+player-hand:nth-child(9) {
+	top: 60%;
+	left: calc(0.5 * var(--mini-card-width));
+	position: absolute;
+}
+player-hand:nth-child(10) {
+	top: 60%;
+	right: calc(0.5 * var(--mini-card-width));
+	position: absolute;
+}
 
-	player-hand.mini playing-card {
-		width: 20px;
-	}
+/* 
+Playing cards inside a mini hand.
+Cards are held naturally
+*/
+player-hand.mini playing-card {
+	width: var(--mini-card-width);
+	position:absolute;
+	top: 0;
+	left:0;
+}
+
+player-hand.mini>playing-card {
+	transform-origin: 50% bottom;
+}
+
+player-hand.mini.closed>playing-card {
+	transform: none !important;
+}
+/* 2-card hand */
+player-hand.mini[data-hole-count='2']>playing-card:nth-child(1) {
+	transform: translate(-10px) rotate(calc(-0.5deg * var(--mini-card-rotation)));
+}
+player-hand.mini[data-hole-count='2']>playing-card:nth-child(2) {
+	transform: translate(-10px) rotate(calc(0.5deg * var(--mini-card-rotation)));
+}
+/* 5-card hand */
+player-hand.mini>playing-card:nth-child(1) {
+	transform: translate(-10px) rotate(calc(-1deg * var(--mini-card-rotation)));
+}
+
+player-hand.mini>playing-card:nth-child(2) {
+	transform: translate(-5px) rotate(calc(-0.5deg * var(--mini-card-rotation)));
+}
+
+player-hand.mini>playing-card:nth-child(3) {
+	transform: none;
+}
+
+player-hand.mini>playing-card:nth-child(4) {
+	transform: translate(5px) rotate(calc(0.5deg * var(--mini-card-rotation)));
+}
+
+player-hand.mini>playing-card:nth-child(5) {
+	position: absolute;
+	top: 0;
+	left: 0;
+	transform: translate(10px) rotate(calc(1deg * var(--mini-card-rotation)));
+}
+
+player-hand.mini playing-card::before {
+	position: absolute;
+	bottom: 0;
+	width: 50%;
+	display: block;
+	font-size: 24px;
+}
+
+player-hand.mini playing-card::after {
+	position: absolute;
+	top: 0;
+	width: 50%;
+	display: block;
+	font-size: 24px;
+}
+
+player-hand.mini.closed>playing-card {
+	transform: none !important;
+}

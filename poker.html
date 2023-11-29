@@ -7,6 +7,8 @@
 	Coding style:
 		- fatal errors throw
 	TODO
+	- poker table crowded
+
 	- phone problems
 		- cards too big
 		- i should not be able to drag suit anchors
@@ -53,7 +55,6 @@ https://flopturnriver.com/poker-strategy/basic-poker-odds-19146/
   	overflow: hidden;
 	}
 	body {
-		--card-width: 72px;
 		background: yellow;
 	}
 	.hidden {
@@ -108,13 +109,13 @@ https://flopturnriver.com/poker-strategy/basic-poker-odds-19146/
 		max-height: 800px;
 		user-select: none;
 	}
-	#pokerTablePanel > player-hand {
+	/* #pokerTablePanel > player-hand {
 		position:absolute;
 		display:flex;
 		justify-content: center;
 		align-items:center;
 		flex:none;
-	}
+	} */
 	/* Poker table 
 	  /--5--2--8--\
 		3           7
@@ -122,7 +123,7 @@ https://flopturnriver.com/poker-strategy/basic-poker-odds-19146/
 		6           4
 		\--9--1-10--/
 	*/
-	  
+/* 	  
 	#pokerTablePanel > player-hand:nth-child(1) {
 		bottom: 0;
 		left: 0;
@@ -172,7 +173,7 @@ https://flopturnriver.com/poker-strategy/basic-poker-odds-19146/
 		right: 0;
 		bottom: 0;
 		width: 50%;
-	}
+	} */
 
 	#tableTop {
 		display:flex;
@@ -180,7 +181,7 @@ https://flopturnriver.com/poker-strategy/basic-poker-odds-19146/
 		align-items: center;
 		align-content:center;
 		flex-wrap:wrap;
-		gap:16px;
+		gap:4px;
 		box-sizing:border-box;
 		width:100%;
 		max-width:1280px;
@@ -274,7 +275,7 @@ https://flopturnriver.com/poker-strategy/basic-poker-odds-19146/
 		<a id="resetButton" href="javascript:UI.clear()" title="clear all">❌</a>
 
 	</div>
-	<div id="pokerTablePanel">
+	<div id="pokerTablePanel" class="tall">
 		<player-hand><!-- 1 --></player-hand>
 		<player-hand class="mini"><!-- 2 --></player-hand>
 		<player-hand class="mini"><!-- 3 --></player-hand>
@@ -286,7 +287,7 @@ https://flopturnriver.com/poker-strategy/basic-poker-odds-19146/
 		<player-hand class="mini"><!-- 9 --></player-hand>
 		<player-hand class="mini"><!-- 10 --></player-hand>
 		<div id="tableTop">
-			<div id="flop" style="display:flex;gap:8px">
+			<div id="flop" style="display:flex;gap:4px">
 				<playing-card title="flop" class="community"></playing-card>
 				<playing-card title="flop" class="community"></playing-card>
 				<playing-card title="flop" class="community"></playing-card>
@@ -628,7 +629,8 @@ class UI {
 		document.querySelector("#statsPanel .error").classList.add("hidden");
 	}
 	static preventDefault(ev) {
-		ev.preventDefault();
+		if (ev.cancelable)
+			ev.preventDefault();
 	}
 	static handlePointerDown(ev) {
 		// console.log('pointerdown', ev);
@@ -659,14 +661,14 @@ class UI {
 				ev.target.valueAsString() != "")
 			return ev.target;
 		// Find them even when obscured
-		let candidates = document.elementsFromPoint(ev.pageX, ev.pageY);
+		let candidates = document.elementsFromPoint(ev.clientX, ev.clientY);
 		for (let c of candidates)
 			if (c.tagName == 'PLAYING-CARD' && c.valueAsString() != "")
 				return c;
 		return null;
 	}
 	static getDropTarget(ev) {
-		let candidates = document.elementsFromPoint(ev.pageX, ev.pageY);
+		let candidates = document.elementsFromPoint(ev.clientX, ev.clientY);
 		// console.log(candidates);
 		for (let c of candidates)
 			if (c.tagName == 'PLAYING-CARD' && c != UI.dragSource) {
@@ -893,10 +895,17 @@ class UI {
 			playerHandElements[h].setAttribute('data-hole-count', UI.model.holeCardCount);
 			let cardElements = playerHandElements[h].querySelectorAll("playing-card");
 			let cards = UI.model.playerCards[h];
+			let hasCards = false;
 			for (let c=0; c<cardElements.length; ++c) {
 				let cardValue = cards ? cards[c] : undefined;
+				if (cardValue)
+					hasCards = true;
 				cardElements[c].setValueFromString(cardValue);
 			}
+			if (hasCards)
+				playerHandElements[h].classList.remove("closed");
+			else
+				playerHandElements[h].classList.add("closed");
 		}
 		// Gray out deck cards that are used
 		let allCards = UI.model.getAllCardsInUse();
