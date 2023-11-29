@@ -109,71 +109,6 @@ https://flopturnriver.com/poker-strategy/basic-poker-odds-19146/
 		max-height: 800px;
 		user-select: none;
 	}
-	/* #pokerTablePanel > player-hand {
-		position:absolute;
-		display:flex;
-		justify-content: center;
-		align-items:center;
-		flex:none;
-	} */
-	/* Poker table 
-	  /--5--2--8--\
-		3           7
-		|           |
-		6           4
-		\--9--1-10--/
-	*/
-/* 	  
-	#pokerTablePanel > player-hand:nth-child(1) {
-		bottom: 0;
-		left: 0;
-		width: 100%;
-	}
-	#pokerTablePanel > player-hand:nth-child(2) {
-		top: 0;
-		left: 0;
-		width: 100%;
-	}
-	#pokerTablePanel > player-hand:nth-child(3) {
-		left: 0;
-		top: 0;
-		height: 66%;
-	}
-	#pokerTablePanel > player-hand:nth-child(4) {
-		right: 0;
-		top: 0;
-		height: 66%;
-	}
-	#pokerTablePanel > player-hand:nth-child(5) {
-		left: 0;
-		top: 0;
-		width: 50%;
-	}
-	#pokerTablePanel > player-hand:nth-child(6) {
-		left: 0;
-		bottom: 0;
-		height: 66%;
-	}
-	#pokerTablePanel > player-hand:nth-child(7) {
-		right: 0;
-		bottom: 0;
-		height: 66%;
-	}
-	#pokerTablePanel > player-hand:nth-child(8) {
-		right: 0;
-		top: 0;
-		width: 50%;
-	}
-	#pokerTablePanel > player-hand:nth-child(9) {
-		left: 0;
-		bottom: 0;
-		width: 50%;
-	}
-	#pokerTablePanel > player-hand:nth-child(10) {
-		right: 0;
-		bottom: 0;
-		width: 50%;
-	} */
 
 	#tableTop {
 		display:flex;
@@ -583,82 +518,52 @@ class PokerRunStats {
 		return `${Math.round((100*count / this.totalGames)).toFixed()}%`;
 	}
 }
-
-class UI {
+class DragDrop {
 	static dragSource;	// element
 	static dragStartX;
 	static dragStartY;
 	static dropTarget; // element
 	static dropTargetOldSuit;
 	static dropTargetOldRank;
-	static model = new UIModel;
-	
-	static init() {
-		// window.addEventListener("error", ev => { console.log(ev.message); alert("js error"); });
-		document.querySelector("#playerCount").addEventListener('input', UI.playersChanged);
-		document.querySelector("#holeCardCount").addEventListener('input', UI.holeCardCountChanged);
-		document.querySelector("#scoring").addEventListener('input', UI.scoringChanged);
-		UI.syncUIToStats();
-		UI.holeCardCountChanged();
-		UI.playersChanged();
-		UI.scoringChanged();
-		UI.setDeckSuit('♥');
-		UI.initDragAndDrop();
-	}
 
 	static initDragAndDrop() {
 
-		document.body.addEventListener('pointerdown', UI.handlePointerDown);
-		// document.body.addEventListener('pointermove', UI.handlePointerMove);
-		document.body.addEventListener('pointerup', UI.handlePointerUp);
-		document.body.addEventListener('pointerleave', UI.handlePointerLeave);
+		document.body.addEventListener('pointerdown', DragDrop.handlePointerDown);
+		document.body.addEventListener('pointerup', DragDrop.handlePointerUp);
+		document.body.addEventListener('pointerleave', DragDrop.handlePointerLeave);
 		window.addEventListener("contextmenu", ev => {
 			// On mobilie, long touch during drag will trigger context menu.
-			if (UI.isDragging())
+			if (DragDrop.isDragging())
 				ev.preventDefault();
 		});
 	}
-
-	static showError(msg) {
-		let errEl = document.querySelector("#statsPanel .error");
-		errEl.classList.remove("hidden");
-		errEl.innerText = msg;
-	}
-
-	static clearError() {
-		document.querySelector("#statsPanel .error").classList.add("hidden");
-	}
-	static preventDefault(ev) {
-		if (ev.cancelable)
-			ev.preventDefault();
-	}
-	static handlePointerDown(ev) {
+		static handlePointerDown(ev) {
 		// console.log('pointerdown', ev);
 		// Because player-hands might overlap cards, need to search 
-		let dragSource = UI.getDragSource(ev);
+		let dragSource = DragDrop.getDragSource(ev);
 		if (!dragSource)
 			return;
-		UI.startDrag(ev, dragSource);
+		DragDrop.startDrag(ev, dragSource);
 	}
 	static handlePointerUp(ev) {
 		// console.log('pointerup');
-		UI.endDrag(ev);
+		DragDrop.endDrag(ev);
 	}
 	static handlePointerLeave(ev) {
 		// console.log('pointerleave');
-		UI.endDrag(ev);
+		DragDrop.endDrag(ev);
 	}
 	static handlePointerMove(ev) {
 		// console.log('pointermove', ev);
-		UI.dragMove(ev);
+		DragDrop.dragMove(ev);
 	}
 	static isDragging() {
-		return UI.dragSource != null;
+		return DragDrop.dragSource != null;
 	}
 	static getDragSource(ev) {
 		// All playing cards can be dragged
 		if (ev.target.tagName == 'PLAYING-CARD' &&
-				ev.target.valueAsString() != "")
+			ev.target.valueAsString() != "")
 			return ev.target;
 		// Find them even when obscured
 		let candidates = document.elementsFromPoint(ev.clientX, ev.clientY);
@@ -671,7 +576,7 @@ class UI {
 		let candidates = document.elementsFromPoint(ev.clientX, ev.clientY);
 		// console.log(candidates);
 		for (let c of candidates)
-			if (c.tagName == 'PLAYING-CARD' && c != UI.dragSource) {
+			if (c.tagName == 'PLAYING-CARD' && c != DragDrop.dragSource) {
 				// console.log(c);
 				return c;
 			}
@@ -683,83 +588,139 @@ class UI {
 			return false;
 	}
 	static startDrag(ev, dragSource) {
-		document.body.addEventListener('pointermove', UI.handlePointerMove);
-		document.body.addEventListener('touchmove', UI.preventDefault, {passive: false} );
+		document.body.addEventListener('pointermove', DragDrop.handlePointerMove);
+		document.body.addEventListener('touchmove', UI.preventDefault, { passive: false });
 
-		UI.dragSource = dragSource;
-		UI.dragSource.classList.add("isDragged");
-		UI.dragStartX = ev.screenX;
-		UI.dragStartY = ev.screenY;
-		UI.dragSource.style.zIndex = "1";
+		DragDrop.dragSource = dragSource;
+		DragDrop.dragSource.classList.add("isDragged");
+		DragDrop.dragStartX = ev.screenX;
+		DragDrop.dragStartY = ev.screenY;
+		DragDrop.dragSource.style.zIndex = "1";
 	}
 	static endDrag(ev) {
-		document.body.removeEventListener('pointermove', UI.handlePointerMove);
-		document.body.removeEventListener('touchmove', UI.preventDefault);
-		if (!UI.dragSource)
+		document.body.removeEventListener('pointermove', DragDrop.handlePointerMove);
+		document.body.removeEventListener('touchmove', DragDrop.preventDefault);
+		if (!DragDrop.dragSource)
 			return;
-		UI.dragSource.classList.remove("isDragged");
-		if (UI.dropTarget) {
-			UI.moveCard(UI.dragSource, UI.dropTarget);
-			UI.dropTarget = null;
-			UI.dropTargetOldSuit = null;
-			UI.dropTargetOldRank = null;
-			UI.dragSource.style.transform = '';
+		DragDrop.dragSource.classList.remove("isDragged");
+		if (DragDrop.dropTarget) {
+			UI.moveCardFromElements(DragDrop.dragSource, DragDrop.dropTarget);
+			DragDrop.dropTarget = null;
+			DragDrop.dropTargetOldSuit = null;
+			DragDrop.dropTargetOldRank = null;
+			DragDrop.dragSource.style.transform = '';
 		} else {
-			UI.dragSource.addEventListener('animationend', UI.endDragAnimationEnd);
-			UI.dragSource.classList.add("dropCancel");
+			DragDrop.dragSource.addEventListener('animationend', DragDrop.endDragAnimationEnd);
+			DragDrop.dragSource.classList.add("dropCancel");
 		}
-		// UI.dragSource.style.transform = "";
-		UI.dragSource.style.zIndex = "";
-		UI.dragSource = undefined;
-		UI.dragStartX = undefined;
-		UI.dragStartY = undefined;
+		// DragDrop.dragSource.style.transform = "";
+		DragDrop.dragSource.style.zIndex = "";
+		DragDrop.dragSource = undefined;
+		DragDrop.dragStartX = undefined;
+		DragDrop.dragStartY = undefined;
 	}
 	static dragMove(ev) {
-		if (!UI.dragSource)
+		if (!DragDrop.dragSource)
 			console.error("dragMove, no target!");
-		let x = ev.screenX - UI.dragStartX;
-		let y = ev.screenY - UI.dragStartY;
-		UI.dragSource.style.transform = `translate(${x}px , ${y}px) scale(1.3)`;
-		// let dropTarget = UI.getDropTarget(ev);
-		UI.showDropTarget(ev, UI.getDropTarget(ev));
+		let x = ev.screenX - DragDrop.dragStartX;
+		let y = ev.screenY - DragDrop.dragStartY;
+		DragDrop.dragSource.style.transform = `translate(${x}px , ${y}px) scale(1.3)`;
+		DragDrop.showDropTarget(ev, DragDrop.getDropTarget(ev));
 	}
 	static showDropTarget(ev, dropTarget) {
-		if (dropTarget == UI.dropTarget || dropTarget == UI.dragSource)
+		if (dropTarget == DragDrop.dropTarget || dropTarget == DragDrop.dragSource)
 			return;
-		if (UI.dropTarget) {	// restore old state
-			if (!UI.dropTargetOldRank)
-				UI.dropTarget.removeAttribute('data-rank');
+		if (DragDrop.dropTarget) {	// restore old state
+			if (!DragDrop.dropTargetOldRank)
+				DragDrop.dropTarget.removeAttribute('data-rank');
 			else
-				UI.dropTarget.setAttribute('data-rank', UI.dropTargetOldRank);
-			if (!UI.dropTargetOldSuit)
-				UI.dropTarget.removeAttribute('data-suit');
+				DragDrop.dropTarget.setAttribute('data-rank', DragDrop.dropTargetOldRank);
+			if (!DragDrop.dropTargetOldSuit)
+				DragDrop.dropTarget.removeAttribute('data-suit');
 			else
-				UI.dropTarget.setAttribute('data-suit', UI.dropTargetOldSuit);
-			UI.dropTarget = null;
+				DragDrop.dropTarget.setAttribute('data-suit', DragDrop.dropTargetOldSuit);
+			DragDrop.dropTarget = null;
 		}
 		if (dropTarget) {
-			UI.dropTargetOldRank = dropTarget.getAttribute('data-rank');
-			UI.dropTargetOldSuit = dropTarget.getAttribute('data-suit');
-			UI.dropTarget = dropTarget;
-			let srcRank = UI.dragSource.getAttribute('data-rank');
-			let srcSuit = UI.dragSource.getAttribute('data-suit');
+			DragDrop.dropTargetOldRank = dropTarget.getAttribute('data-rank');
+			DragDrop.dropTargetOldSuit = dropTarget.getAttribute('data-suit');
+			DragDrop.dropTarget = dropTarget;
+			let srcRank = DragDrop.dragSource.getAttribute('data-rank');
+			let srcSuit = DragDrop.dragSource.getAttribute('data-suit');
 			if (!srcRank || !srcSuit) {
 				console.error(`dragSource missing attributes ${srcRank} ${srcSuit}`);
 				return;
 			}
 			if (!dropTarget.classList.contains("deck")) {
-				UI.dropTarget.setAttribute('data-rank', srcRank);
-				UI.dropTarget.setAttribute('data-suit', srcSuit);
+				DragDrop.dropTarget.setAttribute('data-rank', srcRank);
+				DragDrop.dropTarget.setAttribute('data-suit', srcSuit);
 			}
 		}
 	}
-
 	static endDragAnimationEnd(ev) {
 		// console.log("Animation ended", ev);
 		ev.target.style.transform = '';
 		ev.target.classList.remove('dropCancel');
 	}
+}
 
+class UI {
+	static model = new UIModel;
+	static lastDestination;	// last move destination
+
+	static init() {
+		// window.addEventListener("error", ev => { console.log(ev.message); alert("js error"); });
+		document.querySelector("#playerCount").addEventListener('input', UI.playersChanged);
+		document.querySelector("#holeCardCount").addEventListener('input', UI.holeCardCountChanged);
+		document.querySelector("#scoring").addEventListener('input', UI.scoringChanged);
+		UI.syncUIToStats();
+		UI.holeCardCountChanged();
+		UI.playersChanged();
+		UI.scoringChanged();
+		UI.setDeckSuit('♥')
+		for (let d of document.querySelectorAll("#deckPanel playing-card"))
+			d.addEventListener("click", UI.deckClick);
+		DragDrop.initDragAndDrop();
+	}
+	static showError(msg) {
+		let errEl = document.querySelector("#statsPanel .error");
+		errEl.classList.remove("hidden");
+		errEl.innerText = msg;
+	}
+	static clearError() {
+		document.querySelector("#statsPanel .error").classList.add("hidden");
+	}
+	static deckClick(ev) {
+		// Click on deck card adds card to last move destination
+		let dest;
+		if (UI.lastDestination) {
+			if (UI.lastDestination.location == 'player') {
+				dest = {
+					location: 'player',
+					playerIndex: UI.lastDestination.playerIndex,
+					cardIndex: Math.min(UI.lastDestination.cardIndex + 1, UI.model.holeCardCount - 1)
+				}
+			} else if (UI.lastDestination.location == 'community') {
+				dest = {
+					location: 'community',
+					cardIndex: Math.min(UI.lastDestination.cardIndex+1, 4)
+				}
+			}
+		}
+		if (!dest) {
+			dest = {
+				location: 'player',
+				playerIndex: 0,
+				cardIndex: 0
+			}
+		}
+		UI.moveCard(UI.cardAddressFromElement(ev.target), dest);
+	}
+
+	static preventDefault(ev) {
+		if (ev.cancelable)
+			ev.preventDefault();
+	}
  	static playersChanged() {
 		UI.model.setPlayerCount(document.querySelector("#playerCount").value);
 		UI.syncUIToModel();
@@ -822,11 +783,16 @@ class UI {
 			value: el.valueAsString()
 		}
 	}
-	// src/dest are elements
-	// returns true if card was moved.
-	static moveCard(srcEl, destEl) {
+
+	static moveCardFromElements(srcEl, destEl) {
 		let src = UI.cardAddressFromElement(srcEl);
 		let dest = UI.cardAddressFromElement(destEl);
+		UI.moveCard(src, dest);
+	}
+	// src/dest are cardAddresses
+	static moveCard(src, dest) {
+		console.log(dest);
+		UI.lastDestination = dest;
 		switch(src.location) {
 			case 'deck':
 				switch(dest.location) {
