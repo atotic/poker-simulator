@@ -7,17 +7,6 @@
 	Coding style:
 		- fatal errors throw
 	TODO
-	- poker table crowded
-
-	- phone problems
-		- cards too big
-		- i should not be able to drag suit anchors
-	  - toolbar is too big
-			- hi/low button
-		- other players are too big
-		- community cards are too large
-		- use figma for design ideas?
-		
 	- stats
 	- typescript usage
 	- installable as an app
@@ -788,6 +777,8 @@ class UI {
 		UI.model.setScoring(document.querySelector("#hiloCheckbox").value);
 		if (UI.model.scoring == 'highlow' && UI.model.holeCardCount < 4)
 			UI.model.setHoleCardCount(4);
+		if (UI.model.scoring == 'high' && UI.model.holeCardCount > 3)
+			UI.model.setHoleCardCount(2);
 		UI.syncUIToModel();
 	}
 	static setDeckSuit(suit) {
@@ -1017,6 +1008,7 @@ class UI {
 
 	static clear() {
 		UI.model.reset();
+		UI.lastDestination = undefined;
 		UI.syncUIToModel();
 	}
 }
