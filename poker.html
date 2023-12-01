@@ -35,6 +35,7 @@ https://flopturnriver.com/poker-strategy/basic-poker-odds-19146/
 	*/
 	:root {
 		--hilo-button-size: 40px;
+		--deck-card-width: 50px;
 	}
 	* {
 		box-sizing:border-box;
@@ -140,7 +141,7 @@ https://flopturnriver.com/poker-strategy/basic-poker-odds-19146/
 		user-select: none;
 	}
 	playing-card.deck {
-		width: 50px; 
+		width: var(--deck-card-width); 
 		min-width: 36px;
 	}
 
@@ -165,9 +166,17 @@ https://flopturnriver.com/poker-strategy/basic-poker-odds-19146/
 	#suitPicker a.selected {
 		transform:scale(1.2);
 	}
-	#suitPicker select {
-		font-size: 20px;
+	.suitPickerButton {
+		font-size:0px;
 		height: 68px;
+		width: var(--deck-card-width);
+	}
+	.suitPickerButton span {
+		font-size: 44px;
+		color:black;
+	}
+	.suitPickerButton[data-suit='♥'] span, .suitPickerButton[data-suit='♦'] span {
+		color: red;
 	}
 
 	#statsPanel {
@@ -307,12 +316,7 @@ https://flopturnriver.com/poker-strategy/basic-poker-odds-19146/
 				<a href="javascript:UI.setDeckSuit('♣')" title="clubs">♣</a>
 			</div>
 			<div class="narrow">
-				<select class="suitPickerPopup">
-					<option>♠</option>
-					<option selected>♥</option>
-					<option>♦</option>
-					<option>♣</option>
-				</select>
+				<button class="suitPickerButton"><span>♠</span></button>
 			</div>
 		</div>
   </div>
@@ -739,7 +743,7 @@ class UI {
 				ev.currentTarget.value = "high";
 			UI.scoringChanged();
 		});
-		document.querySelector("#suitPicker .suitPickerPopup").addEventListener('input', UI.suitPickerChanged);
+		document.querySelector("#suitPicker .suitPickerButton").addEventListener('click', UI.suitPickerChanged);
 		document.querySelector("#hiloCheckbox").value = "high";
 		UI.syncUIToStats();
 		UI.holeCardCountChanged();
@@ -811,8 +815,10 @@ class UI {
 		UI.syncUIToModel();
 	}
 	static suitPickerChanged(ev) {
-		UI.setDeckSuit(ev.currentTarget.value);
+		UI.setDeckSuit(ev.currentTarget.innerText);
 	}
+	static suits = Array.from(PlayingCard.EmojiToSuit.keys());
+
 	static setDeckSuit(suit) {
 		for (let c of document.querySelectorAll("#deckPanel > playing-card")) {
 			c.setAttribute("data-suit", suit);
@@ -823,7 +829,18 @@ class UI {
 			else
 				a.classList.remove("selected");
 		}
-		document.querySelector("#suitPicker select").value = suit;
+		// Update suitPickerButton
+		let suitIndex = UI.suits.indexOf(suit);
+		if (suitIndex != -1) {
+			if (++suitIndex == UI.suits.length)
+				suitIndex = 0;
+			let button = document.querySelector("#suitPicker .suitPickerButton");
+			let span = button.querySelector("span");
+			span.innerText = UI.suits[suitIndex];
+			button.setAttribute('data-suit', UI.suits[suitIndex]);
+		} else {
+			console.error(`unexpected suit value ${suit}`);
+		}
 		UI.syncUIToModel();
 	}
 	static cardAddressFromElement(el) {
