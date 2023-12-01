@@ -1,6 +1,8 @@
 {
   "scripts": {
-    "localhost": "'./node_modules/.bin/http-server' --port 8080 -c-1"
+    "localhost": "'./node_modules/.bin/http-server' --port 8080 -c-1",
+    "slocalhost": "'./node_modules/.bin/http-server' --port 8080 --ssl -c-1 -C cert.pem -K key.pem",
+    "gencert": "openssl req -newkey rsa:2048 -new -nodes -x509 -days 3650 -keyout key.pem -out cert.pem"
   },
   "devDependencies": {
     "http-server": "^14.1.1"
