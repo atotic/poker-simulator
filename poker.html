@@ -59,7 +59,7 @@ https://flopturnriver.com/poker-strategy/basic-poker-odds-19146/
 		display: grid;
 		background: green;
 		grid-template-columns: 1fr;
-		grid-template-rows: minmax(min-content, 64px) 1fr minmax(64px, max-content) max-content;
+		grid-template-rows: minmax(max-content, 40px) 1fr minmax(64px, max-content) max-content;
 		grid-template-areas:
 			"toolbar"
 			"table"
@@ -79,12 +79,13 @@ https://flopturnriver.com/poker-strategy/basic-poker-odds-19146/
 	}
 	#toolbar {
 		grid-area: toolbar;
-		padding:16px;
+		/* padding:4px 16px 4px 16px; */
 		background: #DDD;
 		display:flex;
 		align-items:center;
 		justify-content: center;
 		user-select: none;
+		padding: 4px;
 	}
 	#toolbar select {
 	font-size:18px;
@@ -142,15 +143,33 @@ https://flopturnriver.com/poker-strategy/basic-poker-odds-19146/
 		width: 50px; 
 		min-width: 36px;
 	}
-	#deckPanel > div > a {
+
+	/* suit picker */
+	#suitPicker .wide {
+		display:none;
+	}
+	@media (min-width: 400px) {
+		#suitPicker .wide {
+			display:inline-block;
+		}	
+		#suitPicker .narrow {
+			display: none;
+		}
+	}
+	#suitPicker a {
 		text-decoration: none;
 		color: black;
 		font-size:72px;
 		display: inline-block;
 	}
-	#deckPanelSuits > a.selected {
+	#suitPicker a.selected {
 		transform:scale(1.2);
 	}
+	#suitPicker select {
+		font-size: 20px;
+		height: 68px;
+	}
+
 	#statsPanel {
 		grid-area: stats;
 		background: rgb(234 254 231);
@@ -280,11 +299,21 @@ https://flopturnriver.com/poker-strategy/basic-poker-odds-19146/
 		<playing-card data-rank="Q" class="deck" tabindex=0></playing-card>
 		<playing-card data-rank="K" class="deck" tabindex=0></playing-card>	
 		<playing-card data-rank="A" class="deck" tabindex=0></playing-card>
-		<div id="deckPanelSuits" style="display:inline-block">
-			<a href="javascript:UI.setDeckSuit('♠')" title="spades">♠</a>
-			<a href="javascript:UI.setDeckSuit('♥')" title="hearts" style="color:red">♥</a>
-			<a href="javascript:UI.setDeckSuit('♦')" title="diamonds" style="color:red">♦</a>
-			<a href="javascript:UI.setDeckSuit('♣')" title="clubs">♣</a>
+		<div id="suitPicker" style="display:inline-block">
+			<div class="wide">
+				<a href="javascript:UI.setDeckSuit('♠')" title="spades">♠</a>
+				<a href="javascript:UI.setDeckSuit('♥')" title="hearts" style="color:red">♥</a>
+				<a href="javascript:UI.setDeckSuit('♦')" title="diamonds" style="color:red">♦</a>
+				<a href="javascript:UI.setDeckSuit('♣')" title="clubs">♣</a>
+			</div>
+			<div class="narrow">
+				<select class="suitPickerPopup">
+					<option>♠</option>
+					<option selected>♥</option>
+					<option>♦</option>
+					<option>♣</option>
+				</select>
+			</div>
 		</div>
   </div>
 	<div id="statsPanel">
@@ -621,7 +650,6 @@ class DragDrop {
 	static startDrag(ev, dragSource) {
 		document.body.addEventListener('pointermove', DragDrop.handlePointerMove);
 		document.body.addEventListener('touchmove', UI.preventDefault, { passive: false });
-
 		DragDrop.dragSource = dragSource;
 		DragDrop.dragSource.classList.add("isDragged");
 		DragDrop.dragStartX = ev.screenX;
@@ -630,7 +658,7 @@ class DragDrop {
 	}
 	static endDrag(ev) {
 		document.body.removeEventListener('pointermove', DragDrop.handlePointerMove);
-		document.body.removeEventListener('touchmove', DragDrop.preventDefault);
+		document.body.removeEventListener('touchmove', UI.preventDefault);
 		if (!DragDrop.dragSource)
 			return;
 		DragDrop.dragSource.classList.remove("isDragged");
@@ -711,6 +739,7 @@ class UI {
 				ev.currentTarget.value = "high";
 			UI.scoringChanged();
 		});
+		document.querySelector("#suitPicker .suitPickerPopup").addEventListener('input', UI.suitPickerChanged);
 		document.querySelector("#hiloCheckbox").value = "high";
 		UI.syncUIToStats();
 		UI.holeCardCountChanged();
@@ -781,16 +810,20 @@ class UI {
 			UI.model.setHoleCardCount(2);
 		UI.syncUIToModel();
 	}
+	static suitPickerChanged(ev) {
+		UI.setDeckSuit(ev.currentTarget.value);
+	}
 	static setDeckSuit(suit) {
 		for (let c of document.querySelectorAll("#deckPanel > playing-card")) {
 			c.setAttribute("data-suit", suit);
 		}
-		for (let a of document.querySelectorAll("#deckPanelSuits a")) {
+		for (let a of document.querySelectorAll("#suitPicker a")) {
 			if (a.innerText == suit)
 				a.classList.add("selected");
 			else
 				a.classList.remove("selected");
 		}
+		document.querySelector("#suitPicker select").value = suit;
 		UI.syncUIToModel();
 	}
 	static cardAddressFromElement(el) {
@@ -839,7 +872,6 @@ class UI {
 	}
 	// src/dest are cardAddresses
 	static moveCard(src, dest) {
-		console.log(dest);
 		UI.lastDestination = dest;
 		switch(src.location) {
 			case 'deck':

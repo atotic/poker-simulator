@@ -134,9 +134,10 @@
   5     6
 	7     8
 	9     10
-	   2
+	   1
 */
 	player-hand {
+		--mini-left-offset: 0.7;
 	  display: block;
 		position:relative;
 		min-width: var(--mini-card-width);
@@ -152,6 +153,12 @@ player-hand:nth-child(1) {
 	position: absolute;
 	transform: translate(-50%);
 }
+player-hand:nth-child(1) playing-card:first-child {
+	transform: rotate(-3deg);
+}
+player-hand:nth-child(1) playing-card:last-child {
+	transform: rotate(3deg);
+}
 player-hand:nth-child(2) {
 	top: 0;
 	left: 50%;
@@ -160,7 +167,7 @@ player-hand:nth-child(2) {
 }
 player-hand:nth-child(3) {
 	top: 0;
-	left: calc(calc(0.5 * var(--mini-card-width)));
+	left: calc(var(--mini-left-offset) * var(--mini-card-width));
 	position: absolute;
 }
 player-hand:nth-child(4) {
@@ -170,7 +177,7 @@ player-hand:nth-child(4) {
 }
 player-hand:nth-child(5) {
 	top: 20%;
-	left: calc(0.5 * var(--mini-card-width));
+	left: calc(var(--mini-left-offset) * var(--mini-card-width));
 	position: absolute;
 }
 player-hand:nth-child(6) {
@@ -180,7 +187,7 @@ player-hand:nth-child(6) {
 }
 player-hand:nth-child(7) {
 	top: 40%;
-	left: calc(0.5 * var(--mini-card-width));
+	left: calc(var(--mini-left-offset) * var(--mini-card-width));
 	position: absolute;
 }
 player-hand:nth-child(8) {
@@ -190,7 +197,7 @@ player-hand:nth-child(8) {
 }
 player-hand:nth-child(9) {
 	top: 60%;
-	left: calc(0.5 * var(--mini-card-width));
+	left: calc(var(--mini-left-offset) * var(--mini-card-width));
 	position: absolute;
 }
 player-hand:nth-child(10) {
@@ -224,7 +231,7 @@ player-hand.mini[data-hole-count='2']>playing-card:nth-child(1) {
 player-hand.mini[data-hole-count='2']>playing-card:nth-child(2) {
 	transform: translate(-10px) rotate(calc(0.5deg * var(--mini-card-rotation)));
 }
-/* 5-card hand */
+/* 3,4,5-card hand */
 player-hand.mini>playing-card:nth-child(1) {
 	transform: translate(-10px) rotate(calc(-1deg * var(--mini-card-rotation)));
 }
