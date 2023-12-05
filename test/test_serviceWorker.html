@@ -4,46 +4,36 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1" />
   <title>Service worker test</title>
+  <script src="./testUtils.js"></script>
 </head>
-<style>
-</style>
+<h1>Service worker test</h1>
+<script>
+initTestDivs();
 
-<body>
-  <h1>Service worker test</h1>
-  <pre id="log"></pre>
-  <script>
-    function log(msg) {
-      console.log(msg);
-      let l = document.querySelector("#log");
-      l.innerText += msg + "\n";
-    }
-
-    async function registerServiceWorker() {
-      if (!'serviceWorker' in navigator) {
-        console.warn("navigator.serviceWorker not found");
-        return Promise.reject("serviceWorker not supported");
+async function registerServiceWorker() {
+  if (!'serviceWorker' in navigator) {
+    console.warn("navigator.serviceWorker not found");
+    return Promise.reject("serviceWorker not supported");
+  }
+  try {
+    const registration = await navigator.serviceWorker.register("/serviceWorker.js", { scope: "/", });
+    if (registration) {
+      registration.addEventListener('updatefound', () => {
+        console.log('serviceWorker.updatefound');
+      });
+      if (registration.installing) {
+        console.log("client: Service worker installing");
+      } else if (registration.waiting) {
+        console.log("client: Service worker installed");
+      } else if (registration.active) {
+        console.log("client: Service worker active");
       }
-      try {
-        const registration = await navigator.serviceWorker.register("/serviceWorker.js", { scope: "/", });
-        if (registration) {
-          registration.addEventListener('updatefound', () => {
-            console.log('serviceWorker.updatefound');
 
-            window.location.reload(); // Reload when serviceWorker changes
-          });
-          if (registration.installing) {
-            console.log("client: Service worker installing");
-          } else if (registration.waiting) {
-            console.log("client: Service worker installed");
-          } else if (registration.active) {
-            console.log("client: Service worker active");
-          }
-
-        }
-      } catch (error) {
-        console.error(`Registration failed with ${error}`);
-      }
     }
+  } catch (error) {
+    console.error(`Registration failed with ${error}`);
+  }
+}
 
-    registerServiceWorker();
-  </script>
+registerServiceWorker();
+</script>

@@ -2,35 +2,8 @@
 <title>PokerEngine test</title>
 <body>
 <h3>Poker engine test</h3>
-<pre id="error" style="color:red"></pre>
-<pre id="log"></pre>
-<script src="pokerEngine.js"></script>
-<script>
-
-  window.addEventListener("error", ev => {
-    log(`Unexpected error: ${ev.message}`);
-    alert("js error");
-  });
-
-  function error(msg) {
-    document.getElementById('error').appendChild(document.createTextNode(msg + "\n"));
-    console.trace();
-  }
-
-  function log(msg) {
-    document.getElementById('log').appendChild(document.createTextNode(msg + "\n"));
-  }
-
-  function assert_true(t, msg) {
-    if (!t)
-      error(`${msg}   assertion is false`);
-  }
-
-  function assert_equal(a, b, msg) {
-    if (a != b)
-      error(`${msg}  ${a} != ${b}`);
-  }
-</script>
+<script src="/pokerEngine.js"></script>
+<script src="./testUtils.js"></script>
 <script>
 
 let mostEngine = new PokerEngine({ holeCardRules: 'atMost2' });
@@ -258,6 +231,8 @@ function testPerformance() {
   log(`${count} games took ${elapsed}ms; ${gameTime}ms per game`);
 }
 
+initTestDivs();
+
 testComputeAllPossibleStraights();
 testStraightFlush();
 testQuads();
@@ -270,23 +245,9 @@ testPair();
 testHighCard();
 testCompareHands();
 testLowHand();
-  testEliminateDuplicateRank();
+testEliminateDuplicateRank();
 testPerformance();
 log("Done!");
 
-// console.time('1000games');
 
-// let wins = 0;
-// let engine = new PokerEngine({playerCount: 2, holeCardRules: 'atMost2'});
-// for (let i=0; i<10000; i++) {
-//   // let playerCards = [["JD","JS"], ["6C","6H" ]];
-//   let playerCards = [["KD","JS"], ["6C","6H" ]];
-//   let results = engine.playGame(playerCards);
-//   if (results.bestHands[0].player == 0) {
-//     console.log(results.bestHands[0].bestHand.type, results.bestHands[0].bestHand.cards);
-//     wins++;
-//   }
-// }
-// console.log(wins, ' wins');
-// console.timeEnd('10,000 games');
 </script>
