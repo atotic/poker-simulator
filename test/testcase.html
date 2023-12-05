@@ -1,0 +1,50 @@
+<!doctype html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1" />
+  <link rel="stylesheet" href="playing_card.css">
+</head>
+<style>
+  body {
+  }
+</style>
+<body>
+  <pre id="log">
+    Service worker
+  </pre>
+<script>
+  function log(msg) {
+    console.log(msg);
+    let l = document.querySelector("#log");
+    l.innerText += msg + "\n";
+  } 
+
+async function registerServiceWorker() {
+  if (!'serviceWorker' in navigator) {
+    console.warn("navigator.serviceWorker not found");
+    return Promise.reject("serviceWorker not supported");
+  }
+  try {
+    const registration = await navigator.serviceWorker.register("/serviceWorker.js", { scope: "/",});
+    if (registration) {
+      registration.addEventListener('updatefound', () => {
+        console.log('serviceWorker.updatefound');
+
+        window.location.reload(); // Reload when serviceWorker changes
+      });
+      if (registration.installing) {
+        console.log("client: Service worker installing");
+      } else if (registration.waiting) {
+        console.log("client: Service worker installed");
+      } else if (registration.active) {
+        console.log("client: Service worker active");
+      }
+
+    }
+  } catch (error) {
+    console.error(`Registration failed with ${error}`);
+  }
+}
+
+registerServiceWorker();
+</script>

@@ -2,23 +2,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="manifest" href="manifest.json">
 <title>poker odds</title>
 <!--
 	Coding style:
 		- fatal errors throw
-	TODO
-	- stats
-	- typescript usage
-	- installable as an app
-	- run stats as a thread
-	- better show error
-	- save status GUI
-	- a11y
-	DONE
-	- drag-n-drop: should enlarge the card, give it shadow for that drag look
-	- drag n drop: secret was to cancel drag by adding not passive event listener
-	- view on iPhone http://192.168.1.46:8080/poker.html
-	- 
 -->
 <script src="pokerEngine.js"></script>
 <style>
@@ -36,6 +24,7 @@ https://flopturnriver.com/poker-strategy/basic-poker-odds-19146/
 	:root {
 		--hilo-button-size: 40px;
 		--deck-card-width: 50px;
+		--theme-back-color: #fee4d2;
 	}
 	* {
 		box-sizing:border-box;
@@ -48,9 +37,9 @@ https://flopturnriver.com/poker-strategy/basic-poker-odds-19146/
   	overflow: hidden;
 		user-select: none;
 	}
-	body {
+	/* body {
 		background: yellow;
-	}
+	} */
 	.hidden {
 		display:none;
 	}
@@ -82,7 +71,7 @@ https://flopturnriver.com/poker-strategy/basic-poker-odds-19146/
 	#toolbar {
 		grid-area: toolbar;
 		/* padding:4px 16px 4px 16px; */
-		background: #DDD;
+		background: var(--theme-back-color);
 		display:flex;
 		align-items:center;
 		justify-content: center;
