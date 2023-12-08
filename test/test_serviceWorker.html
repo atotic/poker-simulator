@@ -1,5 +1,4 @@
 <!doctype html>
-
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1" />
@@ -7,33 +6,112 @@
   <script src="./testUtils.js"></script>
 </head>
 <h1>Service worker test</h1>
+<div id="time" style="position:absolute; top:0;right:0;border:4px solid yellow"></div>
+<pre>ChromeDevTools:Application:ServiceWorkers::Update on reload always updates service worker on reload</pre>
 <script>
+
 initTestDivs();
 
 async function registerServiceWorker() {
-  if (!'serviceWorker' in navigator) {
-    console.warn("navigator.serviceWorker not found");
-    return Promise.reject("serviceWorker not supported");
-  }
-  try {
-    const registration = await navigator.serviceWorker.register("/serviceWorker.js", { scope: "/", });
-    if (registration) {
-      registration.addEventListener('updatefound', () => {
-        console.log('serviceWorker.updatefound');
-      });
-      if (registration.installing) {
-        console.log("client: Service worker installing");
-      } else if (registration.waiting) {
-        console.log("client: Service worker installed");
-      } else if (registration.active) {
-        console.log("client: Service worker active");
-      }
+  if (!'serviceWorker' in navigator)
+    throw `navigator.serviceWorker not found`;
+  return await navigator.serviceWorker.register("/serviceWorker.js", { scope: "/", });
+}
 
-    }
-  } catch (error) {
-    console.error(`Registration failed with ${error}`);
+function registrationStatusToString(registration) {
+  if (registration.installing)
+    return "installing";
+  else if (registration.waiting)
+    return "waiting";
+  else if (registration.active) 
+    return "active";
+};
+
+async function testRegisterServiceWorker() {
+  try {
+    navigator.serviceWorker.addEventListener('controllerchange', _ => {
+      log('event: controllerchange on navigator.serviceWorker ');
+      window.location.reload();
+    })
+    let registration = await registerServiceWorker();
+    log(`testRegisterServiceWorker successful sw status ${registrationStatusToString(registration)}`);
+    registration.addEventListener('updatefound', () => {
+      log('event: updatefound on registration');
+    });
+  } catch(err) {
+    error(`testRegisterServiceWorker ${err}`);
   }
 }
 
-registerServiceWorker();
+async function testMessagingServiceWorker() {
+  let resolve, reject;
+  let promise = new Promise((res, rej) => {
+    resolve = res;
+    reject = rej;
+  });
+  navigator.serviceWorker.onmessage = (event) => {
+    if (event.data && event.data.type === 'POKER_TEST_GETLOG_REPLY') {
+      log("message: receive POKER_TEST_GETLOG_REPLY");
+      log(event.data.log);
+      resolve("testMessagingServiceWorker done");
+    }
+  };
+  log("message: send POKER_TEST_GETLOG");
+  navigator.serviceWorker.controller.postMessage({
+    type: 'POKER_TEST_GETLOG',
+  });
+  return promise;
+}
+
+async function testListCache() {
+  let resolve, reject;
+  let promise = new Promise((res, rej) => {
+    resolve = res;
+    reject = rej;
+  });
+  navigator.serviceWorker.onmessage = (event) => {
+    if (event.data && event.data.type === 'POKER_TEST_LISTCACHE_REPLY') {
+      log("message: receive POKER_TEST_LISTCACHE_REPLY");
+      log(event.data.cacheList);
+      resolve("testListCache done");
+    }
+  };
+  log("message: send POKER_TEST_LISTCACHE");
+  navigator.serviceWorker.controller.postMessage({
+    type: 'POKER_TEST_LISTCACHE',
+  });
+  return promise;
+}
+
+async function testCacheDelete() {
+  log("testCacheDelete");
+  let resolve, reject;
+  let promise = new Promise((res, rej) => {
+    resolve = res;
+    reject = rej;
+  });
+  navigator.serviceWorker.onmessage = (event) => {
+    if (event.data && event.data.type === 'POKER_CLEAR_CACHE_REPLY') {
+      log("message: receive POKER_CLEAR_CACHE_REPLY");
+      if (event.data.error)
+        reject(event.data.error);
+      else 
+        resolve("testCacheDelete done");
+    }
+  };
+  navigator.serviceWorker.controller.postMessage({
+    type: 'POKER_CLEAR_CACHE',
+  });
+  return promise;
+}
+
+document.querySelector("#time").innerText = Date.now(); // Time notices reloads
+
+testRegisterServiceWorker()
+.then(testMessagingServiceWorker, error)
+.then(testListCache)
+.then(testCacheDelete)
+.then(testListCache)
+.then(log, error);
+
 </script>
