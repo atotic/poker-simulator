@@ -49,60 +49,85 @@ Clearing out buggy service workers: https://developer.chrome.com/docs/workbox/re
 https://whatwebcando.today/articles/handling-service-worker-updates/
 
 */
-
-/*
-Design of my first service worker:
-1) service worker will cache html/js/css so poker can work offline.
-  
-2) when service worker is updated, all clients should reload immediately. 
-  Data loss is limited to current game.
-
-Implementation: 
-navigator.serviceWorker is a ServiceWorkerContainer
-My design:
-- simplest design would not cache anything, but then it would not work offline.
-- 
+/* 
+ ServiceWorker strategy:
+ - precache resources, wipe out any old caches, skipWaiting
+ - claim all clients on activation
 */
 'use strict'
 
-let SW_LOG = "";
-
-let CACHE_NAME = "v1";
-let PRE_CACHED_RESOURCES = ["/", "index.html", "playing_card.css", "pokerEngine.js"];
+let PRE_CACHED_RESOURCES = ["/", "index.html", "playing_card.css", "pokerEngine.js", "favicon.ico"];
+let SW_VERSION = `PSW_${Math.floor(Math.random() * 10000000)}`;
+let CACHE_NAME = 'v1';
 
 async function precacheResources() {
-  const cache = await caches.open(CACHE_NAME);
+  await caches.delete(CACHE_NAME);  // Brute force, just deletes previous cache that might be live.
+  let cache = await caches.open(CACHE_NAME);
   // Cache all static resources.
   cache.addAll(PRE_CACHED_RESOURCES);
+}
+
+async function deleteOldCaches() {
+  caches.keys()
+  .then(keys => {
+    Promise.all(
+      keys.map(key => {
+        if (key != CACHE_NAME)
+          return caches.delete(key);
+      })
+    );
+  });
 }
 
 self.addEventListener("install", ev => {
   console.log("Service worker install in progress");
   self.skipWaiting(); // activates new service worker immediately
-  ev.waitUntil(precacheResources());
+  ev.waitUntil(
+    precacheResources());
 });
 
 self.addEventListener("activate", ev => {
-  // clear out stale caches here
-  console.log("Service worker activated");
+  clients.claim()
+    .then(deleteOldCaches);
+  console.log(`Service worker  ${SW_VERSION} activated`);
 });
 
+
+self.addEventListener("fetch", ev => {
+  // https://developer.chrome.com/docs/workbox/caching-strategies-overview
+  ev.respondWith(
+    caches.open(CACHE_NAME)
+      .then(async cache => {
+        return cache.match(ev.request.url);
+      })
+      .then(async response => {
+        if (response)
+          return response;
+        let url = new URL(ev.request.url);
+        if (!url.pathname.startsWith("/test"))
+          console.error(`Fetching in service worker ${ev.request.url}`);
+        return fetch(ev.request);
+      })
+  );
+});
+
+// Message events are only used for testing
 self.addEventListener("message", ev => {
   if (!ev.data)
     return;
   console.log("sw message", ev.data.type);
   switch (ev.data.type) {
-    case "POKER_TEST_GETLOG": {
+    case "POKER_TEST_GETVERSION": {
       ev.source.postMessage({
-        type: "POKER_TEST_GETLOG_REPLY",
-        log: SW_LOG
+        type: "POKER_TEST_GETVERSION_REPLY",
+        version: SW_VERSION
       });
     }
     break;
     case 'POKER_TEST_LISTCACHE': {
       caches.open(CACHE_NAME)
-        .then((cache) => cache.keys())
-        .then((requests) => {
+        .then(cache => cache.keys())
+        .then(requests => {
           let cacheList = [];
           for (let r of requests)
             cacheList.push(r.url.replace("http://", ""));
@@ -143,27 +168,5 @@ self.addEventListener("message", ev => {
     break;
     default:
       console.error("Unexpected sw message", ev.data.type);
-  }
-});
-
-
-self.addEventListener("fetch", ev => {
-  // https://developer.chrome.com/docs/workbox/caching-strategies-overview
-  // Network-first, copied from google
-  if (ev.request.mode === 'navigate') {
-    // Open the cache
-    ev.respondWith(caches.open(CACHE_NAME).then(async (cache) => {
-      // Go to the network first
-      return fetch(ev.request.url).then((fetchedResponse) => {
-        if (ev.request.url.match("test/") == null) // Do not put test files into the cache
-          cache.put(ev.request, fetchedResponse.clone());
-        return fetchedResponse;
-      }).catch(() => {
-        // If the network is unavailable, get
-        return cache.match(ev.request.url);
-      });
-    }));
-  } else {
-    return;
   }
 });

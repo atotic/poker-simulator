@@ -50,20 +50,22 @@ async function testMessagingServiceWorker() {
     reject = rej;
   });
   navigator.serviceWorker.onmessage = (event) => {
-    if (event.data && event.data.type === 'POKER_TEST_GETLOG_REPLY') {
-      log("message: receive POKER_TEST_GETLOG_REPLY");
-      log(event.data.log);
+    if (event.data && event.data.type === 'POKER_TEST_GETVERSION_REPLY') {
+      log("message: receive POKER_TEST_GETVERSION_REPLY");
+      log("response: " + event.data.version);
       resolve("testMessagingServiceWorker done");
     }
   };
-  log("message: send POKER_TEST_GETLOG");
+  log("message: send POKER_TEST_GETVERSION");
   navigator.serviceWorker.controller.postMessage({
-    type: 'POKER_TEST_GETLOG',
+    type: 'POKER_TEST_GETVERSION',
   });
   return promise;
 }
 
 async function testListCache() {
+  if (!navigator.serviceWorker.controller)
+    throw "No navigator.serviceWorker.controller";
   let resolve, reject;
   let promise = new Promise((res, rej) => {
     resolve = res;
@@ -71,7 +73,7 @@ async function testListCache() {
   });
   navigator.serviceWorker.onmessage = (event) => {
     if (event.data && event.data.type === 'POKER_TEST_LISTCACHE_REPLY') {
-      log("message: receive POKER_TEST_LISTCACHE_REPLY");
+      log("response: receive POKER_TEST_LISTCACHE_REPLY");
       log(event.data.cacheList);
       resolve("testListCache done");
     }
@@ -85,6 +87,8 @@ async function testListCache() {
 
 async function testCacheDelete() {
   log("testCacheDelete");
+  if (!navigator.serviceWorker.controller)
+    throw "No navigator.serviceWorker.controller";
   let resolve, reject;
   let promise = new Promise((res, rej) => {
     resolve = res;
