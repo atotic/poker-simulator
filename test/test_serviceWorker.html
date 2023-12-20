@@ -28,19 +28,16 @@ function registrationStatusToString(registration) {
 };
 
 async function testRegisterServiceWorker() {
-  try {
-    navigator.serviceWorker.addEventListener('controllerchange', _ => {
-      log('event: controllerchange on navigator.serviceWorker ');
-      window.location.reload();
-    })
-    let registration = await registerServiceWorker();
-    log(`testRegisterServiceWorker successful sw status ${registrationStatusToString(registration)}`);
-    registration.addEventListener('updatefound', () => {
-      log('event: updatefound on registration');
-    });
-  } catch(err) {
-    error(`testRegisterServiceWorker ${err}`);
-  }
+  navigator.serviceWorker.addEventListener('controllerchange', _ => {
+    log('event: controllerchange on navigator.serviceWorker ');
+  })
+  let registration = await registerServiceWorker();
+  log(`testRegisterServiceWorker successful sw status ${registrationStatusToString(registration)}`);
+  registration.addEventListener('updatefound', () => {
+    log('event: updatefound on registration');
+  });
+  await navigator.serviceWorker.ready;
+  navigator.serviceWorker.startMessages();
 }
 
 async function testMessagingServiceWorker() {
@@ -57,6 +54,10 @@ async function testMessagingServiceWorker() {
     }
   };
   log("message: send POKER_TEST_GETVERSION");
+  if (!navigator.serviceWorker.controller) {
+    reject("navigator.serviceWorker.controller is null");
+    return;
+  }
   navigator.serviceWorker.controller.postMessage({
     type: 'POKER_TEST_GETVERSION',
   });

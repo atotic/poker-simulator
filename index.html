@@ -3,6 +3,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="manifest" href="manifest.json">
+<link rel="apple-touch-startup-image" src="icons/512.png"/>
+<link rel="apple-touch-icon">
 <title>poker odds</title>
 <!--
 	Coding style:
@@ -25,6 +27,7 @@ https://flopturnriver.com/poker-strategy/basic-poker-odds-19146/
 		--hilo-button-size: 40px;
 		--deck-card-width: 50px;
 		--theme-back-color: #fee4d2;
+		--felt-green: #C9EED0;
 	}
 	* {
 		box-sizing:border-box;
@@ -109,7 +112,7 @@ https://flopturnriver.com/poker-strategy/basic-poker-odds-19146/
 		max-width:1280px;
 		height: 100%;
 		max-height: 800px;
-		background: #C9EED0;
+		background: var(--felt-green);
 		border: 32px solid #F6E6C2 ;
 		border-radius:72px;
 	}
@@ -139,7 +142,7 @@ https://flopturnriver.com/poker-strategy/basic-poker-odds-19146/
 	#suitPicker .wide {
 		display:none;
 	}
-	@media (min-width: 400px) {
+	@media (min-width: 440px) {
 		#suitPicker .wide {
 			display:inline-block;
 		}	
@@ -173,10 +176,54 @@ https://flopturnriver.com/poker-strategy/basic-poker-odds-19146/
 		grid-area: stats;
 		background: rgb(234 254 231);
 		min-width: 200px;
+		display:flex;
+		flex-direction: column;
 	}
 	.error {
 		border: 2px solid red;
 		color: rgb(212, 26, 26);
+	}
+	#simResults {
+		overflow: auto;
+		/* max-height: 100%; */
+		flex-grow: 1;
+		background: orange;
+	}
+	.statsTable {
+		border-collapse: collapse;
+		width:100%;
+	}
+	.statsTable td:nth-child(2), .statsTable td:nth-child(3), .statsTable td:nth-child(4) {
+		text-align:center;
+	}
+	.statsTable td:nth-child(2) {
+		background-color:rgb(207, 244, 202);
+	}
+	.statsTable td:nth-child(3) {
+		background-color:rgb(244, 206, 202);
+	}
+	.statsTable td:nth-child(4) {
+		background-color:rgb(125, 125, 125);
+	}
+	.statsTable colgroup:nth-child(2), 
+	.statsTable colgroup:nth-child(3), 
+	.statsTable colgroup:nth-child(4) {
+		width: 33%;
+	}
+	.statsDetails {
+		font-size: 11px;
+		font-family: sans-serif;
+	}
+	.red {
+		color: red;
+	}
+	.cardTextTile {
+		font-size:11px;
+		display:inline-block;
+		border: 0.5px solid gray;
+		border-radius: 3px;
+		background-color: white;
+		padding: 0 2px 0 2px;
 	}
 
 	@keyframes dropCancel {
@@ -313,6 +360,7 @@ https://flopturnriver.com/poker-strategy/basic-poker-odds-19146/
 	<div id="statsPanel">
 		<button onClick="UI.runSimulation()">Simulate</button>
 		<div class="error"></div>
+		<div id="simResults"></div>
 		<table class="hiStats">
 			<tr><td>Win</td><td class="hiWin stat"></td></tr>
 			<tr><td>Lose</td><td class="hiLose stat"></td></tr>
@@ -525,32 +573,38 @@ class PokerRunStats {
 	pokerEngine;
 	communityCards;
 	playerCards;
-
 	hi = { win: 0, lose: 0, draw: 0};
 	low = { win: 0, lose: 0, draw: 0, noLow: 0};
 	totalGames = 0;
+	winningHandStats = new Map();
+	losingHandStats = new Map();
+	drawHandStats = new Map();
 
 	constructor(pokerEngine, communityCards, playerCards) {
 		this.pokerEngine = pokerEngine;
 		this.communityCards = communityCards;
 		this.playerCards = playerCards;
-		this.winningHandStats = new Map();
-		this.losingHandStats = new Map();
 		for (let k of PokerEngine.HandRank.keys()) {
 			this.losingHandStats.set(k, 0);
 			this.winningHandStats.set(k, 0);
+			this.drawHandStats.set(k, 0);
 		}
 	}
 
 	recordGame(result) {
 		++this.totalGames;
 		if (result.highWinners.indexOf(0) == -1) {
-			++this.hi.lose;
+			// If player is not the winner
 			let t = result.bestHands[0].bestHighHand.type;
-			this.losingHandStats.set(t, this.winningHandStats.get(t) + 1);
+			this.losingHandStats.set(t, this.losingHandStats.get(t) + 1);
+			++this.hi.lose;
 		} else if (result.highWinners.length > 1) {
+			// There is more than one winner
+			let t = result.bestHands[0].bestHighHand.type;
+			this.drawHandStats.set(t, this.drawHandStats.get(t) + 1);
 			++this.hi.draw;
 		} else {
+			// Player is the only winner
 			let t = result.bestHands[0].bestHighHand.type;
 			this.winningHandStats.set(t, this.winningHandStats.get(t) + 1);
 			++this.hi.win;
@@ -568,8 +622,63 @@ class PokerRunStats {
 		}
 	}
 
-	asPercent(count) {
-		return `${Math.round((100*count / this.totalGames)).toFixed()}%`;
+	asPercent(count, hideZeros=true) {
+		let percent = Math.round((100*count / this.totalGames)).toFixed();
+		if (hideZeros && percent == 0)
+			return "";
+		return `${percent}`;
+	}
+
+	// returns HTML string
+	render() {
+		if (this.pokerEngine.scoring == 'highlow')
+			return this.renderHighLow();
+		let playerCardsHtml = UI.cardsToHtml(this.playerCards[0]);
+		let html = `
+<table class="statsTable">
+	<colgroup></colgroup>
+	<colgroup></colgroup>
+	<colgroup></colgroup>
+	<colgroup></colgroup>
+	<thead>
+		<tr>
+			<td>${playerCardsHtml}</td>
+			<td>win %</td>
+			<td>lose</td>
+			<td>draw</td>
+		</tr>
+		<tr>
+			<td></td>
+			<td>${this.asPercent(this.hi.win)}</td>
+			<td>${this.asPercent(this.hi.lose)}</td>
+			<td>${this.asPercent(this.hi.draw)}</td>
+		</tr>
+	</thead>
+	<tbody class="statsDetails">							
+`;
+		for (let k of PokerEngine.HandRank.keys()) {
+			let wins = this.winningHandStats.get(k);
+			let losses = this.losingHandStats.get(k);
+			let draws = this.drawHandStats.get(k);
+			let total = wins + losses + draws;
+			if (this.asPercent(total) == "")
+				continue;
+			html += `<tr>
+				<td>${k}</td>
+				<td>${this.asPercent(wins)}</td>
+				<td>${this.asPercent(losses)}</td>
+				<td>${this.asPercent(draws)}</td>
+			</tr>`;
+		}
+		html += `
+	</tbody>
+</table>
+`;
+		return html;
+	}
+
+	renderHighLow() {
+		return "<div>No high low yet</div>";
 	}
 }
 class DragDrop {
@@ -591,7 +700,7 @@ class DragDrop {
 				ev.preventDefault();
 		});
 	}
-		static handlePointerDown(ev) {
+	static handlePointerDown(ev) {
 		// console.log('pointerdown', ev);
 		// Because player-hands might overlap cards, need to search 
 		let dragSource = DragDrop.getDragSource(ev);
@@ -739,10 +848,11 @@ class UI {
 		UI.holeCardCountChanged();
 		UI.playersChanged();
 		UI.scoringChanged();
-		UI.setDeckSuit('♥')
+		UI.setDeckSuit('♥');
 		for (let d of document.querySelectorAll("#deckPanel playing-card"))
 			d.addEventListener("click", UI.deckClick);
 		DragDrop.initDragAndDrop();
+		UI.initServiceWorker();
 	}
 	static showError(msg) {
 		let errEl = document.querySelector("#statsPanel .error");
@@ -751,6 +861,17 @@ class UI {
 	}
 	static clearError() {
 		document.querySelector("#statsPanel .error").classList.add("hidden");
+	}
+	static async initServiceWorker() {
+		if (!'serviceWorker' in navigator) {
+			console.error(`navigator.serviceWorker not found`);
+			return;
+		}
+		navigator.serviceWorker.addEventListener('controllerchange', _ => {
+			log('event: controllerchange on navigator.serviceWorker ');
+			window.location.reload();
+		});
+		let registration = await navigator.serviceWorker.register("/serviceWorker.js", { scope: "/", });
 	}
 	static deckClick(ev) {
 		// Click on deck card adds card to last move destination
@@ -808,6 +929,36 @@ class UI {
 		UI.setDeckSuit(ev.currentTarget.innerText);
 	}
 	static suits = Array.from(PlayingCard.EmojiToSuit.keys());
+
+	static cardToHtml(c) {
+		if (!c)
+			throw `cardToHtml got an illegal card ${c}`;
+		let rank = c[0];
+		let suit = c[1];
+		if (rank == "T")
+			rank = "10";
+		switch(suit) {
+			case 'S': 
+				suit = "♠";
+				break;
+			case 'C':
+				suit = "♣";
+				break;
+			case 'H':
+				suit = "<span class='red'>♥</span>";
+				break;
+			case 'D':
+				suit = "<span class='red'>♦</span>";
+				break;
+		}
+		return `<div class='cardTextTile'>${rank}${suit}</div>`;
+	}
+
+	static cardsToHtml(cardsArray) {
+		if (!cardsArray)
+			return "<div class='cardTextTile'>? ?</div>";
+		return cardsArray.map( c => UI.cardToHtml(c)).join('');
+	}
 
 	static setDeckSuit(suit) {
 		for (let c of document.querySelectorAll("#deckPanel > playing-card")) {
@@ -982,6 +1133,14 @@ class UI {
 			document.querySelector(".lowStats").classList.add("hidden");
 			return;
 		}
+		if (pokerRunStats) {
+			let statsHtml = pokerRunStats.render();
+			let d = document.createElement("div");
+			d.innerHTML = statsHtml;
+			let target = document.querySelector("#simResults");
+			//target.innerHTML = "";
+			target.prepend(d);
+		}
 		document.querySelector(".hiStats").classList.remove("hidden");
 		document.querySelector(".hiStats .hiWin").innerText = pokerRunStats.asPercent(pokerRunStats.hi.win);
 		document.querySelector(".hiStats .hiDraw").innerText = pokerRunStats.asPercent(pokerRunStats.hi.draw);
@@ -1024,8 +1183,8 @@ class UI {
 			scoring: UI.model.scoring
 		});
 		window.setTimeout( _ => {
-			let count = 5000;
-			let stats = new PokerRunStats(engine);
+			let count = 5000;			let stats = new PokerRunStats(engine, UI.model.communityCards, UI.model.playerCards);
+
 			let start = Date.now();
 			try {
 			for (let i = 0; i < count; i++) {
