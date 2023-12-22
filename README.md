@@ -3,6 +3,7 @@
 CURRENT
 
 TODO
+	- save stats to db
 	- stats
 	  - pre-flop full stats
 		- vs stats

@@ -36,7 +36,7 @@ https://flopturnriver.com/poker-strategy/basic-poker-odds-19146/
 		margin: 0;
 		padding: 0;
 	 	min-height: 100vh;/* if body scrolls, can't do drag'n'drop on mobile */
-		height: 100vh;
+		/* height: 100vh; */
   	overflow: hidden;
 		user-select: none;
 	}
@@ -192,23 +192,49 @@ https://flopturnriver.com/poker-strategy/basic-poker-odds-19146/
 	.statsTable {
 		border-collapse: collapse;
 		width:100%;
+		font-family:monospace;
 	}
-	.statsTable td:nth-child(2), .statsTable td:nth-child(3), .statsTable td:nth-child(4) {
+	.statsTable td {
+		padding: 1px 2px 1px 2px;
+	}
+
+	.statsTable td:nth-child(2),
+	.statsTable td:nth-child(3), 
+	.statsTable td:nth-child(4),
+	.statsTable thead tr:nth-child(2) td:nth-child(1) {
 		text-align:center;
 	}
-	.statsTable td:nth-child(2) {
-		background-color:rgb(207, 244, 202);
+	.statsTable thead tr:nth-child(1) td:nth-child(4) {
+		font-size:xx-small;
 	}
-	.statsTable td:nth-child(3) {
-		background-color:rgb(244, 206, 202);
+
+	.statsTable thead tr:nth-child(1) td:nth-child(1) {
+		vertical-align:top;
 	}
-	.statsTable td:nth-child(4) {
-		background-color:rgb(125, 125, 125);
+	/* .statsTable hr {
+		border: 0;
+		height: 0;
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+	} */
+	.statsTable thead tr {
+		vertical-align: bottom;
+	}
+	.statsTable colgroup:nth-child(2) {
+		background-color:#e2f8df;
+	}
+	.statsTable colgroup:nth-child(3) {
+		background-color:#ffeeec;
+	}
+	.statsTable colgroup:nth-child(4) {
+		background-color:#eee;
 	}
 	.statsTable colgroup:nth-child(2), 
-	.statsTable colgroup:nth-child(3), 
+	.statsTable colgroup:nth-child(3) {
+		width:35%;
+	}
 	.statsTable colgroup:nth-child(4) {
-		width: 33%;
+		width: 25%;
 	}
 	.statsDetails {
 		font-size: 11px;
@@ -364,12 +390,12 @@ https://flopturnriver.com/poker-strategy/basic-poker-odds-19146/
 		<table class="hiStats">
 			<tr><td>Win</td><td class="hiWin stat"></td></tr>
 			<tr><td>Lose</td><td class="hiLose stat"></td></tr>
-			<tr><td>Draw</td><td class="hiDraw stat"></td></tr>
+			<tr><td>Split</td><td class="hiSplit stat"></td></tr>
 		</table>
 		<table class="lowStats">
 			<tr><td>Win</td><td class="lowWin stat"></td></tr>
 			<tr><td>Lose</td><td class="lowLose stat"></td></tr>
-			<tr><td>Draw</td><td class="lowDraw stat"></td></tr>
+			<tr><td>Split</td><td class="lowSplit stat"></td></tr>
 			<tr><td>No low</td><td class="lowNone stat"></td></tr>
 		</table>
 	</div>
@@ -573,12 +599,36 @@ class PokerRunStats {
 	pokerEngine;
 	communityCards;
 	playerCards;
-	hi = { win: 0, lose: 0, draw: 0};
-	low = { win: 0, lose: 0, draw: 0, noLow: 0};
+	hi = { win: 0, lose: 0, split: 0};
+	low = { win: 0, lose: 0, split: 0, noLow: 0};
 	totalGames = 0;
 	winningHandStats = new Map();
 	losingHandStats = new Map();
-	drawHandStats = new Map();
+	splitHandStats = new Map();
+
+	static fromJson(json){
+		let o = JSON.parse(json, (key, value) => {
+  		if(typeof value === 'object' && value !== null) {
+    		if (value.dataType === 'Map') {
+      		return new Map(value.value);
+    		}
+  		}
+  		return value;
+		});
+		return Object.assign(new PokerRunStats(), o);
+	}
+	
+	// https://stackoverflow.com/questions/29085197/how-do-you-json-stringify-an-es6-map
+	toJson() {
+		return JSON.stringify(this, (key, value) => {
+			if(value instanceof Map)
+    		return {
+      		dataType: 'Map',
+      		value: Array.from(value.entries()), // or with spread: value: [...value]
+    		};
+    	return value;
+		});
+	}
 
 	constructor(pokerEngine, communityCards, playerCards) {
 		this.pokerEngine = pokerEngine;
@@ -587,7 +637,7 @@ class PokerRunStats {
 		for (let k of PokerEngine.HandRank.keys()) {
 			this.losingHandStats.set(k, 0);
 			this.winningHandStats.set(k, 0);
-			this.drawHandStats.set(k, 0);
+			this.splitHandStats.set(k, 0);
 		}
 	}
 
@@ -601,8 +651,8 @@ class PokerRunStats {
 		} else if (result.highWinners.length > 1) {
 			// There is more than one winner
 			let t = result.bestHands[0].bestHighHand.type;
-			this.drawHandStats.set(t, this.drawHandStats.get(t) + 1);
-			++this.hi.draw;
+			this.splitHandStats.set(t, this.splitHandStats.get(t) + 1);
+			++this.hi.split;
 		} else {
 			// Player is the only winner
 			let t = result.bestHands[0].bestHighHand.type;
@@ -615,7 +665,7 @@ class PokerRunStats {
 			} else if (result.lowWinners.indexOf(0) == -1) {
 				++this.low.lose;
 			} else if (result.lowWinners.length > 1) {
-				++this.low.draw;
+				++this.low.split;
 			} else {
 				++this.low.win;
 			}
@@ -633,25 +683,32 @@ class PokerRunStats {
 	render() {
 		if (this.pokerEngine.scoring == 'highlow')
 			return this.renderHighLow();
-		let playerCardsHtml = UI.cardsToHtml(this.playerCards[0]);
+		let EMPTY_CARDS_HTML = "<div class='cardTextTile'>?</div>";
+		let playerCards = Array.from(this.playerCards[0] || []);
+		while (playerCards.length < this.pokerEngine.holeCardCount) {
+			playerCards.push("??");
+		}
+		let playerCardsHtml = UI.cardsToHtml(playerCards) || EMPTY_CARDS_HTML;
+		let communityCardsHtml = UI.cardsToHtml(this.communityCards);
+		if (communityCardsHtml != "")
+			communityCardsHtml = "<br>" + communityCardsHtml;
 		let html = `
 <table class="statsTable">
 	<colgroup></colgroup>
-	<colgroup></colgroup>
+  <colgroup></colgroup>
 	<colgroup></colgroup>
 	<colgroup></colgroup>
 	<thead>
 		<tr>
-			<td>${playerCardsHtml}</td>
+			<td rowspan="2">${playerCardsHtml}${communityCardsHtml}</td>
 			<td>win %</td>
 			<td>lose</td>
-			<td>draw</td>
+			<td>split</td>
 		</tr>
 		<tr>
-			<td></td>
 			<td>${this.asPercent(this.hi.win)}</td>
 			<td>${this.asPercent(this.hi.lose)}</td>
-			<td>${this.asPercent(this.hi.draw)}</td>
+			<td>${this.asPercent(this.hi.split)}</td>
 		</tr>
 	</thead>
 	<tbody class="statsDetails">							
@@ -659,15 +716,15 @@ class PokerRunStats {
 		for (let k of PokerEngine.HandRank.keys()) {
 			let wins = this.winningHandStats.get(k);
 			let losses = this.losingHandStats.get(k);
-			let draws = this.drawHandStats.get(k);
-			let total = wins + losses + draws;
+			let splits = this.splitHandStats.get(k);
+			let total = wins + losses + splits;
 			if (this.asPercent(total) == "")
 				continue;
 			html += `<tr>
 				<td>${k}</td>
 				<td>${this.asPercent(wins)}</td>
 				<td>${this.asPercent(losses)}</td>
-				<td>${this.asPercent(draws)}</td>
+				<td>${this.asPercent(splits)}</td>
 			</tr>`;
 		}
 		html += `
@@ -681,6 +738,43 @@ class PokerRunStats {
 		return "<div>No high low yet</div>";
 	}
 }
+
+class PokerStorage {
+	static STAT_PREFIX = "STAT_";
+	static NEXT_STAT_SAVE_INDEX = 1;
+	// returns an array of PokerRunStats
+	static loadStats() {
+		let stats = [];
+		for (let i=0; i<window.localStorage.length; ++i) {
+			let key = window.localStorage.key(i);
+			if (!key.startsWith(PokerStorage.STAT_PREFIX))
+				continue;
+			try {
+				// Update next 
+				let match = key.match(/STAT_(\d+)/);
+				if (match) {
+					let x = parseInt(match[1]);
+					if (x != NaN && x >= PokerStorage.NEXT_STAT_SAVE_INDEX)
+						PokerStorage.NEXT_STAT_SAVE_INDEX = x+1;
+				}
+				stats.push(PokerRunStats.fromJson(window.localStorage.getItem(key)));
+			} catch(e) {
+				console.error(`Error decoding Json ${key}`);
+			}
+		}
+		// TODO: Eliminate duplicates?
+		return stats.reverse();
+	}
+
+	static savePokerRunStat(stat) {
+		let key = PokerStorage.STAT_PREFIX + PokerStorage.NEXT_STAT_SAVE_INDEX;
+		while (window.localStorage.getItem(key)) {
+			key = PokerStorage.STAT_PREFIX + ++PokerStorage.NEXT_STAT_SAVE_INDEX;
+		}
+		window.localStorage.setItem(key, stat.toJson());
+	}
+}
+
 class DragDrop {
 	static dragSource;	// element
 	static dragStartX;
@@ -853,6 +947,9 @@ class UI {
 			d.addEventListener("click", UI.deckClick);
 		DragDrop.initDragAndDrop();
 		UI.initServiceWorker();
+		for (let s of PokerStorage.loadStats()) {
+			UI.syncUIToStats(s);
+		}
 	}
 	static showError(msg) {
 		let errEl = document.querySelector("#statsPanel .error");
@@ -949,6 +1046,9 @@ class UI {
 				break;
 			case 'D':
 				suit = "<span class='red'>♦</span>";
+				break;
+			default:
+				suit = '?';
 				break;
 		}
 		return `<div class='cardTextTile'>${rank}${suit}</div>`;
@@ -1143,14 +1243,14 @@ class UI {
 		}
 		document.querySelector(".hiStats").classList.remove("hidden");
 		document.querySelector(".hiStats .hiWin").innerText = pokerRunStats.asPercent(pokerRunStats.hi.win);
-		document.querySelector(".hiStats .hiDraw").innerText = pokerRunStats.asPercent(pokerRunStats.hi.draw);
+		document.querySelector(".hiStats .hiSplit").innerText = pokerRunStats.asPercent(pokerRunStats.hi.split);
 		document.querySelector(".hiStats .hiLose").innerText = pokerRunStats.asPercent(pokerRunStats.hi.lose);
 		if (pokerRunStats.pokerEngine.scoring == 'high')
 			document.querySelector(".lowStats").classList.add("hidden");
 		else {
 			document.querySelector(".lowStats").classList.remove("hidden");
 			document.querySelector(".lowStats .lowWin").innerText = pokerRunStats.asPercent(pokerRunStats.low.win);
-			document.querySelector(".lowStats .lowDraw").innerText = pokerRunStats.asPercent(pokerRunStats.low.draw);
+			document.querySelector(".lowStats .lowSplit").innerText = pokerRunStats.asPercent(pokerRunStats.low.split);
 			document.querySelector(".lowStats .lowLose").innerText = pokerRunStats.asPercent(pokerRunStats.low.lose);
 			document.querySelector(".lowStats .lowNone").innerText = pokerRunStats.asPercent(pokerRunStats.low.noLow);
 		}
@@ -1200,6 +1300,7 @@ class UI {
 			let gameTime = elapsed / count;
 			console.log(`${count} games took ${elapsed}ms; ${gameTime}ms per game`);
 			UI.syncUIToStats(stats);
+			PokerStorage.savePokerRunStat(stats);
 		}, 0);
 
 	}
