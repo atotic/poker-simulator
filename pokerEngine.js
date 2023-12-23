@@ -899,7 +899,8 @@ var PokerEngine = (function () {
 			return {
 				bestHands: bestHands, // [ best hand for each player ]
 				highWinners: highWinners, // [ indexes of players who won high hand ]
-				lowWinners: lowWinners  // [ indexes of players who won low hand ]
+				lowWinners: lowWinners,  // [ indexes of players who won low hand ]
+				communityCards: allCommunityCards
 			}
 		}
 	}
