@@ -3,11 +3,11 @@
 CURRENT
 
 TODO
-	- save stats to db
+	- stats loading. Initialize UI from stats
+	  there is no place where we currently store stats in memory
 	- stats
 	  - pre-flop full stats
 		- vs stats
-		- highlow: how do we display: sweep
 	- better layout (iPhone curvature)
 	- installable from github pages
 	- typescript usage
@@ -22,6 +22,7 @@ TODO
 	- prompt user to install offline if they use app offline
 		https://stackoverflow.com/questions/51160348/pwa-how-to-programmatically-trigger-add-to-homescreen-on-ios-safari
 DONE
+	22-Dec stats for high low
 	11-Dec-23 installed on iPhone simulator
  		- https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps/Guides/Making_PWAs_installable
 		- run server as https: done, but with incorrect certificate authority

@@ -56,7 +56,7 @@ https://whatwebcando.today/articles/handling-service-worker-updates/
 */
 'use strict'
 
-let PRE_CACHED_RESOURCES = ["/", "index.html", "playing_card.css", "pokerEngine.js", "favicon.ico"];
+let PRE_CACHED_RESOURCES = ["/", "index.html", "playing_card.css", "pokerEngine.js", "favicon.ico", "icons/512.png"];
 let SW_VERSION = `PSW_${Math.floor(Math.random() * 10000000)}`;
 let CACHE_NAME = 'v1';
 
@@ -89,9 +89,10 @@ self.addEventListener("install", ev => {
 self.addEventListener("activate", ev => {
   clients.claim()
     .then(deleteOldCaches);
-  console.log(`Service worker  ${SW_VERSION} activated`);
+  console.log(`Service worker  ${CACHE_NAME} ${SW_VERSION} activated`);
 });
 
+let NOT_CACHED = ["/manifest.json"];
 
 self.addEventListener("fetch", ev => {
   // https://developer.chrome.com/docs/workbox/caching-strategies-overview
@@ -104,8 +105,17 @@ self.addEventListener("fetch", ev => {
         if (response)
           return response;
         let url = new URL(ev.request.url);
-        if (!url.pathname.startsWith("/test"))
-          console.error(`Fetching in service worker ${ev.request.url}`);
+        if (!url.pathname.startsWith("/test")) {
+          let should_be_cached = true;
+          for (let path of NOT_CACHED) {
+            if (url.pathname == path) {
+              should_be_cached = false;
+              break;
+            }
+          }
+          if (should_be_cached)
+            console.error(`Fetching in service worker ${ev.request.url}`);
+        }
         return fetch(ev.request);
       })
   );

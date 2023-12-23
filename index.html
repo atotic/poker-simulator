@@ -199,6 +199,7 @@ https://flopturnriver.com/poker-strategy/basic-poker-odds-19146/
 		font-family:monospace;
 		margin-bottom: 8px;
 		border-bottom: 1px solid #ddd;
+		user-select: text;
 	}
 	
 	.statsTable td {
@@ -579,11 +580,11 @@ class UIModel {
 // Odds testing:
 // https://homes.luddy.indiana.edu/kapadia/nofoldem/10_wins.stats
 class PokerRunStats {
-	pokerEngine;
 	holeCardCount;
 	holeCardRules;
 	playerCount;
 	scoring;
+
 	communityCards;
 	playerCards;
 	hi = { win: 0, lose: 0, split: 0};
@@ -599,6 +600,8 @@ class PokerRunStats {
 	winningHandStats = new Map();
 	losingHandStats = new Map();
 	splitHandStats = new Map();
+
+	dbId = Math.random().toString(36).slice(2, 7);
 
 	static fromJson(json){
 		let o = JSON.parse(json, (key, value) => {
@@ -625,7 +628,10 @@ class PokerRunStats {
 	}
 
 	constructor(pokerEngine, communityCards, playerCards) {
-		this.pokerEngine = pokerEngine;
+		if (pokerEngine) {
+			for (let p of ["holeCardCount", "holeCardRules", "playerCount", "scoring" ])
+				this[p] = pokerEngine[p];
+		}
 		this.communityCards = communityCards;
 		this.playerCards = playerCards;
 		for (let k of PokerEngine.HandRank.keys()) {
@@ -660,7 +666,7 @@ class PokerRunStats {
 			++this.hi.win;
 			didWinHigh = true;
 		}
-		if (this.pokerEngine.scoring == "highlow") {
+		if (this.scoring == "highlow") {
 			let hasLow = result.lowWinners && result.lowWinners.length > 0;
 			let didWinLow = false;
 			let didLoseLow = false;
@@ -709,7 +715,7 @@ class PokerRunStats {
 
 	getPlayerCommunityCardsAsHtml() {
 		let EMPTY_CARDS_HTML = "<div class='cardTextTile'>?</div>";
-		let playerCards = this.fillCardsToCount(this.playerCards[0], this.pokerEngine.holeCardCount);
+		let playerCards = this.fillCardsToCount(this.playerCards[0], this.holeCardCount);
 		let playerCardsHtml = UI.cardsToHtml(playerCards) || PokerRunStats.EMPTY_CARDS_HTML;
 		let communityCardsHtml = UI.cardsToHtml(this.communityCards);
 		if (communityCardsHtml != "")
@@ -719,7 +725,7 @@ class PokerRunStats {
 
 	// returns HTML string
 	render() {
-		if (this.pokerEngine.scoring == 'highlow')
+		if (this.scoring == 'highlow')
 			return this.renderHighLow();
 		let html = `
 <table class="statsTable statsHigh">
@@ -729,7 +735,7 @@ class PokerRunStats {
 	<colgroup class="statsSplit" style="width:25%"></colgroup>
 	<thead>
 		<tr>
-			<th rowspan="2">${this.getPlayerCommunityCardsAsHtml()}</th>
+			<th rowspan="2" onclick="javascript:UI.showStatsHand('${this.dbId}')">${this.getPlayerCommunityCardsAsHtml()}</th>
 			<td class="emoji">👍<span class="x-small">%</span></td>
 			<td class="emoji">👎</td>
 			<td class="emoji">😐</td>
@@ -772,7 +778,7 @@ class PokerRunStats {
 	<colgroup span=1 class="statsLose"></colgroup>
 	<thead>
 		<tr>
-			<th rowspan="3">${this.getPlayerCommunityCardsAsHtml()}</th>
+			<th rowspan="3" onclick="javascript:UI.showStatsHand('${this.dbId}')">${this.getPlayerCommunityCardsAsHtml()}</th>
 			<td class="emoji" colspan="3">👍<span class="x-small">%</span></td>
 			<td class="emoji" colspan="2">😐</td>
 			<td class="emoji">👎</td>
@@ -807,6 +813,8 @@ class PokerRunStats {
 class PokerStorage {
 	static STAT_PREFIX = "STAT_";
 	static NEXT_STAT_SAVE_INDEX = 1;
+
+	static runStatsList = []; // List of current PokerRunStats
 	// returns an array of PokerRunStats
 	static loadStats() {
 		let stats = [];
@@ -844,6 +852,7 @@ class PokerStorage {
 				return 1;
 			return 0;
 		});
+		PokerStorage.runStatsList = stats;
 		return stats;
 	}
 
@@ -853,6 +862,14 @@ class PokerStorage {
 			key = PokerStorage.STAT_PREFIX + ++PokerStorage.NEXT_STAT_SAVE_INDEX;
 		}
 		window.localStorage.setItem(key, stat.toJson());
+		PokerStorage.runStatsList.push(stat);
+	}
+
+	static getStat(statId) {
+		for (let s of PokerStorage.runStatsList) {
+			if (s.dbId == statId)
+				return s;
+		}
 	}
 }
 
@@ -1045,8 +1062,8 @@ class UI {
 			return;
 		}
 		navigator.serviceWorker.addEventListener('controllerchange', _ => {
-			log('event: controllerchange on navigator.serviceWorker ');
-			window.location.reload();
+			console.log('event: controllerchange on navigator.serviceWorker ');
+			// window.location.reload();
 		});
 		let registration = await navigator.serviceWorker.register("/serviceWorker.js", { scope: "/", });
 	}
@@ -1168,6 +1185,7 @@ class UI {
 		}
 		UI.syncUIToModel();
 	}
+
 	static cardAddressFromElement(el) {
 		// address is one of:
 		// { location: 'deck'; value: pokerEngineCardValue }
@@ -1257,13 +1275,19 @@ class UI {
 		}
 		UI.syncUIToModel();
 	}
+
 	static syncUIToModel() {
 		UI.clearError();
 
 		// Sync toolbar
 		document.querySelector("#playerCount").value = UI.model.playerCount;
 		document.querySelector("#holeCardCount").value = UI.model.holeCardCount;
-		document.querySelector("#hiloCheckbox").value = UI.model.scoring;
+		let hiloCheckbox = document.querySelector("#hiloCheckbox");
+		hiloCheckbox.value = UI.model.scoring;
+		if (UI.model.scoring == "highlow")
+			hiloCheckbox.classList.add("checked");
+		else
+			hiloCheckbox.classList.remove("checked");
 
 		// Only show hands in play, with correct number of hole cards
 		let i = 1;
@@ -1324,6 +1348,20 @@ class UI {
 			//target.innerHTML = "";
 			target.prepend(d);
 		}
+	}
+	
+	static showStatsHand(statsId) {
+		let stats = PokerStorage.getStat(statsId);
+		if (!stats)
+			console.error("Could not show stats ", statsId);
+		for (let p of ["playerCount","holeCardCount", "scoring", "holeCardRules"]) {
+			if (stats[p] === undefined)
+				console.error("Stats missing property", p);
+			UI.model[p] = stats[p];
+		}
+		UI.model.playerCards = Array.from(stats.playerCards);
+		UI.model.communityCards = Array.from(stats.communityCards)
+		UI.syncUIToModel();
 	}
 
 	static runSimulation() {
