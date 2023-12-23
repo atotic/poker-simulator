@@ -59,7 +59,7 @@ https://flopturnriver.com/poker-strategy/basic-poker-odds-19146/
 			"table"
 			"deck"
 			"stats";
-		height:100%;
+		height:100vh;
 		max-height: 1050px;
 	}
 	@media (min-width: 780px) {
@@ -217,12 +217,6 @@ https://flopturnriver.com/poker-strategy/basic-poker-odds-19146/
 	.statsTable thead tr:nth-child(1) th:nth-child(1) {
 		vertical-align:top;
 	}
-	/* .statsTable hr {
-		border: 0;
-		height: 0;
-    border-top: 1px solid rgba(0, 0, 0, 0.1);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.3);
-	} */
 	.statsTable thead tr {
 		vertical-align: bottom;
 	}
@@ -599,7 +593,12 @@ class PokerRunStats {
 	communityCards;
 	playerCards;
 	hi = { win: 0, lose: 0, split: 0};
-	low = { win: 0, lose: 0, split: 0, noLow: 0};
+	low = { 
+		winAll: 0, winOnlyHigh: 0, winOnlyLow: 0,
+		splitLow: 0,
+		splitHigh: 0,
+		lose: 0
+	};
 	totalGames = 0;
 	winningHandStats = new Map();
 	losingHandStats = new Map();
@@ -801,10 +800,13 @@ class PokerStorage {
 				let match = key.match(/STAT_(\d+)/);
 				let keyIndex = 0;
 				if (match) {
-					console.log(key);
 					keyIndex = parseInt(match[1]);
 					if (keyIndex != NaN && keyIndex >= PokerStorage.NEXT_STAT_SAVE_INDEX)
 						PokerStorage.NEXT_STAT_SAVE_INDEX = keyIndex+1;
+				} 
+				else {
+					console.error("could not parse key", key);
+					continue;
 				}
 				let stat = PokerRunStats.fromJson(window.localStorage.getItem(key));
 				statToKeyMap.set(stat, keyIndex);
@@ -1037,13 +1039,17 @@ class UI {
 				dest = {
 					location: 'player',
 					playerIndex: UI.lastDestination.playerIndex,
-					cardIndex: Math.min(UI.lastDestination.cardIndex + 1, UI.model.holeCardCount - 1)
+					cardIndex: UI.lastDestination.cardIndex + 1
 				}
+				if (dest.cardIndex > UI.model.holeCardCount - 1)
+					dest.cardIndex = 0;
 			} else if (UI.lastDestination.location == 'community') {
 				dest = {
 					location: 'community',
-					cardIndex: Math.min(UI.lastDestination.cardIndex+1, 4)
+					cardIndex: UI.lastDestination.cardIndex+1
 				}
+				if (dest.cardIndex > 4)
+					dest.cardIndex = 0;
 			}
 		}
 		if (!dest) {
@@ -1087,7 +1093,7 @@ class UI {
 	static suits = Array.from(PlayingCard.EmojiToSuit.keys());
 
 	static cardToHtml(c) {
-		if (!c)
+		if (!c || c.length < 2)
 			throw `cardToHtml got an illegal card ${c}`;
 		let rank = c[0];
 		let suit = c[1];
@@ -1293,9 +1299,9 @@ class UI {
 			return;
 		}
 		if (pokerRunStats) {
-			let statsHtml = pokerRunStats.render();
 			let d = document.createElement("div");
-			d.innerHTML = statsHtml;
+			d.classList.add("statsDiv");
+			d.innerHTML = pokerRunStats.render();
 			let target = document.querySelector("#simResults");
 			//target.innerHTML = "";
 			target.prepend(d);
@@ -1352,6 +1358,9 @@ class UI {
 		UI.model.reset();
 		UI.lastDestination = undefined;
 		UI.syncUIToModel();
+		window.localStorage.clear();
+		for (let el of document.querySelectorAll(".statsDiv"))
+			el.remove();
 	}
 }
 
