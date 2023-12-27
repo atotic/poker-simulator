@@ -586,15 +586,15 @@ class UIModel {
 		}
 		this.playerCards[playerIndex].splice(ci, 1);
 	}
-	updateFromRunStats(stats) {
+	updateFromSimStat(stat) {
 		for (let p of ["playerCount","holeCardCount", "scoring", "holeCardRules"]) {
-			if (stats[p] === undefined)
+			if (stat[p] === undefined)
 				console.error("Stats missing property", p);
-			this[p] = stats[p];
+			this[p] = stat[p];
 		}
-		// playerCards array is 2-deep
-		this.playerCards = Array.from(stats.playerCards).map( a => Array.from(a));
-		this.communityCards = Array.from(stats.communityCards)
+		// playerCards array is 2-deep, need deeper clone
+		this.playerCards = Array.from(stat.playerCards).map( a => Array.from(a));
+		this.communityCards = Array.from(stat.communityCards)
 	}
 }
 
@@ -1122,7 +1122,7 @@ class UI {
 		DragDrop.initDragAndDrop();
 		UI.initServiceWorker();
 		for (let s of PokerStorage.loadStats()) {
-			UI.showRunStats(s);
+			UI.showSimStat(s);
 		}
 	}
 	static showError(msg) {
@@ -1412,15 +1412,15 @@ class UI {
 		}
 	}
 
-	static showRunStats(pokerRunStats) {
-		if (!pokerRunStats) {
+	static showSimStat(simStat) {
+		if (!simStat) {
 			console.error("syncUIToStats has no stats")
 			return;
 		}
-		if (pokerRunStats) {
+		if (simStat) {
 			let d = document.createElement("div");
 			d.classList.add("statsDiv");
-			d.innerHTML = pokerRunStats.render();
+			d.innerHTML = simStat.render();
 			let target = document.querySelector("#simResults");
 			//target.innerHTML = "";
 			target.prepend(d);
@@ -1433,7 +1433,7 @@ class UI {
 			console.error("Could not show stats ", statsId);
 			return;
 		}
-		UI.model.updateFromRunStats(stats);
+		UI.model.updateFromSimStat(stats);
 		UI.syncUIToModel();
 	}
 
@@ -1464,7 +1464,7 @@ class UI {
 			let elapsed = Date.now() - start;
 			let gameTime = elapsed / count;
 			console.log(`${count} games took ${elapsed}ms; ${gameTime}ms per game`);
-			UI.showRunStats(stats);
+			UI.showSimStat(stats);
 			PokerStorage.saveSimStat(stats);
 		}, 0);
 
