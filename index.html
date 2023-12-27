@@ -890,8 +890,9 @@ class PokerStorage {
 	static STAT_PREFIX = "STAT_";
 	static NEXT_STAT_SAVE_INDEX = 1;
 
-	static runStatsList = []; // List of current PokerRunStats
-	// returns an array of PokerRunStats
+	static simStatList = []; // List of current SimStats
+
+	// returns an array of SimStats
 	static loadStats() {
 		let stats = [];
 		let statToKeyMap = new Map();	// Used to sort entries by key
@@ -928,21 +929,21 @@ class PokerStorage {
 				return 1;
 			return 0;
 		});
-		PokerStorage.runStatsList = stats;
+		PokerStorage.simStatList = stats;
 		return stats;
 	}
 
-	static savePokerRunStat(stat) {
+	static saveSimStat(stat) {
 		let key = PokerStorage.STAT_PREFIX + PokerStorage.NEXT_STAT_SAVE_INDEX;
 		while (window.localStorage.getItem(key)) {
 			key = PokerStorage.STAT_PREFIX + ++PokerStorage.NEXT_STAT_SAVE_INDEX;
 		}
 		window.localStorage.setItem(key, stat.toJson());
-		PokerStorage.runStatsList.push(stat);
+		PokerStorage.simStatList.push(stat);
 	}
 
 	static getStat(statId) {
-		for (let s of PokerStorage.runStatsList) {
+		for (let s of PokerStorage.simStatList) {
 			if (s.dbId == statId)
 				return s;
 		}
@@ -1464,7 +1465,7 @@ class UI {
 			let gameTime = elapsed / count;
 			console.log(`${count} games took ${elapsed}ms; ${gameTime}ms per game`);
 			UI.showRunStats(stats);
-			PokerStorage.savePokerRunStat(stats);
+			PokerStorage.saveSimStat(stats);
 		}, 0);
 
 	}
