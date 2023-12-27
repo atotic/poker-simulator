@@ -616,8 +616,10 @@ class PlayerStats {
 	losingHandStats = new Map();
 	splitHandStats = new Map();
 
-	constructor(player) {
+	constructor(player, scoring) {
 		this.player = player;
+		this.scoring = scoring;
+
 		for (let k of PokerEngine.HandRank.keys()) {
 			this.losingHandStats.set(k, 0);
 			this.winningHandStats.set(k, 0);
@@ -687,7 +689,7 @@ class PlayerStats {
 }
 // Odds testing:
 // https://homes.luddy.indiana.edu/kapadia/nofoldem/10_wins.stats
-class PokerRunStats {
+class SimStats {
 	// Hand rules
 	holeCardCount;
 	holeCardRules;
@@ -713,7 +715,7 @@ class PokerRunStats {
   		}
   		return value;
 		});
-		return Object.assign(new PokerRunStats(), o);
+		return Object.assign(new SimStats(), o);
 	}
 	
 	// https://stackoverflow.com/questions/29085197/how-do-you-json-stringify-an-es6-map
@@ -740,11 +742,11 @@ class PokerRunStats {
 		this.vsMode = vsMode;
 		this.playerStats = new Array(this.playerCount);
 		let activePlayers = [0];
-		this.playerStats[0] = new PlayerStats(0);
+		this.playerStats[0] = new PlayerStats(0, this.scoring);
 		if (this.vsMode) {
 			for (let i=1; i<playerCards.length; ++i) {
 				if (playerCards[i].length > 0)
-					playerStats[i] = new PlayerStats(i);
+					playerStats[i] = new PlayerStats(i, this.scoring);
 			}
 		}
 	}
@@ -777,7 +779,7 @@ class PokerRunStats {
 	getPlayerCommunityCardsAsHtml() {
 		let EMPTY_CARDS_HTML = "<div class='cardTextTile'>?</div>";
 		let playerCards = this.fillCardsToCount(this.playerCards[0], this.holeCardCount);
-		let playerCardsHtml = UI.cardsToHtml(playerCards) || PokerRunStats.EMPTY_CARDS_HTML;
+		let playerCardsHtml = UI.cardsToHtml(playerCards) || SimStats.EMPTY_CARDS_HTML;
 		let communityCardsHtml = UI.cardsToHtml(this.communityCards);
 		if (communityCardsHtml != "")
 			communityCardsHtml = "<br>" + communityCardsHtml;
@@ -910,7 +912,7 @@ class PokerStorage {
 					console.error("could not parse key", key);
 					continue;
 				}
-				let stat = PokerRunStats.fromJson(window.localStorage.getItem(key));
+				let stat = SimStats.fromJson(window.localStorage.getItem(key));
 				statToKeyMap.set(stat, keyIndex);
 				stats.push(stat);
 			} catch(e) {
@@ -1445,7 +1447,7 @@ class UI {
 			scoring: UI.model.scoring
 		});
 		window.setTimeout( _ => {
-			let count = 5000;			let stats = new PokerRunStats(engine, UI.model.communityCards, UI.model.playerCards);
+			let count = 5000;			let stats = new SimStats(engine, UI.model.communityCards, UI.model.playerCards);
 
 			let start = Date.now();
 			try {

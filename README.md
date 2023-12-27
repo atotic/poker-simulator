@@ -1,13 +1,10 @@
 # poker-simulator
 
-CURRENT
+You can 
 
 TODO
-	- stats
-	- better hilow stats:
-		instead of scoop, give me win percentage
-	  - pre-flop full stats
-		- vs stats
+	- vs mode: 
+		- when we 
 	- better layout (iPhone curvature)
 	- installable from github pages
 	- typescript usage
