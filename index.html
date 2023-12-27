@@ -598,6 +598,93 @@ class UIModel {
 	}
 }
 
+class PlayerStats {
+	player;
+	// accumulated statistics
+	hi = { win: 0, lose: 0, split: 0};
+	low = { 
+		winTotal: 0,	// How much money made after splits, etc. Ex: winning only high is 0.5 win.
+		winAll:  0, 
+		winOnlyHigh: 0, 
+		winOnlyLow: 0,
+		splitLow: 0,
+		splitHigh: 0,
+		lose: 0
+	};
+
+	winningHandStats = new Map();
+	losingHandStats = new Map();
+	splitHandStats = new Map();
+
+	constructor(player) {
+		this.player = player;
+		for (let k of PokerEngine.HandRank.keys()) {
+			this.losingHandStats.set(k, 0);
+			this.winningHandStats.set(k, 0);
+			this.splitHandStats.set(k, 0);
+		}
+	}
+
+	recordGame(game) {
+		let didWinHigh = false;
+		let didLoseHigh = false;
+		let didSplitHigh = false;
+		if (game.highWinners.indexOf(this.player) == -1) {
+			// If player is not the winner
+			let t = game.bestHands[0].bestHighHand.type;
+			this.losingHandStats.set(t, this.losingHandStats.get(t) + 1);
+			++this.hi.lose;
+			didLoseHigh = true;
+		} else if (game.highWinners.length > 1) {
+			// There is more than one winner
+			let t = game.bestHands[0].bestHighHand.type;
+			this.splitHandStats.set(t, this.splitHandStats.get(t) + 1);
+			++this.hi.split;
+			didSplitHigh = true;
+			didWinHigh = true;
+		} else {
+			// Player is the only winner
+			let t = game.bestHands[0].bestHighHand.type;
+			this.winningHandStats.set(t, this.winningHandStats.get(t) + 1);
+			++this.hi.win;
+			didWinHigh = true;
+		}
+		if (this.scoring == "highlow") {
+			let hasLow = game.lowWinners && game.lowWinners.length > 0;
+			let didWinLow = false;
+			let didLoseLow = false;
+			let didSplitLow = false;
+			if (hasLow) {
+				if(game.lowWinners.indexOf(0) == -1) {
+					didLoseLow = true;
+				} else if (game.lowWinners.length > 1) {
+					didSplitLow = true;
+					didWinLow = true;
+				} else {
+					didWinLow = true;
+				}
+			}
+			let winHighWorth = (hasLow ? 0.5 : 1) * 1/game.highWinners.length;
+			let winLowWorth = (hasLow ? 0.5 : 0) * 1 / game.lowWinners.length;
+			let myWinWorth = (didWinLow ? winLowWorth : 0) + (didWinHigh ? winHighWorth : 0);
+			if (myWinWorth)
+				console.log(myWinWorth);
+			this.low.winTotal += (didWinLow ? winLowWorth : 0) + (didWinHigh ? winHighWorth : 0);
+			if (didWinHigh && (didWinLow || !hasLow))
+				this.low.winAll++;
+			if (didWinHigh && (hasLow && !didWinLow))
+				this.low.winOnlyHigh++;
+			if (didWinLow && !didWinHigh)
+				this.low.winOnlyLow++;
+			if (didSplitHigh)
+				this.low.splitHigh++;
+			if (didSplitLow)
+				this.low.splitLow++;
+			if (!didWinHigh && (!hasLow || !didWinLow))
+				this.low.lose++;
+		}
+	}
+}
 // Odds testing:
 // https://homes.luddy.indiana.edu/kapadia/nofoldem/10_wins.stats
 class PokerRunStats {
@@ -611,25 +698,9 @@ class PokerRunStats {
 	communityCards;
 	playerCards;
 
+	playerStats = [];
 	vsMode = false;
-
-	// accumulated statistics
-	hi = { win: 0, lose: 0, split: 0};
-	low = { 
-		winTotal: 0,	// How much money made after splits, etc. Ex: winning only high is 0.5 win.
-		winAll:  0, 
-		winOnlyHigh: 0, 
-		winOnlyLow: 0,
-		splitLow: 0,
-		splitHigh: 0,
-		lose: 0
-	};
-	vs;	// vs mode stats
-
 	totalGames = 0;
-	winningHandStats = new Map();
-	losingHandStats = new Map();
-	splitHandStats = new Map();
 
 	dbId = Math.random().toString(36).slice(2, 7);
 
@@ -657,6 +728,8 @@ class PokerRunStats {
 		});
 	}
 
+	// in vsMode, stats are collected for all players whose cards
+	// are already assigned.
 	constructor(pokerEngine, communityCards, playerCards, vsMode = false) {
 		if (pokerEngine) {
 			for (let p of ["holeCardCount", "holeCardRules", "playerCount", "scoring" ])
@@ -665,71 +738,22 @@ class PokerRunStats {
 		this.communityCards = communityCards;
 		this.playerCards = playerCards;
 		this.vsMode = vsMode;
-		for (let k of PokerEngine.HandRank.keys()) {
-			this.losingHandStats.set(k, 0);
-			this.winningHandStats.set(k, 0);
-			this.splitHandStats.set(k, 0);
+		this.playerStats = new Array(this.playerCount);
+		let activePlayers = [0];
+		this.playerStats[0] = new PlayerStats(0);
+		if (this.vsMode) {
+			for (let i=1; i<playerCards.length; ++i) {
+				if (playerCards[i].length > 0)
+					playerStats[i] = new PlayerStats(i);
+			}
 		}
 	}
 
-	recordGame(result) {
+	recordGame(game) {
 		++this.totalGames;
-		let didWinHigh = false;
-		let didLoseHigh = false;
-		let didSplitHigh = false;
-		if (result.highWinners.indexOf(0) == -1) {
-			// If player is not the winner
-			let t = result.bestHands[0].bestHighHand.type;
-			this.losingHandStats.set(t, this.losingHandStats.get(t) + 1);
-			++this.hi.lose;
-			didLoseHigh = true;
-		} else if (result.highWinners.length > 1) {
-			// There is more than one winner
-			let t = result.bestHands[0].bestHighHand.type;
-			this.splitHandStats.set(t, this.splitHandStats.get(t) + 1);
-			++this.hi.split;
-			didSplitHigh = true;
-			didWinHigh = true;
-		} else {
-			// Player is the only winner
-			let t = result.bestHands[0].bestHighHand.type;
-			this.winningHandStats.set(t, this.winningHandStats.get(t) + 1);
-			++this.hi.win;
-			didWinHigh = true;
-		}
-		if (this.scoring == "highlow") {
-			let hasLow = result.lowWinners && result.lowWinners.length > 0;
-			let didWinLow = false;
-			let didLoseLow = false;
-			let didSplitLow = false;
-			if (hasLow) {
-				if(result.lowWinners.indexOf(0) == -1) {
-					didLoseLow = true;
-				} else if (result.lowWinners.length > 1) {
-					didSplitLow = true;
-					didWinLow = true;
-				} else {
-					didWinLow = true;
-				}
-			}
-			let winHighWorth = (hasLow ? 0.5 : 1) * 1/result.highWinners.length;
-			let winLowWorth = (hasLow ? 0.5 : 0) * 1 / result.lowWinners.length;
-			let myWinWorth = (didWinLow ? winLowWorth : 0) + (didWinHigh ? winHighWorth : 0);
-			if (myWinWorth)
-				console.log(myWinWorth);
-			this.low.winTotal += (didWinLow ? winLowWorth : 0) + (didWinHigh ? winHighWorth : 0);
-			if (didWinHigh && (didWinLow || !hasLow))
-				this.low.winAll++;
-			if (didWinHigh && (hasLow && !didWinLow))
-				this.low.winOnlyHigh++;
-			if (didWinLow && !didWinHigh)
-				this.low.winOnlyLow++;
-			if (didSplitHigh)
-				this.low.splitHigh++;
-			if (didSplitLow)
-				this.low.splitLow++;
-			if (!didWinHigh && (!hasLow || !didWinLow))
-				this.low.lose++;
+		for (let s of this.playerStats) {
+			if (s)
+				s.recordGame(game);
 		}
 	}
 
@@ -787,17 +811,17 @@ class PokerRunStats {
 			<td class="emoji">😐</td>
 		</tr>
 		<tr>
-			<td>${this.asPercent(this.hi.win)}</td>
-			<td>${this.asPercent(this.hi.lose)}</td>
-			<td>${this.asPercent(this.hi.split)}</td>
+			<td>${this.asPercent(this.playerStats[0].hi.win)}</td>
+			<td>${this.asPercent(this.playerStats[0].hi.lose)}</td>
+			<td>${this.asPercent(this.playerStats[0].hi.split)}</td>
 		</tr>
 	</thead>
 	<tbody class="statsDetails">							
 `;
 		for (let k of PokerEngine.HandRank.keys()) {
-			let wins = this.winningHandStats.get(k);
-			let losses = this.losingHandStats.get(k);
-			let splits = this.splitHandStats.get(k);
+			let wins = this.playerStats[0].winningHandStats.get(k);
+			let losses = this.playerStats[0].losingHandStats.get(k);
+			let splits = this.playerStats[0].splitHandStats.get(k);
 			let total = wins + losses + splits;
 			if (this.asPercent(total) == "")
 				continue;
@@ -841,13 +865,13 @@ class PokerRunStats {
 			<td>all</td>
 		</tr>
 		<tr>
-			<td>${this.asPercent(this.low.winTotal)}</td>
-			<td>${this.asPercent(this.low.winAll)}</td>
-			<td>${this.asPercent(this.low.winOnlyHigh)}</td>
-			<td>${this.asPercent(this.low.winOnlyLow)}</td>
-			<td>${this.asPercent(this.low.splitHigh)}</td>
-			<td>${this.asPercent(this.low.splitLow)}</td>
-			<td>${this.asPercent(this.low.lose)}</td>
+			<td>${this.asPercent(this.playerStats[0].low.winTotal)}</td>
+			<td>${this.asPercent(this.playerStats[0].low.winAll)}</td>
+			<td>${this.asPercent(this.playerStats[0].low.winOnlyHigh)}</td>
+			<td>${this.asPercent(this.playerStats[0].low.winOnlyLow)}</td>
+			<td>${this.asPercent(this.playerStats[0].low.splitHigh)}</td>
+			<td>${this.asPercent(this.playerStats[0].low.splitLow)}</td>
+			<td>${this.asPercent(this.playerStats[0].low.lose)}</td>
 		</tr>
 	</thead>
 	<tbody class="statsDetails">							
