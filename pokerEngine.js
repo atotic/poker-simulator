@@ -802,8 +802,6 @@ var PokerEngine = (function () {
 			return { type: 'highCard', cards: cards }
 		}
 
-		logBestHands(bestHands) {
-		}
 		// playerCards are cards for all players string[][]
 		playGame(allPlayerCards = [[]], communityCards = []) {
 			if (allPlayerCards.length > 0 && allPlayerCards[0].length > 0
@@ -880,9 +878,6 @@ var PokerEngine = (function () {
 			let highWinners = [];
 			while (i < bestHands.length && PokerEngine.compareHighHands(winningHighHand, bestHands[i].bestHighHand) == 0)
 				highWinners.push(bestHands[i++].player);
-			if (highWinners.indexOf(0) != -1) {
-				this.logBestHands(bestHands);
-			}
 			// Find low winners
 			let lowWinners = [];
 			if (this.scoring == 'highlow') {
