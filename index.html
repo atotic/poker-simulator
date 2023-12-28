@@ -253,7 +253,12 @@ Now defunct simulator manual http://propokertools.com/oracle_help/main
 	.statsDetails {
 		font-size: 11px;
 		font-family: sans-serif;
+		border-top: 1px solid #ddd;
 	}
+	.statsDetails tr:nth-child(odd) {
+ 	 background-color: rgba(220,220,220,0.5);
+	}
+
 	.red {
 		color: red;
 	}
@@ -927,9 +932,22 @@ class SimStats {
 		html += `<td>${this.asPercent(wins)}${splitStr}</td>`;
 	}
 	html += `</tr>
-		</thead>`;
-	
-	html += `
+		</thead><tbody class="statsDetails">`;
+	for (let k of PokerEngine.HandRank.keys()) {
+		let self = this;
+		let hasValue = this.activePlayers.filter( p => {
+			return self.asPercent(self.playerStats[p].winningHandStats.get(k)) != "";
+		});
+		if (hasValue.length == 0)
+			continue;
+		html += `<tr><th>${k}</th>`;
+		for (let p of this.activePlayers) {
+			let wins = this.playerStats[p].winningHandStats.get(k);
+			html += `<td>${this.asPercent(wins)}</td>`;
+		}
+		html += "</tr>";
+	}
+	html += `</tbody>
 	</table>`;
 	return html;
 	}
