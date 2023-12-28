@@ -670,7 +670,7 @@ class PlayerStats {
 			let didLoseLow = false;
 			let didSplitLow = false;
 			if (hasLow) {
-				if(game.lowWinners.indexOf(0) == -1) {
+				if(game.lowWinners.indexOf(this.player) == -1) {
 					didLoseLow = true;
 				} else if (game.lowWinners.length > 1) {
 					didSplitLow = true;
@@ -713,7 +713,7 @@ class SimStats {
 	communityCards;
 	playerCards;
 
-	playerStats = [];
+	playerStats = []; // An array of PlayerStats
 	vsMode = false;
 	totalGames = 0;
 
@@ -721,17 +721,14 @@ class SimStats {
 
 	static fromJson(json){
 		let o = JSON.parse(json, (key, value) => {
-			try {
-				if(typeof value === 'object' && value !== null) {
-					if (value.dataType === 'Map') {
-						return new Map(value.value);
-					}
+			if(typeof value === 'object' && value !== null) {
+				if (value.dataType === 'Map') {
+					return new Map(value.value);
 				}
-				return value;
-			} catch (e) {
-				debugger;
 			}
+			return value;
 		});
+		// Caution: this.playerStats is 
 		return Object.assign(new SimStats(), o);
 	}
 	
