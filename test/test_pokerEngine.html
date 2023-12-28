@@ -219,6 +219,15 @@ function testEliminateDuplicateRank() {
   assert_equal(a.length, 3, "eliminate multiples")
   assert_equal(JSON.stringify(dupes), '["2S","AC","AD","KC"]', "returned correct duplicates");
 }
+
+function testPlayGameVsMode() {
+  log("testPlayGameVsMode");
+  let simResult = mostEngine.playGame([["AH", "AS"]], []);
+  simResult = mostEngine.playGame([["AH", "AS"]], [], [0]);
+  assert_equal(simResult.bestHands[1].bestHighHand, undefined,
+    "inactive players do not get best hands");
+}
+
 function testPerformance() {
   log("testPerformance");
   let start = Date.now();
@@ -247,6 +256,7 @@ testCompareHands();
 testLowHand();
 testEliminateDuplicateRank();
 testPerformance();
+testPlayGameVsMode();
 log("Done!");
 
 

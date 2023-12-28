@@ -4,7 +4,12 @@ You can
 
 TODO
 	- vs mode: 
-		- when we 
+		1) pokerEngine vsMode
+		2) simulate in vsMode
+		3) display results in vsMode
+
+		- play in vs mode
+		- display stats
 	- better layout (iPhone curvature)
 	- installable from github pages
 	- typescript usage
@@ -19,7 +24,7 @@ TODO
 	- prompt user to install offline if they use app offline
 		https://stackoverflow.com/questions/51160348/pwa-how-to-programmatically-trigger-add-to-homescreen-on-ios-safari
 DONE
-	22-Dec-23 stats loading. Initialize UI from stats
+	22-Dec-23 stats loading. Initialize UI from stats. Save stats list
 	22-Dec stats for high low
 	11-Dec-23 installed on iPhone simulator
  		- https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps/Guides/Making_PWAs_installable
@@ -46,3 +51,12 @@ DONE
 
 References
 	manifest.json https://w3c.github.io/manifest/#display-member
+
+Dr. Raluca Dinu    
+For: 7,090,878 Witheld: 667,885
+
+Dr. Mariya Pylypiv 
+For: 6,830,013 Witheld: 928,750
+
+James Greene 
+For: 7,593,789 Witheld: 164,974

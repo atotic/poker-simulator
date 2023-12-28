@@ -746,7 +746,7 @@ class SimStats {
 		if (this.vsMode) {
 			for (let i=1; i<playerCards.length; ++i) {
 				if (playerCards[i].length > 0)
-					playerStats[i] = new PlayerStats(i, this.scoring);
+					this.playerStats[i] = new PlayerStats(i, this.scoring);
 			}
 		}
 	}
@@ -792,11 +792,15 @@ class SimStats {
 		else
 			return `<div class='playerCountStats'>${this.playerCount}👤</div>`;
 	}
-
-	// returns HTML string
+	
 	render() {
-		if (this.scoring == 'highlow')
-			return this.renderHighLow();
+		if (this.vsMode) {
+			return this.scoring == 'highlow' ? this.renderVsHighLow() : this.renderVsHigh();
+		}
+		return this.scoring == 'highlow' ? this.renderHighLow() : this.renderHigh();
+	}
+	// returns HTML string
+	renderHigh() {
 		let html = `
 <table class="statsTable statsHigh">
 	<colgroup></colgroup>
@@ -882,6 +886,20 @@ class SimStats {
 	</tbody>
 </table>
 `;
+	return html;
+	}
+
+	renderVsHigh() {
+		let html = `
+<table class="statsTable statsHighLow"><td>renderVsHigh not implemented yet</td></table>
+	`;
+	return html;
+	}
+
+	renderVsHighLow() {
+		let html = `
+<table class="statsTable statsHighLow"><td>renderVsHighLow not implemented yet</td></table>
+	`;
 	return html;
 	}
 }
@@ -1276,7 +1294,8 @@ class UI {
 				value: el.valueAsString()
 			};
 		if (el.classList.contains("community")) {
-			let communityIndex = Array.from(document.querySelectorAll("#tableTop playing-card")).indexOf(el);
+			let communityIndex = Array.from(
+				document.querySelectorAll("#tableTop playing-card")).indexOf(el);
 			if (communityIndex == -1)
 				throw `Could not find community card index ${el}`;
 			return {
@@ -1448,14 +1467,28 @@ class UI {
 			scoring: UI.model.scoring
 		});
 		window.setTimeout( _ => {
-			let count = 5000;			let stats = new SimStats(engine, UI.model.communityCards, UI.model.playerCards);
-
-			let start = Date.now();
-			try {
-			for (let i = 0; i < count; i++) {
-				let results = engine.playGame(UI.model.playerCards, UI.model.communityCards);
-				stats.recordGame(results);
+			let count = 5000;
+			let activePlayers = [];
+			for (let i=0; i<UI.model.playerCards.length; ++i) {
+				if (UI.model.playerCards[i] && UI.model.playerCards[i].length > 0)
+					activePlayers.push(i);
 			}
+			if (activePlayers.length > 0 && activePlayers.indexOf(0) == -1)
+				activePlayers.unshift(0);
+			// score all players if only active player is 0
+			if (activePlayers.length < 2)
+				activePlayers = [];
+
+			let stats = new SimStats(
+				engine, UI.model.communityCards, UI.model.playerCards, activePlayers.length > 0);
+			let start = Date.now();
+		
+			try {
+				for (let i = 0; i < count; i++) {
+					let results = engine.playGame(
+						UI.model.playerCards, UI.model.communityCards, activePlayers);
+					stats.recordGame(results);
+				}
 			} catch(err) {
 				UI.showError(err);
 				console.error(err);

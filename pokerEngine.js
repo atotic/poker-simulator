@@ -103,6 +103,14 @@ var PokerEngine = (function () {
 		}
 
 		static compareHighHands(a, b) {
+			if (a === undefined) {
+				if (b === undefined)
+					return 0;
+				else
+					return -1;
+			} else if (b === undefined) {
+				return 1;
+			}
 			let aHandRank = PokerEngine.HandRank.get(a.type);
 			let bHandRank = PokerEngine.HandRank.get(b.type);
 			if (aHandRank< bHandRank)
@@ -803,7 +811,9 @@ var PokerEngine = (function () {
 		}
 
 		// playerCards are cards for all players string[][]
-		playGame(allPlayerCards = [[]], communityCards = []) {
+		playGame(allPlayerCards = [[]], communityCards = [], activePlayers=[]) {
+			if (!Array.isArray(activePlayers))
+				throw `activePlayers must be an array of player indexes. ${activePlayers}`;
 			if (allPlayerCards.length > 0 && allPlayerCards[0].length > 0
 				&& typeof allPlayerCards[0] == 'string') {
 				// if we just passed in first player cards.
@@ -865,6 +875,12 @@ var PokerEngine = (function () {
 				}
 				if (this.scoring == 'highlow') {
 					score.bestLowHand = this.scoreLowHand(allCommunityCards, allHoleCards[i]);
+				}
+				if (activePlayers.length > 0 && activePlayers.indexOf(i) == -1) {
+					// Inactive players do not count
+					// console.log("kicked off inactive player");
+					score.bestHighHand = undefined;
+					score.bestLowHand = undefined;
 				}
 				bestHands.push(score);
 			}
