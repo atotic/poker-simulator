@@ -5,114 +5,24 @@
   <link rel="stylesheet" href="../playing_card.css">
 </head>
 <style>
-  body {
-  }
+ 
 </style>
 <body>
-<table>
-  <thead>
-    <tr>
-      <td></td>
-      <td>win</td>
-      <td>lose</td>
-      <td>draw</td>
-    </tr>
-    <tr>
-      <td></td>
-      <td>10%</td>
-      <td>90%</td>
-      <td>1%</td>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>high card</td>
-      <td>1%</td>
-      <td>1%</td>
-      <td></td>
-    </tr>
-    <tr>
-      <td>pair</td>
-      <td>1%</td>
-      <td>1%</td>
-      <td></td>
-    </tr>
-    <tr>
-      <td>two pair</td>
-      <td>1%</td>
-      <td>1%</td>
-      <td></td>
-    </tr>
-    <tr>
-      <td>trips</td>
-      <td>1%</td>
-      <td>1%</td>
-      <td></td>
-    </tr>
-    <tr>
-      <td>straight</td>
-      <td>1%</td>
-      <td>1%</td>
-      <td></td>
-    </tr>
-    <tr>
-      <td>flush</td>
-      <td>1%</td>
-      <td>1%</td>
-      <td></td>
-    </tr>
-    <tr>
-      <td>full house</td>
-      <td>1%</td>
-      <td>1%</td>
-      <td></td>
-    </tr>
-    <tr>
-      <td>quads</td>
-      <td>1%</td>
-      <td>1%</td>
-      <td></td>
-    </tr>
-    <tr>
-      <td>straight flush</td>
-      <td>1%</td>
-      <td>1%</td>
-      <td></td>
-    </tr>
-  </tbody>
-</table>
+<div id="target" style="width:200px;height:200px;background: green">
+click me</div>
 <script>
 
 'use strict'
 
-function makeTimeoutPromise(name, whatElse) {
-  // console.log(`makeTimeoutPromise ${name}`);
-  return new Promise((resolve, reject) => {
-    let interval =50 + Math.floor(Math.random() * 50);
-    window.setTimeout(() => {
-        resolve(`${name} ${interval} ${whatElse}`);
-      }, interval);
-  });
+function preventAll(ev) {
+  ev.stopImmediatePropagation();
+  ev.preventDefault();
+  console.log(ev.type, Date.now());
 }
-
-async function asyncFuncGood(name) {
-  console.log(name);
-}
-function log(msg, moreMsg) {
-  console.log(msg, moreMsg);
-  return "did log";
-}
-function errLog(msg, moreMsg) {
-  console.error(msg, moreMsg);
-  return "did errLog";
-}
-
-async function throwMe(name) {
-  await makeTimeoutPromise("first");
-  throw `throwMe error ${name}`;
-  return `throwMe returned ${name}`;
-}
-
-throwMe("YABBA").then(log, errLog);
-
+let t = document.querySelector("#target");
+t.addEventListener("mousedown",preventAll,{ passive: false });
+t.addEventListener("mouseup",preventAll,{ passive: false });
+t.addEventListener("pointerdown",preventAll,{ passive: false });
+t.addEventListener("pointerup",preventAll,{ passive: false });
+t.addEventListener("click", ev => console.log("click", Date.now()));
 </script>

@@ -754,8 +754,8 @@ class SimStats {
 			for (let p of ["holeCardCount", "holeCardRules", "playerCount", "scoring" ])
 				this[p] = pokerEngine[p];
 		}
-		this.communityCards = communityCards;
-		this.playerCards = playerCards;
+		this.communityCards = Array.from(communityCards || []);
+		this.playerCards = Array.from(playerCards || []);
 		this.playerStats = new Array(this.playerCount);
 		this.activePlayers = Array.from(activePlayers || []);
 		this.vsMode = this.activePlayers.length > 1;
@@ -1033,7 +1033,6 @@ class DragDrop {
 	static dropTargetOldRank;
 
 	static initDragAndDrop() {
-
 		document.body.addEventListener('pointerdown', DragDrop.handlePointerDown);
 		document.body.addEventListener('pointerup', DragDrop.handlePointerUp);
 		document.body.addEventListener('pointerleave', DragDrop.handlePointerLeave);
@@ -1108,6 +1107,18 @@ class DragDrop {
 		if (!DragDrop.dragSource)
 			return;
 		DragDrop.dragSource.classList.remove("isDragged");
+		// Workaround for bug with drag'n'drop and click handling
+		// Dragged card will also receive a click event because
+		// there was a mousedown+mouseup on it.
+		// There is no way to prevent 'click' from firing.
+		// Therefore, click handler must ignore click if
+		// element was just dragged.
+		// We signal that element was dragged by setting "wasDragged" class
+		if (DragDrop.dropTarget) {
+			DragDrop.dragSource.classList.add("wasDragged");
+			let dragSource = DragDrop.dragSource;
+			window.setTimeout(_ => dragSource.classList.remove("wasDragged"), 0);
+		}
 		if (DragDrop.dropTarget) {
 			UI.moveCardFromElements(DragDrop.dragSource, DragDrop.dropTarget);
 			DragDrop.dropTarget = null;
@@ -1191,9 +1202,10 @@ class UI {
 		UI.playersChanged();
 		UI.scoringChanged();
 		UI.setDeckSuit('♥');
+		
+		DragDrop.initDragAndDrop();
 		for (let d of document.querySelectorAll("#deckPanel playing-card"))
 			d.addEventListener("click", UI.deckClick);
-		DragDrop.initDragAndDrop();
 		UI.initServiceWorker();
 		for (let s of PokerStorage.loadStats()) {
 			UI.showSimStat(s);
@@ -1219,6 +1231,9 @@ class UI {
 		let registration = await navigator.serviceWorker.register("/serviceWorker.js", { scope: "/", });
 	}
 	static deckClick(ev) {
+		// if card was just dragged, ignore the click
+		if (ev.target.classList.contains("wasDragged"))
+			return;
 		// Click on deck card adds card to last move destination
 		let dest;
 		if (UI.lastDestination) {

@@ -10,6 +10,8 @@ TODO
 
 		- play in vs mode
 		- display stats
+	- drag to delete stat
+	- drag to reorder stat
 	- better layout (iPhone curvature)
 	- installable from github pages
 	- typescript usage
@@ -51,12 +53,3 @@ DONE
 
 References
 	manifest.json https://w3c.github.io/manifest/#display-member
-
-Dr. Raluca Dinu    
-For: 7,090,878 Witheld: 667,885
-
-Dr. Mariya Pylypiv 
-For: 6,830,013 Witheld: 928,750
-
-James Greene 
-For: 7,593,789 Witheld: 164,974
