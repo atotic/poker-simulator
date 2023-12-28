@@ -204,6 +204,7 @@ Now defunct simulator manual http://propokertools.com/oracle_help/main
 		font-family:monospace;
 		margin-bottom: 8px;
 		border-bottom: 1px solid #ddd;
+		border-top: 1px solid #ddd;
 		user-select: text;
 	}
 	
@@ -232,6 +233,13 @@ Now defunct simulator manual http://propokertools.com/oracle_help/main
 	}
 	.statsTable thead tr {
 		vertical-align: bottom;
+	}
+	.statsTable .vsMarquee {
+		border: 1px solid #ddd;;
+	}
+	.statsTable.vsTable td {
+		border-left: 1px solid #ddd;
+		border-right: 1px solid #ddd;		
 	}
 	.statsWin {
 		background-color:#e2f8df;
@@ -708,12 +716,16 @@ class SimStats {
 
 	static fromJson(json){
 		let o = JSON.parse(json, (key, value) => {
-  		if(typeof value === 'object' && value !== null) {
-    		if (value.dataType === 'Map') {
-      		return new Map(value.value);
-    		}
-  		}
-  		return value;
+			try {
+				if(typeof value === 'object' && value !== null) {
+					if (value.dataType === 'Map') {
+						return new Map(value.value);
+					}
+				}
+				return value;
+			} catch (e) {
+				debugger;
+			}
 		});
 		return Object.assign(new SimStats(), o);
 	}
@@ -732,22 +744,20 @@ class SimStats {
 
 	// in vsMode, stats are collected for all players whose cards
 	// are already assigned.
-	constructor(pokerEngine, communityCards, playerCards, vsMode = false) {
+	constructor(pokerEngine, communityCards, playerCards, activePlayers) {
 		if (pokerEngine) {
 			for (let p of ["holeCardCount", "holeCardRules", "playerCount", "scoring" ])
 				this[p] = pokerEngine[p];
 		}
 		this.communityCards = communityCards;
 		this.playerCards = playerCards;
-		this.vsMode = vsMode;
 		this.playerStats = new Array(this.playerCount);
-		let activePlayers = [0];
+		this.activePlayers = Array.from(activePlayers || []);
+		this.vsMode = this.activePlayers.length > 1;
 		this.playerStats[0] = new PlayerStats(0, this.scoring);
 		if (this.vsMode) {
-			for (let i=1; i<playerCards.length; ++i) {
-				if (playerCards[i].length > 0)
-					this.playerStats[i] = new PlayerStats(i, this.scoring);
-			}
+			for (let p of this.activePlayers)
+				this.playerStats[p] = new PlayerStats(p, this.scoring);
 		}
 	}
 
@@ -802,7 +812,7 @@ class SimStats {
 	// returns HTML string
 	renderHigh() {
 		let html = `
-<table class="statsTable statsHigh">
+<table class="statsTable">
 	<colgroup></colgroup>
   <colgroup class="statsWin" style="width:35%"></colgroup>
 	<colgroup class="statsLose" style="width:35%"></colgroup>
@@ -847,7 +857,7 @@ class SimStats {
 
 	renderHighLow() {
 		let html = `
-<table class="statsTable statsHighLow">
+<table class="statsTable">
 	<colgroup></colgroup>
   <colgroup span=4 class="statsWin"></colgroup>
 	<colgroup span=2 class="statsSplit"></colgroup>
@@ -891,14 +901,42 @@ class SimStats {
 
 	renderVsHigh() {
 		let html = `
-<table class="statsTable statsHighLow"><td>renderVsHigh not implemented yet</td></table>
+<table class="statsTable vsTable">
+	<thead>
+		<tr>
+			<th class="vsMarquee" rowspan="2" onclick="javascript:UI.showStatsHand('${this.dbId}')">
+				vs<br>${UI.cardsToHtml(this.communityCards)}
+				${this.renderPlayerCount()}</th>
 	`;
+	// 1st row are each player's cards
+	for (let p of this.activePlayers) {
+		html += "<td>";
+		let splitStr = this.asPercent(this.playerStats[p].hi.split) == "" ? "" : "/split";
+		let playerCards = this.fillCardsToCount(this.playerCards[p], this.holeCardCount);
+		html += UI.cardsToHtml(playerCards) || SimStats.EMPTY_CARDS_HTML;
+		html += `<br>win${splitStr}`;
+		html += "</td>";
+	}
+	html += "</tr><tr>";
+	// 2nd row are player's win percentages
+	for (let p of this.activePlayers) {
+		let wins = this.playerStats[p].hi.win;
+		let splitStr = this.asPercent(this.playerStats[p].hi.split);
+		if (splitStr != "")
+			splitStr = "/" + splitStr;
+		html += `<td>${this.asPercent(wins)}${splitStr}</td>`;
+	}
+	html += `</tr>
+		</thead>`;
+	
+	html += `
+	</table>`;
 	return html;
 	}
 
 	renderVsHighLow() {
 		let html = `
-<table class="statsTable statsHighLow"><td>renderVsHighLow not implemented yet</td></table>
+<table class="statsTable"><td>renderVsHighLow not implemented yet</td></table>
 	`;
 	return html;
 	}
@@ -1480,7 +1518,7 @@ class UI {
 				activePlayers = [];
 
 			let stats = new SimStats(
-				engine, UI.model.communityCards, UI.model.playerCards, activePlayers.length > 0);
+				engine, UI.model.communityCards, UI.model.playerCards, activePlayers);
 			let start = Date.now();
 		
 			try {
