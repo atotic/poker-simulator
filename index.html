@@ -368,10 +368,10 @@ Now defunct simulator manual http://propokertools.com/oracle_help/main
 				<playing-card title="flop" class="community"></playing-card>
 				<playing-card title="flop" class="community"></playing-card>
 			</div>
-			<div id="turn">
+			<div id="turn" style="line-height:0">
 				<playing-card title="turn" class="community"></playing-card>
 			</div>
-			<div id="river">
+			<div id="river" style="line-height:0">
 				<playing-card title="river" class="community"></playing-card>
 			</div>
 		</div>
@@ -954,9 +954,38 @@ class SimStats {
 
 	renderVsHighLow() {
 		let html = `
-<table class="statsTable"><td>renderVsHighLow not implemented yet</td></table>
+<table class="statsTable vsTable">
+	<thead>
+		<tr>
+			<th class="vsMarquee" rowspan="2" onclick="javascript:UI.showStatsHand('${this.dbId}')">
+				vs<br>${UI.cardsToHtml(this.communityCards)}
+				${this.renderPlayerCount()}</th>
 	`;
-	return html;
+		// 1st row are each player's cards
+		for (let p of this.activePlayers) {
+			html += "<td>";
+			let splitStr = this.asPercent(this.playerStats[p].hi.split) == "" ? "" : "/split";
+			let playerCards = this.fillCardsToCount(this.playerCards[p], this.holeCardCount);
+			html += UI.cardsToHtml(playerCards) || SimStats.EMPTY_CARDS_HTML;
+			html += `<br>both/high/low/split`;
+			html += "</td>";
+		}
+		html += "</tr><tr>";
+		// 2nd row are player's win percentages
+		for (let p of this.activePlayers) {
+			let wins = this.playerStats[p].hi.win;
+			let splitStr = this.asPercent(this.playerStats[p].hi.split);
+			if (splitStr != "")
+				splitStr = "/" + splitStr;
+			html += `<td style="white-space-collapse: discard">
+				${this.asPercent(this.playerStats[p].low.winAll, false)}/
+				${this.asPercent(this.playerStats[p].low.winOnlyHigh, false)}/
+				${this.asPercent(this.playerStats[p].low.winOnlyLow, false)}/
+				${this.asPercent(this.playerStats[p].low.splitLow, false)}</td>`;
+		}
+		html += `</thead>
+	</table>`;
+		return html;
 	}
 }
 
