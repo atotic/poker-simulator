@@ -3,16 +3,12 @@
 You can 
 
 TODO
-
-		- play in vs mode
-		- display stats
-	- drag to delete stat
-	- drag to reorder stat
 	- better layout (iPhone curvature)
 	- installable from github pages
-	- typescript usage
 	- run stats as a thread
-	- save status GUI
+	- drag to delete stat
+	- drag to reorder stat
+	- typescript usage
 	- a11y
 	- use state? https://sqlsync.dev/posts/stop-building-databases/
 	- Reimplement using different frameworks:
