@@ -12,6 +12,7 @@
 	  border: 1px solid #000;
 	  border-radius: 8px;
 	  aspect-ratio: 1 / 1.4;
+		line-height:normal;
 	  background: repeating-linear-gradient(45deg,
 	      /* https://css-tricks.com/stripes-css/ */
 	      #606dbc,

@@ -3,9 +3,12 @@
 You can 
 
 TODO
+
 	- better layout (iPhone curvature)
 	- installable from github pages
 	- run stats as a thread
+	- Chromium: cannot create max-content size column. Is this because table_layout_types.cc:InlineLayoutFromStyle is setting CellInlineConstraint::is_constrained to false?
+	- lets build and debug chromium. Set the breakpoint for max-content
 	- drag to delete stat
 	- drag to reorder stat
 	- typescript usage
@@ -18,6 +21,12 @@ TODO
 	- prompt user to install offline if they use app offline
 		https://stackoverflow.com/questions/51160348/pwa-how-to-programmatically-trigger-add-to-homescreen-on-ios-safari
 DONE
+  18-Jan-24
+	  - when you make fewer players, try hard to keep existing filled in players
+		- improved stats display
+		- limit number of stored simulations to PokerStorage.MAX_STATS
+		- drag'n'drop usability improvements
+		
 	27-Dec-23 vs mode: 
 		1) pokerEngine vsMode
 		2) simulate in vsMode
@@ -43,9 +52,9 @@ DONE
 	drag-n-drop: should enlarge the card, give it shadow for that drag look
 	drag n drop: secret was to cancel drag by adding not passive event listener
 	view on iPhone http://192.168.1.46:8080/poker.html
-	Use http-server https://www.npmjs.com/package/http-server
-	poker engine works
-  drag n drop
+	21-Nov-23 Use http-server https://www.npmjs.com/package/http-server
+	17-Nov-23 poker engine works, high low scoring too
+  15-Nov-23 drag n drop
 
 References
 	manifest.json https://w3c.github.io/manifest/#display-member

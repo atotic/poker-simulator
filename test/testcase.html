@@ -5,11 +5,31 @@
   <link rel="stylesheet" href="../playing_card.css">
 </head>
 <style>
- 
+ td {
+  border: 1px solid orange;
+ }
+ table {
+  border: 5px solid purple;
+  /* width: 600px; */
+ }
+ .other {
+  width: auto;
+ }
 </style>
 <body>
 <div id="target" style="width:200px;height:200px;background: green">
 click me</div>
+
+<div style="border:1px solid black">
+<table>
+  <tr>
+    <td style="width:max-content;min-width:100px">s h o r t</td>
+    <td class="other">win lose</td>
+    <td class="other">win lose</td>
+  </tr>
+</table>
+</div>
+<div style="width:10px;min-width:max-content;border:5px solid brown">s h o r t</div>
 <script>
 
 'use strict'

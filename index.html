@@ -13,6 +13,11 @@
 <script src="pokerEngine.js"></script>
 <style>
 	/* 
+Super speedy hand evaluation algo. Might be interesting
+https://web.archive.org/web/20120509001649/http://www.suffecool.net/poker/evaluator.html
+https://senzee.blogspot.com/2007/01/7.html
+https://github.com/mixu/perfect
+
 	 Main page styles
 	https://css-tricks.com/snippets/css/complete-guide-grid/ 
 	Single DIV poker chips
@@ -53,6 +58,21 @@ Now defunct simulator manual http://propokertools.com/oracle_help/main
 	}
 	.dragIsActive  {
 		touch-action: none;
+	}
+	.emoji {
+		font-size: x-large;
+	}
+	.x-small {
+		font-size: x-small;
+	}
+	.red {
+		color: red;
+	}
+	.wsCollapse {
+		white-space-collapse: collapse;
+	}
+	.maxContent {
+		width: max-content;
 	}
 	#main {
 		display: grid;
@@ -196,18 +216,17 @@ Now defunct simulator manual http://propokertools.com/oracle_help/main
 		background: white;
 	}
 
-	/* Stats table */
 
+	/* Stats table */
 	.statsTable {
 		border-collapse: collapse;
 		width:100%;
 		font-family:monospace;
 		margin-bottom: 8px;
-		border-bottom: 1px solid #ddd;
+		border-bottom: 1px solid black;
 		border-top: 1px solid #ddd;
 		user-select: text;
 	}
-	
 	.statsTable td {
 		padding: 1px 2px 1px 2px;
 		text-align:center;
@@ -216,39 +235,41 @@ Now defunct simulator manual http://propokertools.com/oracle_help/main
 		text-align: start;
 		font-weight: normal;
 	}
-	.emoji {
-		font-size: x-large;
-	}
-	.x-small {
-		font-size: small;
+	.statsTable th hr {
+		border:none;
+		border-top:1px solid #ddd;
+		margin:2px;
 	}
 	.statsTable thead tr:nth-child(1) th:nth-child(1) {
 		vertical-align:top;
 		position: relative;
+	}
+	.statsTable thead tr {
+		vertical-align: bottom;
 	}
 	.statsTable .playerCountStats {
 		position:absolute;
 		bottom: 2px;
 		right:2px;
 	}
-	.statsTable thead tr {
-		vertical-align: bottom;
-	}
 	.statsTable .vsMarquee {
-		border: 1px solid #ddd;;
+		border: 1px solid #ddd;
 	}
 	.statsTable.vsTable td {
 		border-left: 1px solid #ddd;
 		border-right: 1px solid #ddd;		
 	}
-	.statsWin {
+	.winColumn {
 		background-color:#e2f8df;
 	}
-	.statsLose {
+	.loseColumn {
 		background-color:#ffeeec;
 	}
-	.statsSplit {
+	.splitColumn {
 		background-color:#eee;
+	}
+	.headerColumn {
+		max-width:50px;
 	}
 	.statsDetails {
 		font-size: 11px;
@@ -258,12 +279,12 @@ Now defunct simulator manual http://propokertools.com/oracle_help/main
 	.statsDetails tr:nth-child(odd) {
  	 background-color: rgba(220,220,220,0.5);
 	}
-
-	.red {
-		color: red;
+	.statsTable tbody tr:nth-child(odd){
+		background-color: rgba(220,220,220,0.5);
 	}
+
 	.cardTextTile {
-		font-size:11px;
+		font-size:13px;
 		display:inline-block;
 		border: 0.5px solid gray;
 		border-radius: 3px;
@@ -502,10 +523,19 @@ class UIModel {
 	}
 	setPlayerCount(count) {
 		this.playerCount = parseInt(count);
-		this.playerCards.splice(count);
+		let discards = this.playerCards.splice(count);
+		// If cards were dealt to players being removed,
+		// try to reassign cards to other players that had no cards.
+		discards = discards.filter(cards => cards.length > 0);
+		let pc = -1;
+		while (discards.length > 0 && ++pc < this.playerCards.length) {
+			if (this.playerCards[pc].length == 0) {
+				this.playerCards[pc] = discards.shift();
+			}
+		}
 	}
 	setHoleCardCount(count) {
-		this.holeCardCount = count;
+		this.holeCardCount = parseInt(count);
 		for (let p of this.playerCards) 
 			p.splice(count);
 	}
@@ -571,14 +601,18 @@ class UIModel {
 		this.communityCards.splice(i,1);
 	}
 	// Enforces consistent state by removing card from other players + community
+	// return: cardIndex card was moved to (can be different from cardIndex)
 	addPlayerCard(card, playerIndex, cardIndex) {
 		while (this.playerCards.length <= playerIndex)
 			this.playerCards.push([]);
 		let cards = this.playerCards[playerIndex];
 		let ci = cards.indexOf(card);
+		let cardDestination = cardIndex;
 		if (ci == -1) {
-			if (cards.length <= cardIndex)
+			if (cards.length <= cardIndex) {
 				cards.push(card);
+				cardDestination = cards.length - 1;
+			}
 			else {
 				cards.splice(cardIndex, 1, card);
 			}
@@ -588,6 +622,7 @@ class UIModel {
 		}
 		this.removeFromPlayers(card, playerIndex);
 		this.removeCommunityCard(card);
+		return cardDestination;
 	}
 	removePlayerCard(card, playerIndex) {
 		if (!this.playerCards[playerIndex])
@@ -682,9 +717,7 @@ class PlayerStats {
 			let winHighWorth = (hasLow ? 0.5 : 1) * 1/game.highWinners.length;
 			let winLowWorth = (hasLow ? 0.5 : 0) * 1 / game.lowWinners.length;
 			let myWinWorth = (didWinLow ? winLowWorth : 0) + (didWinHigh ? winHighWorth : 0);
-			if (myWinWorth)
-				console.log(myWinWorth);
-			this.low.winTotal += (didWinLow ? winLowWorth : 0) + (didWinHigh ? winHighWorth : 0);
+			this.low.winTotal += myWinWorth;
 			if (didWinHigh && (didWinLow || !hasLow))
 				this.low.winAll++;
 			if (didWinHigh && (hasLow && !didWinLow))
@@ -794,7 +827,7 @@ class SimStats {
 		let playerCardsHtml = UI.cardsToHtml(playerCards) || SimStats.EMPTY_CARDS_HTML;
 		let communityCardsHtml = UI.cardsToHtml(this.communityCards);
 		if (communityCardsHtml != "")
-			communityCardsHtml = "<br>" + communityCardsHtml;
+			communityCardsHtml = "<hr>" + communityCardsHtml;
 		return playerCardsHtml + communityCardsHtml;
 	}
 
@@ -816,17 +849,17 @@ class SimStats {
 		let html = `
 <table class="statsTable">
 	<colgroup></colgroup>
-  <colgroup class="statsWin" style="width:35%"></colgroup>
-	<colgroup class="statsLose" style="width:35%"></colgroup>
-	<colgroup class="statsSplit" style="width:25%"></colgroup>
+  <colgroup class="winColumn" style="width:35%"></colgroup>
+	<colgroup class="loseColumn" style="width:35%"></colgroup>
+	<colgroup class="splitColumn" style="width:25%"></colgroup>
 	<thead>
 		<tr>
 			<th rowspan="2" onclick="javascript:UI.showStatsHand('${this.dbId}')">
 				${this.getPlayerCommunityCardsAsHtml()}
 				${this.renderPlayerCount()}</th>
-			<td class="emoji">👍<span class="x-small">%</span></td>
-			<td class="emoji">👎</td>
-			<td class="emoji">😐</td>
+			<td>win<span class="x-small">%</span></td>
+			<td>lose</td>
+			<td>split</td>
 		</tr>
 		<tr>
 			<td>${this.asPercent(this.playerStats[0].hi.win)}</td>
@@ -859,48 +892,37 @@ class SimStats {
 
 	renderHighLow() {
 		let html = `
-<table class="statsTable">
-	<colgroup></colgroup>
-  <colgroup span=4 class="statsWin"></colgroup>
-	<colgroup span=2 class="statsSplit"></colgroup>
-	<colgroup span=1 class="statsLose"></colgroup>
+<table class="statsTable vsTable">
+	<colgroup class="headerColumn"></colgroup>
 	<thead>
-		<tr>
-			<th rowspan="3" onclick="javascript:UI.showStatsHand('${this.dbId}')">
-				${this.getPlayerCommunityCardsAsHtml()}
+		<tr style="height:4ex">
+			<th class="" rowspan="1" onclick="javascript:UI.showStatsHand('${this.dbId}')">
+				hi-low<br>${UI.cardsToHtml(this.communityCards)}
 				${this.renderPlayerCount()}</th>
-			<td class="emoji" colspan="4">👍<span class="x-small">%</span></td>
-			<td class="emoji" colspan="2">😐</td>
-			<td class="emoji">👎</td>
+			<td>win%</td>
+			<td>high/split</td>
+			<td>low/split</td>
 		</tr>
-		<tr>
-			<td>h+l</td>
-			<td>all</td>
-			<td>high</td>
-			<td>low</td>
-			<td>high</td>
-			<td>low</td>
-			<td>all</td>
-		</tr>
-		<tr>
-			<td>${this.asPercent(this.playerStats[0].low.winTotal)}</td>
-			<td>${this.asPercent(this.playerStats[0].low.winAll)}</td>
-			<td>${this.asPercent(this.playerStats[0].low.winOnlyHigh)}</td>
-			<td>${this.asPercent(this.playerStats[0].low.winOnlyLow)}</td>
-			<td>${this.asPercent(this.playerStats[0].low.splitHigh)}</td>
-			<td>${this.asPercent(this.playerStats[0].low.splitLow)}</td>
-			<td>${this.asPercent(this.playerStats[0].low.lose)}</td>
-		</tr>
-	</thead>
-	<tbody class="statsDetails">							
-`;
-	html += `
-	</tbody>
-</table>
-`;
-	return html;
+	</thead><tbody>
+	`;
+		html += "<tr>";
+		let splitHighStr = this.asPercent(this.playerStats[0].low.splitHigh);
+		let splitLowStr = this.asPercent(this.playerStats[0].low.splitLow);
+		if (splitHighStr != "")
+			splitHighStr = "/" + splitHighStr;
+		if (splitLowStr != "")
+			splitLowStr ="/" + splitLowStr;
+		let playerCards = this.fillCardsToCount(this.playerCards[0], this.holeCardCount);
+		html += `<th onclick="javascript:UI.showStatsHand('${this.dbId}')"><div class="maxContent">${UI.cardsToHtml(playerCards) || SimStats.EMPTY_CARDS_HTML}</div></th>`;
+		html += `<td style="width:33%">${this.asPercent(this.playerStats[0].low.winTotal, false)}</td>`;
+		html += `<td style="width:33%">${this.asPercent(this.playerStats[0].low.winOnlyHigh, false) + splitHighStr}</td>`;
+		html += `<td style="width:33%">${this.asPercent(this.playerStats[0].low.winOnlyLow, false) + splitLowStr}</td>`;
+		html += "</tr>";
+		html += `</tbody>
+		</table>`;
+		return html;
 	}
-
+	
 	renderVsHigh() {
 		let html = `
 <table class="statsTable vsTable">
@@ -913,7 +935,7 @@ class SimStats {
 	// 1st row are each player's cards
 	for (let p of this.activePlayers) {
 		html += "<td>";
-		let splitStr = this.asPercent(this.playerStats[p].hi.split) == "" ? "" : "/split";
+		let splitStr = this.asPercent(this.playerStats[p].hi.split) == "" ? "" : `<span class="x-small">/split</span>`;
 		let playerCards = this.fillCardsToCount(this.playerCards[p], this.holeCardCount);
 		html += UI.cardsToHtml(playerCards) || SimStats.EMPTY_CARDS_HTML;
 		html += `<br>win${splitStr}`;
@@ -921,12 +943,13 @@ class SimStats {
 	}
 	html += "</tr><tr>";
 	// 2nd row are player's win percentages
+	let tdWidth = Math.floor(100/this.activePlayers);
 	for (let p of this.activePlayers) {
 		let wins = this.playerStats[p].hi.win;
 		let splitStr = this.asPercent(this.playerStats[p].hi.split);
 		if (splitStr != "")
-			splitStr = "/" + splitStr;
-		html += `<td>${this.asPercent(wins)}${splitStr}</td>`;
+			splitStr = `/${splitStr}`;
+		html += `<td style="width:${tdWidth}%">${this.asPercent(wins)}${splitStr}</td>`;
 	}
 	html += `</tr>
 		</thead><tbody class="statsDetails">`;
@@ -953,34 +976,33 @@ class SimStats {
 		let html = `
 <table class="statsTable vsTable">
 	<thead>
-		<tr>
-			<th class="vsMarquee" rowspan="2" onclick="javascript:UI.showStatsHand('${this.dbId}')">
-				vs<br>${UI.cardsToHtml(this.communityCards)}
+		<tr style="height:4ex">
+			<th class="vsMarquee" rowspan="1" onclick="javascript:UI.showStatsHand('${this.dbId}')">
+				vs hi-low<br>${UI.cardsToHtml(this.communityCards)}
 				${this.renderPlayerCount()}</th>
+				<td>win%</td>
+				<td>high/split</td>
+				<td>low/split</td>
+		</tr>
+	</thead><tbody>
 	`;
 		// 1st row are each player's cards
 		for (let p of this.activePlayers) {
-			html += "<td>";
-			let splitStr = this.asPercent(this.playerStats[p].hi.split) == "" ? "" : "/split";
+			html += "<tr>";
+			let splitHighStr = this.asPercent(this.playerStats[p].low.splitHigh);
+			let splitLowStr = this.asPercent(this.playerStats[p].low.splitLow);
+			if (splitHighStr != "")
+				splitHighStr = "/" + splitHighStr;
+			if (splitLowStr != "")
+				splitLowStr ="/" + splitLowStr;
 			let playerCards = this.fillCardsToCount(this.playerCards[p], this.holeCardCount);
-			html += UI.cardsToHtml(playerCards) || SimStats.EMPTY_CARDS_HTML;
-			html += `<br>both/high/low/split`;
-			html += "</td>";
+			html += `<th onclick="javascript:UI.showStatsHand('${this.dbId}')">${UI.cardsToHtml(playerCards) || SimStats.EMPTY_CARDS_HTML}</th>`;
+			html += `<td>${this.asPercent(this.playerStats[p].low.winTotal, false)}</td>`;
+			html += `<td>${this.asPercent(this.playerStats[p].low.winOnlyHigh, false) + splitHighStr}</td>`;
+			html += `<td>${this.asPercent(this.playerStats[p].low.winOnlyLow, false) + splitLowStr}</td>`;
+			html += "</tr>";
 		}
-		html += "</tr><tr>";
-		// 2nd row are player's win percentages
-		for (let p of this.activePlayers) {
-			let wins = this.playerStats[p].hi.win;
-			let splitStr = this.asPercent(this.playerStats[p].hi.split);
-			if (splitStr != "")
-				splitStr = "/" + splitStr;
-			html += `<td style="white-space-collapse: discard">
-				${this.asPercent(this.playerStats[p].low.winAll, false)}/
-				${this.asPercent(this.playerStats[p].low.winOnlyHigh, false)}/
-				${this.asPercent(this.playerStats[p].low.winOnlyLow, false)}/
-				${this.asPercent(this.playerStats[p].low.splitLow, false)}</td>`;
-		}
-		html += `</thead>
+		html += `</tbody>
 	</table>`;
 		return html;
 	}
@@ -989,7 +1011,7 @@ class SimStats {
 class PokerStorage {
 	static STAT_PREFIX = "STAT_";
 	static NEXT_STAT_SAVE_INDEX = 1;
-
+	static MAX_STATS = 200;
 	static simStatList = []; // List of current SimStats
 
 	// returns an array of SimStats
@@ -1029,6 +1051,13 @@ class PokerStorage {
 				return 1;
 			return 0;
 		});
+		if (stats.length > PokerStorage.MAX_STATS)
+			console.warn("Removing simulations, limited to ", PokerStorage.MAX_STATS);
+		while (stats.length > PokerStorage.MAX_STATS) {
+			let removeMe = stats.shift();
+			let key = `${PokerStorage.STAT_PREFIX}${statToKeyMap.get(removeMe)}`;
+			window.localStorage.removeItem(key);
+		}
 		PokerStorage.simStatList = stats;
 		return stats;
 	}
@@ -1234,7 +1263,9 @@ class UI {
 		DragDrop.initDragAndDrop();
 		for (let d of document.querySelectorAll("#deckPanel playing-card"))
 			d.addEventListener("click", UI.deckClick);
+	
 		UI.initServiceWorker();
+
 		for (let s of PokerStorage.loadStats()) {
 			UI.showSimStat(s);
 		}
@@ -1247,7 +1278,7 @@ class UI {
 	static clearError() {
 		document.querySelector("#statsPanel .error").classList.add("hidden");
 	}
-	static async initServiceWorker() {
+	static initServiceWorker() {
 		if (!'serviceWorker' in navigator) {
 			console.error(`navigator.serviceWorker not found`);
 			return;
@@ -1256,7 +1287,19 @@ class UI {
 			console.log('event: controllerchange on navigator.serviceWorker ');
 			// window.location.reload();
 		});
-		let registration = await navigator.serviceWorker.register("/serviceWorker.js", { scope: "/", });
+
+		if (location.protocol == 'file:')	{ 
+			// No registration for localhost
+			console.error("file:// has no service worker");
+			return;
+		}
+		navigator.serviceWorker.register("/serviceWorker.js", { scope: "/", })
+			.then( reg => {
+				let registration = reg;
+			})
+			.catch(err => {
+				console.error("did not register serviceWorker", err);
+			});			
 	}
 	static deckClick(ev) {
 		// if card was just dragged, ignore the click
@@ -1437,7 +1480,7 @@ class UI {
 						UI.model.addCommunityCard(src.value, dest.cardIndex);
 						break;
 					case 'player':
-						UI.model.addPlayerCard(src.value, dest.playerIndex, dest.cardIndex);
+						UI.lastDestination.cardIndex = UI.model.addPlayerCard(src.value, dest.playerIndex, dest.cardIndex);
 						break;
 				}
 				break;
@@ -1450,7 +1493,7 @@ class UI {
 						UI.model.addCommunityCard(src.value, dest.cardIndex);
 						break;
 					case 'player':
-						UI.model.addPlayerCard(src.value, dest.playerIndex, dest.cardIndex);
+						UI.lastDestination.cardIndex = UI.model.addPlayerCard(src.value, dest.playerIndex, dest.cardIndex);
 						break;
 				}				
 				break;
@@ -1463,7 +1506,7 @@ class UI {
 						UI.model.addCommunityCard(src.value, dest.cardIndex);
 						break;
 					case 'player':
-						UI.model.addPlayerCard(src.value, dest.playerIndex, dest.cardIndex);
+						UI.lastDestination.cardIndex = UI.model.addPlayerCard(src.value, dest.playerIndex, dest.cardIndex);
 						break;
 				}
 				break;
@@ -1566,7 +1609,7 @@ class UI {
 			scoring: UI.model.scoring
 		});
 		window.setTimeout( _ => {
-			let count = 5000;
+			let count = 8000;
 			let activePlayers = [];
 			for (let i=0; i<UI.model.playerCards.length; ++i) {
 				if (UI.model.playerCards[i] && UI.model.playerCards[i].length > 0)
