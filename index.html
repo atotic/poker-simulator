@@ -50,6 +50,9 @@ Now defunct simulator manual http://propokertools.com/oracle_help/main
   	/* overflow: hidden; */
 		user-select: none;
 	}
+	body {
+		padding-bottom: 16px;
+	}
 	/* body {
 		background: yellow;
 	} */
@@ -424,7 +427,7 @@ Now defunct simulator manual http://propokertools.com/oracle_help/main
 		</div>
   </div>
 	<div id="statsPanel">
-		<button onClick="UI.runSimulation()">Simulate</button>
+		<button id="simButton" style="font-size:large" onClick="UI.runSimulation()">Simulate</button>
 		<div class="error"></div>
 		<div id="simResults"></div>
 	</div>
@@ -1238,36 +1241,43 @@ class DragDrop {
 }
 
 class UI {
+	static SIM_ITERATIONS = 8000;
 	static model = new UIModel;
 	static lastDestination;	// last move destination
 
 	static init() {
-		// window.addEventListener("error", ev => { console.log(ev.message); alert("js error"); });
-		document.querySelector("#playerCount").addEventListener('input', UI.playersChanged);
-		document.querySelector("#holeCardCount").addEventListener('input', UI.holeCardCountChanged);
-		document.querySelector("#hiloCheckbox").addEventListener("click", ev => {
-			ev.currentTarget.classList.toggle("checked");
-			if (ev.currentTarget.classList.contains("checked"))
-				ev.currentTarget.value = "highlow";
-			else
-				ev.currentTarget.value = "high";
+		try {
+			// window.addEventListener("error", ev => { console.log(ev.message); alert("js error"); });
+			document.querySelector("#playerCount").addEventListener('input', UI.playersChanged);
+			document.querySelector("#holeCardCount").addEventListener('input', UI.holeCardCountChanged);
+			document.querySelector("#hiloCheckbox").addEventListener("click", ev => {
+				ev.currentTarget.classList.toggle("checked");
+				if (ev.currentTarget.classList.contains("checked"))
+					ev.currentTarget.value = "highlow";
+				else
+					ev.currentTarget.value = "high";
+				UI.scoringChanged();
+			});
+			document.querySelector("#suitPicker .suitPickerButton").addEventListener('click', UI.suitPickerChanged);
+			document.querySelector("#hiloCheckbox").value = "high";
+			UI.holeCardCountChanged();
+			UI.playersChanged();
 			UI.scoringChanged();
-		});
-		document.querySelector("#suitPicker .suitPickerButton").addEventListener('click', UI.suitPickerChanged);
-		document.querySelector("#hiloCheckbox").value = "high";
-		UI.holeCardCountChanged();
-		UI.playersChanged();
-		UI.scoringChanged();
-		UI.setDeckSuit('♥');
-		
-		DragDrop.initDragAndDrop();
-		for (let d of document.querySelectorAll("#deckPanel playing-card"))
-			d.addEventListener("click", UI.deckClick);
-	
-		UI.initServiceWorker();
+			UI.setDeckSuit('♥');
+			
+			DragDrop.initDragAndDrop();
+			for (let d of document.querySelectorAll("#deckPanel playing-card"))
+				d.addEventListener("click", UI.deckClick);
+			
+			UI.initServiceWorker();
 
-		for (let s of PokerStorage.loadStats()) {
-			UI.showSimStat(s);
+			for (let s of PokerStorage.loadStats()) {
+				UI.showSimStat(s);
+			}
+		}
+		catch(err) {
+			console.error("unexpected error in UI.init", err);
+			UI.showError(err.toString());
 		}
 	}
 	static showError(msg) {
@@ -1279,7 +1289,7 @@ class UI {
 		document.querySelector("#statsPanel .error").classList.add("hidden");
 	}
 	static initServiceWorker() {
-		if (!'serviceWorker' in navigator) {
+		if (!('serviceWorker' in navigator)) {
 			console.error(`navigator.serviceWorker not found`);
 			return;
 		}
@@ -1598,6 +1608,17 @@ class UI {
 		UI.syncUIToModel();
 	}
 
+	static indicateSimulationStarted() {
+		let simButton = document.querySelector("#simButton");
+		simButton.setAttribute('disabled', true);
+		simButton.innerText = `Playing ${UI.SIM_ITERATIONS} games`;
+	}
+	static indicateSimulationEnded() {
+		let simButton = document.querySelector("#simButton");
+		simButton.removeAttribute('disabled');
+		simButton.innerText = `Simulate`;
+	}
+
 	static runSimulation() {
 		console.log("Run simulation");
 		for (let s of document.querySelectorAll(".stat"))
@@ -1608,6 +1629,7 @@ class UI {
 			holeCardRules: UI.model.holeCardRules,
 			scoring: UI.model.scoring
 		});
+		UI.indicateSimulationStarted();
 		window.setTimeout( _ => {
 			let count = 8000;
 			let activePlayers = [];
@@ -1638,6 +1660,7 @@ class UI {
 			}
 			let elapsed = Date.now() - start;
 			let gameTime = elapsed / count;
+			UI.indicateSimulationEnded();
 			console.log(`${count} games took ${elapsed}ms; ${gameTime}ms per game`);
 			UI.showSimStat(stats);
 			PokerStorage.saveSimStat(stats);
@@ -1654,7 +1677,6 @@ class UI {
 			el.remove();
 	}
 }
-
-UI.init();
+	UI.init();
 </script>
 </body>

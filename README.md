@@ -3,8 +3,9 @@
 You can 
 
 TODO
-
+  - shake to undo
 	- better layout (iPhone curvature)
+	- how do I get a PWA app to update?
 	- installable from github pages
 	- run stats as a thread
 	- Chromium: cannot create max-content size column. Is this because table_layout_types.cc:InlineLayoutFromStyle is setting CellInlineConstraint::is_constrained to false?

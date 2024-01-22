@@ -58,7 +58,7 @@ https://whatwebcando.today/articles/handling-service-worker-updates/
 
 let PRE_CACHED_RESOURCES = ["/", "index.html", "playing_card.css", "pokerEngine.js", "favicon.ico", "icons/512.png"];
 let SW_VERSION = `PSW_${Math.floor(Math.random() * 10000000)}`;
-let CACHE_NAME = 'v1';
+let CACHE_NAME = 'v2';
 
 async function precacheResources() {
   await caches.delete(CACHE_NAME);  // Brute force, just deletes previous cache that might be live.
