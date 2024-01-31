@@ -1,12 +1,13 @@
 # poker-simulator
 
-You can 
-
 TODO
-  - shake to undo
+  - Usability
+	  - share a hand with others
+	  - default target should be marked
+  	- shake to undo?z
+		- click on X twice to remove saved simulations (toaster shows this)
 	- better layout (iPhone curvature)
 	- how do I get a PWA app to update?
-	- installable from github pages
 	- run stats as a thread
 	- Chromium: cannot create max-content size column. Is this because table_layout_types.cc:InlineLayoutFromStyle is setting CellInlineConstraint::is_constrained to false?
 	- lets build and debug chromium. Set the breakpoint for max-content
@@ -21,7 +22,10 @@ TODO
 		- Lighting Web Components https://lwc.dev/. Noah Lawson
 	- prompt user to install offline if they use app offline
 		https://stackoverflow.com/questions/51160348/pwa-how-to-programmatically-trigger-add-to-homescreen-on-ios-safari
+
 DONE
+	23-Jan-24 
+		- installable from github pages
   18-Jan-24
 	  - when you make fewer players, try hard to keep existing filled in players
 		- improved stats display
