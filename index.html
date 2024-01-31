@@ -1303,7 +1303,7 @@ class UI {
 			console.error("file:// has no service worker");
 			return;
 		}
-		navigator.serviceWorker.register("serviceWorker.js", { scope: "/", })
+		navigator.serviceWorker.register("serviceWorker.js", { scope: "./", })
 			.then( reg => {
 				let registration = reg;
 			})
