@@ -64,7 +64,7 @@ async function precacheResources() {
   await caches.delete(CACHE_NAME);  // Brute force, just deletes previous cache that might be live.
   let cache = await caches.open(CACHE_NAME);
   // Cache all static resources.
-  cache.addAll(PRE_CACHED_RESOURCES);
+  return cache.addAll(PRE_CACHED_RESOURCES);
 }
 
 async function deleteOldCaches() {
@@ -82,8 +82,7 @@ async function deleteOldCaches() {
 self.addEventListener("install", ev => {
   console.log("Service worker install in progress");
   self.skipWaiting(); // activates new service worker immediately
-  ev.waitUntil(
-    precacheResources());
+  ev.waitUntil(precacheResources());
 });
 
 self.addEventListener("activate", ev => {
