@@ -9,7 +9,6 @@ let CACHE_NAME = 'v1';
 let SW_VERSION = `SW_${String.fromCharCode(Math.round(65+Math.random()*26))} ${CACHE_NAME}`;
 
 let PRE_CACHED_RESOURCES = [
-  "./", 
   "index.html", 
   "playing_card.css", 
   "pokerEngine.js", 
