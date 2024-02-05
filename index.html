@@ -12,27 +12,6 @@
 -->
 <script src="pokerEngine.js"></script>
 <style>
-	/* 
-Super speedy hand evaluation algo. Might be interesting
-https://web.archive.org/web/20120509001649/http://www.suffecool.net/poker/evaluator.html
-https://senzee.blogspot.com/2007/01/7.html
-https://github.com/mixu/perfect
-
-	 Main page styles
-	https://css-tricks.com/snippets/css/complete-guide-grid/ 
-	Single DIV poker chips
-	https://codepen.io/pmk/pen/GgrJRq
-	Simple PWA starter kit
-	https://github.com/nikkifurls/simplepwa/blob/master/style.css
-Poker odds
-https://www.cardschat.com/poker/strategy/odds/
-https://flopturnriver.com/poker-strategy/basic-poker-odds-19146/
-Poker book resources:
-https://www.holdemresources.net/docs
-GTO explanations
-https://www.runitonce.com/
-Now defunct simulator manual http://propokertools.com/oracle_help/main
-	*/
 	:root {
 		--hilo-button-size: 40px;
 		--deck-card-width: 50px;
@@ -144,6 +123,15 @@ Now defunct simulator manual http://propokertools.com/oracle_help/main
 		background: var(--felt-green);
 		border: 32px solid #F6E6C2 ;
 		border-radius:72px;
+	}
+	#flopContainer {
+		display:flex;
+		justify-content: center;
+		align-items: center;
+		align-content:center;
+		flex-wrap:wrap;
+		gap:4px;
+		padding-bottom:48px;
 	}
 
 	@media (min-width: 780px) {
@@ -387,16 +375,18 @@ Now defunct simulator manual http://propokertools.com/oracle_help/main
 		<player-hand class="mini"><!-- 9 --></player-hand>
 		<player-hand class="mini"><!-- 10 --></player-hand>
 		<div id="tableTop">
-			<div id="flop" style="display:flex;gap:4px">
-				<playing-card title="flop" class="community"></playing-card>
-				<playing-card title="flop" class="community"></playing-card>
-				<playing-card title="flop" class="community"></playing-card>
-			</div>
-			<div id="turn" style="line-height:0">
-				<playing-card title="turn" class="community"></playing-card>
-			</div>
-			<div id="river" style="line-height:0">
-				<playing-card title="river" class="community"></playing-card>
+			<div id="flopContainer">
+				<div id="flop" style="display:flex;gap:4px">
+					<playing-card title="flop" class="community"></playing-card>
+					<playing-card title="flop" class="community"></playing-card>
+					<playing-card title="flop" class="community"></playing-card>
+				</div>
+				<div id="turn" style="line-height:0">
+					<playing-card title="turn" class="community"></playing-card>
+				</div>
+				<div id="river" style="line-height:0">
+					<playing-card title="river" class="community"></playing-card>
+				</div>
 			</div>
 		</div>
 	</div>

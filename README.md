@@ -23,6 +23,28 @@ TODO
 	- prompt user to install offline if they use app offline
 		https://stackoverflow.com/questions/51160348/pwa-how-to-programmatically-trigger-add-to-homescreen-on-ios-safari
 
+INTERESTING
+
+Super speedy hand evaluation algo. Might be interesting
+https://web.archive.org/web/20120509001649/http://www.suffecool.net/poker/evaluator.html
+https://senzee.blogspot.com/2007/01/7.html
+https://github.com/mixu/perfect
+
+	 Main page styles
+	https://css-tricks.com/snippets/css/complete-guide-grid/ 
+	Single DIV poker chips
+	https://codepen.io/pmk/pen/GgrJRq
+	Simple PWA starter kit
+	https://github.com/nikkifurls/simplepwa/blob/master/style.css
+Poker odds
+https://www.cardschat.com/poker/strategy/odds/
+https://flopturnriver.com/poker-strategy/basic-poker-odds-19146/
+Poker book resources:
+https://www.holdemresources.net/docs
+GTO explanations
+https://www.runitonce.com/
+Now defunct simulator manual http://propokertools.com/oracle_help/main
+
 DONE
 	23-Jan-24 
 		- installable from github pages
