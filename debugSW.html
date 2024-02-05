@@ -1,0 +1,146 @@
+<!doctype HTML><meta charset="UTF-8">
+<!--
+  Goal: test serviceWorker cacheing
+
+SUCCESS:
+  window.caches.match(url) works
+
+FAIL:
+  let cache = window.caches.open(CACHE_NAME) 
+  cache.match(url) 
+
+Since there is only single cache, SUCCESS and FAIL should be equivalent.
+Is there a hidden cache?
+-->
+<style>
+  .error {
+    color: rgb(136, 3, 3);
+  }
+  body {
+    border: 5px solid black;
+    margin: 0;
+    padding: 0;
+    min-height:100vh;
+  }
+  #iframes > iframe {
+    display: inline-block;
+    background-color: #ddd;
+  }
+</style>
+<title>Debug ServiceWorker</title>
+<div id="toolbar">
+  <button onclick="javascript:registerServiceWorker()">Register SW</button><br>
+  <button onclick="javascript:listCaches()">List all caches</button><br>
+  <button onclick="javascript:sendMessage('listCache')">List cache</button><br>
+  <button onclick="javascript:sendMessage('clearCache')">Delete cache</button><br>
+  <button onclick="javascript:sendMessage('addToCache')">Add to cache</button><input id="addToCachePath" value="icons/512.png"><br>
+  <button onclick="javascript:loadFromCacheIntoIframe()">Render cached path</button><br>
+  <button onclick="javascript:cacheMatchLocal('DEBUG_CACHE')">Cache match local DEBUG_CACHE</button>
+  <button onclick="javascript:cacheMatchLocal()">Cache match local all</button>
+ <br>
+</div>
+<div id="iframes"></div>
+<div id="log" style="font-family:monospace;margin-top:16px"> 
+
+</div>
+<script>
+  let timeFormat =  Intl.DateTimeFormat('en-us', {
+    hour12: false, minute: "2-digit", second: "2-digit", fractionalSecondDigits: 3});
+  function timestamp() {
+    return timeFormat.format(new Date());
+  }
+
+  function log(msg, skipTimestamp) {
+    let m = document.createElement("div");
+    m.innerHTML = `${skipTimestamp ? '' : timestamp()} ${msg}`;
+    document.querySelector("#log").append(m);
+  }
+  function error(msg) {
+    let m = document.createElement("div");
+    m.innerText = `${timestamp()} ${msg}`;
+    m.classList.add("error");
+    document.querySelector("#log").append(m);
+  }
+</script>
+<script>
+  function loadFromCacheIntoIframe() {
+    let url = document.querySelector("#addToCachePath").value;
+    let el = document.createElement("iframe");
+    if (url.match(/.*png$/)) {
+      el = document.createElement("img");
+      el.style.width = "100px";
+      el.style.height = "100px";
+    }
+    el.setAttribute("src", url);
+    document.querySelector("#iframes").append(el);
+  }
+
+  async function cacheMatchLocal(cacheName) {
+    let url = document.querySelector("#addToCachePath").value;
+    let processResponse = response => {
+      if (response)
+        log(`got cached response ${response.url}`);
+      else
+        log("cache miss");
+    };
+    let processErr = err => {
+      error(err);
+    }
+    if (cacheName) {
+      caches.open(cacheName)
+        .then(async cache => {
+          await listCache(cache);
+          let match = await cache.match(url);
+          return match;
+        })
+        .then(processResponse, processErr)
+    } else {
+      caches.match(url).then(processResponse, processErr);
+    }
+  }
+
+  async function listCaches() {
+    let keys = await caches.keys();
+    for (let k of keys)
+      log("Cache available: "+k);
+  }
+
+  async function listCache(cache) {
+    let requests = await cache.keys();
+    log(`List local cache`);
+    for (let r of requests) {
+      log(`${r.url}`);
+    }
+  }
+
+  async function registerServiceWorker() {
+    log("registerServiceWorker");
+    if (!('serviceWorker' in navigator))
+      throw `navigator.serviceWorker not found`;
+    navigator.serviceWorker.addEventListener("message", ev => {
+      log(ev.data, true);
+    });
+    navigator.serviceWorker.addEventListener('controllerchange', _ => {
+			log('serviceWorker controllerchange event');
+		});
+    return await navigator.serviceWorker.register("./debugSW.js");
+  }
+  
+  async function sendMessage(msgType) {
+    let msg = {type: msgType};
+    if (msgType == "addToCache") {
+      msg.path = document.querySelector("#addToCachePath").value;
+    }
+    navigator.serviceWorker.controller.postMessage(msg);
+  }
+
+  let RANDOM_PREFIX = String.fromCharCode(Math.round(65+Math.random()*26));
+  function init() {
+    log("init " + RANDOM_PREFIX);
+    const randomColor = Math.floor(Math.random()*16777215).toString(16);
+    document.body.style.borderColor = `#${randomColor}`;
+    registerServiceWorker()
+      .then(listCaches)
+  }
+  init();
+</script>
