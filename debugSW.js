@@ -100,6 +100,15 @@ async function addToCache(path) {
     await cache.add(path);
     messageClient(`success adding ${path}`);
   } catch(err) {
+    try {
+      let response = await fetch(path);
+      if (!response.ok) {
+        console.error(response);
+        debugger;
+      }
+    } catch(err) {
+      messageClient(`additional error trying fetch ${path}: ${err}`);
+    }
     messageClient(`error adding ${path}: ${err}`);
   }
 }
