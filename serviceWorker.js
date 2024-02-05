@@ -8,19 +8,17 @@
 let CACHE_NAME = 'v1';
 let SW_VERSION = `SW_${String.fromCharCode(Math.round(65+Math.random()*26))} ${CACHE_NAME}`;
 
-let PRE_CACHED_RESOURCES = [
-  "index.html", 
-  "playing_card.css", 
-  "pokerEngine.js", 
-  "favicon.ico", 
-  "icons/512.png"
-];
-
 async function precacheResources() {
   await caches.delete(CACHE_NAME);  // Brute force, just deletes previous cache that might be live.
   let cache = await caches.open(CACHE_NAME);
   // Cache all static resources.
-  return cache.addAll(PRE_CACHED_RESOURCES);
+  return cache.addAll([
+    "index.html", 
+    "playing_card.css", 
+    "pokerEngine.js", 
+    "favicon.ico", 
+    "icons/512.png"
+  ]);
 }
 
 async function deleteOldCaches() {
@@ -29,6 +27,15 @@ async function deleteOldCaches() {
     keys.map(key => {
       if (key != CACHE_NAME)
         return caches.delete(key);
+    })
+  );
+}
+
+async function deleteAllCaches() {
+  let keys = await caches.keys();
+  return Promise.all(
+    keys.map(key => {
+      return caches.delete(key);
     })
   );
 }

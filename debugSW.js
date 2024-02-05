@@ -75,41 +75,33 @@ self.addEventListener("fetch", ev => {
 });
 
 // Message handlers
-function listCache() {
-  caches.open(CACHE_NAME)
-    .then(cache => cache.keys())
-    .then(requests => {
-      let listMsg = `list cache ${CACHE_NAME}<br>`;
-      if (requests.length == 0)
-        listMsg += "empty!";
-      for (let r of requests) {
-        listMsg += `${r.url}<br>`;
-      }
-      messageClient(listMsg);
-    });
+async function listCache() {
+  let cache = await caches.open(CACHE_NAME);
+  let requests = await cache.keys();
+  let listMsg = `list cache ${CACHE_NAME}<br>`;
+  if (requests.length == 0)
+    listMsg += "empty!";
+  for (let r of requests)
+    listMsg += `${r.url}<br>`;
+  messageClient(listMsg);
 }
 
-function clearCache() {
-  caches.delete(CACHE_NAME)
-    .then( wasDeleted => {
-      if (wasDeleted)
-        messageClient(`${CACHE_NAME} deleted`);
-      else
-        messageClient(`${CACHE_NAME} not found`);
-    });
+async function clearCache() {
+  let wasDeleted = await caches.delete(CACHE_NAME);
+  if (wasDeleted)
+    messageClient(`${CACHE_NAME} deleted`);
+  else
+    messageClient(`${CACHE_NAME} not found`);
 }
 
-function addToCache(path) {
-  caches.open(CACHE_NAME)
-    .then(cache => {
-      cache.add(path);
-    })
-    .then( _ => {
-      messageClient(`success adding ${path}`);
-    })
-    .catch( err => {
-      messageClient(`error adding ${path}: ${err}`);
-    })
+async function addToCache(path) {
+  let cache = await caches.open(CACHE_NAME);
+  try {
+    await cache.add(path);
+    messageClient(`success adding ${path}`);
+  } catch(err) {
+    messageClient(`error adding ${path}: ${err}`);
+  }
 }
 
 // Message events are only used for testing
