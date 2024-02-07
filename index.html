@@ -56,6 +56,9 @@
 	.maxContent {
 		width: max-content;
 	}
+	.deckClickTarget {
+		box-shadow: 0px 0px 5px 0px rgba(60, 56, 47,1);
+	}
 	#main {
 		display: grid;
 		background: green;
@@ -1061,13 +1064,13 @@ class PokerStorage {
 			key = PokerStorage.STAT_PREFIX + ++PokerStorage.NEXT_STAT_SAVE_INDEX;
 		}
 		window.localStorage.setItem(key, stat.toJson());
-		PokerStorage.simStatList.push(stat);
+		PokerStorage.simStatList.push(JSON.parse(JSON.stringify(stat)));
 	}
 
 	static getStat(statId) {
 		for (let s of PokerStorage.simStatList) {
 			if (s.dbId == statId)
-				return s;
+				return Object.freeze(s);	// Freeze to ensure we do not modify the stat
 		}
 	}
 }
@@ -1234,7 +1237,7 @@ class DragDrop {
 class UI {
 	static SIM_ITERATIONS = 8000;
 	static model = new UIModel;
-	static lastDestination;	// last move destination
+	static nextDestination = UI.computeNextDestination();	// next default card destination
 
 	static init() {
 		try {
@@ -1306,34 +1309,7 @@ class UI {
 		// if card was just dragged, ignore the click
 		if (ev.target.classList.contains("wasDragged"))
 			return;
-		// Click on deck card adds card to last move destination
-		let dest;
-		if (UI.lastDestination) {
-			if (UI.lastDestination.location == 'player') {
-				dest = {
-					location: 'player',
-					playerIndex: UI.lastDestination.playerIndex,
-					cardIndex: UI.lastDestination.cardIndex + 1
-				}
-				if (dest.cardIndex > UI.model.holeCardCount - 1)
-					dest.cardIndex = 0;
-			} else if (UI.lastDestination.location == 'community') {
-				dest = {
-					location: 'community',
-					cardIndex: UI.lastDestination.cardIndex+1
-				}
-				if (dest.cardIndex > 4)
-					dest.cardIndex = 0;
-			}
-		}
-		if (!dest) {
-			dest = {
-				location: 'player',
-				playerIndex: 0,
-				cardIndex: 0
-			}
-		}
-		UI.moveCard(UI.cardAddressFromElement(ev.target), dest);
+		UI.moveCard(UI.cardAddressFromElement(ev.target), UI.nextDestination);
 	}
 
 	static preventDefault(ev) {
@@ -1469,9 +1445,41 @@ class UI {
 		let dest = UI.cardAddressFromElement(destEl);
 		UI.moveCard(src, dest);
 	}
+
+	static isNextDestination(location, cardIndex, playerIndex) {
+		return UI.nextDestination.location == location 
+			&& UI.nextDestination.cardIndex == cardIndex
+			&& UI.nextDestination.playerIndex === playerIndex;
+	}
+
+	static computeNextDestination(dest) {
+		let next;
+		if (dest) {
+			if (dest.location == 'player') {
+				next = {
+					location: 'player',
+					playerIndex: dest.playerIndex,
+					cardIndex: dest.cardIndex + 1
+				}
+				if (next.cardIndex > UI.model.holeCardCount - 1)
+					next.cardIndex = 0;
+			} else if (dest.location == 'community') {
+				next = {
+					location: 'community',
+					cardIndex: dest.cardIndex+1
+				}
+				if (next.cardIndex > 4)
+				next.cardIndex = 0;
+			}
+		}
+		return next || {
+			location: 'player',
+			playerIndex: 0,
+			cardIndex: 0
+		};
+	}
 	// src/dest are cardAddresses
 	static moveCard(src, dest) {
-		UI.lastDestination = dest;
 		switch(src.location) {
 			case 'deck':
 				switch(dest.location) {
@@ -1481,7 +1489,7 @@ class UI {
 						UI.model.addCommunityCard(src.value, dest.cardIndex);
 						break;
 					case 'player':
-						UI.lastDestination.cardIndex = UI.model.addPlayerCard(src.value, dest.playerIndex, dest.cardIndex);
+						dest.cardIndex = UI.model.addPlayerCard(src.value, dest.playerIndex, dest.cardIndex);
 						break;
 				}
 				break;
@@ -1494,7 +1502,7 @@ class UI {
 						UI.model.addCommunityCard(src.value, dest.cardIndex);
 						break;
 					case 'player':
-						UI.lastDestination.cardIndex = UI.model.addPlayerCard(src.value, dest.playerIndex, dest.cardIndex);
+						dest.cardIndex = UI.model.addPlayerCard(src.value, dest.playerIndex, dest.cardIndex);
 						break;
 				}				
 				break;
@@ -1507,11 +1515,12 @@ class UI {
 						UI.model.addCommunityCard(src.value, dest.cardIndex);
 						break;
 					case 'player':
-						UI.lastDestination.cardIndex = UI.model.addPlayerCard(src.value, dest.playerIndex, dest.cardIndex);
+						dest.cardIndex = UI.model.addPlayerCard(src.value, dest.playerIndex, dest.cardIndex);
 						break;
 				}
 				break;
 		}
+		UI.nextDestination = UI.computeNextDestination(dest);
 		UI.syncUIToModel();
 	}
 
@@ -1545,6 +1554,9 @@ class UI {
 			} else {
 				communityElements[i].setValueFromString(UI.model.communityCards[i]);
 			}
+			UI.isNextDestination('community', i) 
+				? communityElements[i].classList.add("deckClickTarget")
+				: communityElements[i].classList.remove("deckClickTarget");
 		}
 		// Sync player cards
 		let playerHandElements = document.querySelectorAll("#pokerTablePanel player-hand");
@@ -1558,6 +1570,9 @@ class UI {
 				if (cardValue)
 					hasCards = true;
 				cardElements[c].setValueFromString(cardValue);
+				UI.isNextDestination('player', c, h) 
+					? cardElements[c].classList.add("deckClickTarget")
+					: cardElements[c].classList.remove("deckClickTarget");
 			}
 			if (hasCards)
 				playerHandElements[h].classList.remove("closed");
@@ -1661,7 +1676,7 @@ class UI {
 
 	static clear() {
 		UI.model.reset();
-		UI.lastDestination = undefined;
+		UI.nextDestination = UI.computeNextDestination();
 		UI.syncUIToModel();
 		window.localStorage.clear();
 		for (let el of document.querySelectorAll(".statsDiv"))

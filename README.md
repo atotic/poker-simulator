@@ -3,16 +3,15 @@
 TODO
   - Usability
 	  - share a hand with others
-	  - default target should be marked
   	- shake to undo?z
 		- click on X twice to remove saved simulations (toaster shows this)
+		- process localstorage events
+	- drag to delete stat
+	- drag to reorder stat
 	- better layout (iPhone curvature)
-	- how do I get a PWA app to update?
 	- run stats as a thread
 	- Chromium: cannot create max-content size column. Is this because table_layout_types.cc:InlineLayoutFromStyle is setting CellInlineConstraint::is_constrained to false?
 	- lets build and debug chromium. Set the breakpoint for max-content
-	- drag to delete stat
-	- drag to reorder stat
 	- typescript usage
 	- a11y
 	- use state? https://sqlsync.dev/posts/stop-building-databases/
@@ -46,6 +45,8 @@ https://www.runitonce.com/
 Now defunct simulator manual http://propokertools.com/oracle_help/main
 
 DONE
+  7-Feb-24
+		- default target should be marked
 	23-Jan-24 
 		- installable from github pages
   18-Jan-24
