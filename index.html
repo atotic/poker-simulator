@@ -76,13 +76,13 @@
   }
   #toolbar {
     grid-area: toolbar;
-    /* padding:4px 16px 4px 16px; */
     background: var(--theme-back-color);
     display:flex;
     align-items:center;
     justify-content: center;
     user-select: none;
     padding: 4px;
+    position:relative;
   }
   #toolbar select {
     font-size:18px;
@@ -358,6 +358,8 @@
         <option>5</option>
     </select></label>
     <a id="resetButton" href="javascript:UI.clear()" title="clear all">❌</a>
+    <!-- https://iconduck.com/icons/53904/share-boxed -->
+    <a id="shareIcon" style="position:absolute;right:8px" href="javascript:UI.share()" title="share"><svg style="width:24px;height:24px;" height="8" viewBox="0 0 8 8" width="8" xmlns="http://www.w3.org/2000/svg"><path d="m.75 0c-.41 0-.75.34-.75.75v5.5c0 .41.34.75.75.75h4.5c.41 0 .75-.34.75-.75v-1.25h-1v1h-4v-5h2v-1zm5.25 0v1c-2.05 0-3.7 1.54-3.94 3.53.21-.88.99-1.53 1.94-1.53h2v1l2-2-2-2z"/></svg></a>
   </div>
   <div id="pokerTablePanel" class="tall">
     <player-hand><!-- 1 --></player-hand>
@@ -531,7 +533,8 @@ class UIModel {
 
   toHashString() {
     let s = '';
-    s += `cc=${JSON.stringify(this.communityCards)}&`;
+    if (this.communityCards.length > 0)
+      s += `cc=${JSON.stringify(this.communityCards)}&`;
     s += `players=${JSON.stringify(this.playerCards)}&`;
     if (this.holeCardCount != 2)
       s += `hole=${this.holeCardCount}&`;
@@ -543,14 +546,18 @@ class UIModel {
       s += `scoring=${this.scoring}`;
     if (s.charAt(s.length -1) == '&')	// trim &
       s = s.substring(0, s.length -1);
+// https://stackoverflow.com/questions/40636281/what-are-the-eligible-characters-in-a-urls-fragment-location-hash
     s = s.replaceAll('[', '(').replaceAll(']',')');
+    s = s.replaceAll('"', "'");
     return s;
   }
   // return UIModel
   static fromHashString(hash) {
+    if (hash && hash[0]=='#')
+      hash = hash.replace('#', '');
     try {
       let m = new UIModel();
-      hash = hash.replaceAll('(', '[').replaceAll(')', ']');
+      hash = hash.replaceAll('(', '[').replaceAll(')', ']').replaceAll("'",'"');
       let keyValues = new Map(hash.split('&').map( x => x.split('=')));
       for (let kv of keyValues) {
         switch(kv[0]) {
@@ -1325,11 +1332,19 @@ class UI {
       });
       document.querySelector("#suitPicker .suitPickerButton").addEventListener('click', UI.suitPickerChanged);
       document.querySelector("#hiloCheckbox").value = "high";
+
+      if (!navigator.share && !navigator.clipboard)
+        document.querySelector("#shareIcon").classList.add("hidden");
       UI.holeCardCountChanged();
       UI.playersChanged();
       UI.scoringChanged();
       UI.setDeckSuit('♥');
       
+      if (window.location.hash) {
+        let hashModel = UIModel.fromHashString(window.location.hash);
+        UI.model = hashModel;
+        UI.syncUIToModel();
+      }
       DragDrop.initDragAndDrop();
       for (let d of document.querySelectorAll("#deckPanel playing-card"))
         d.addEventListener("click", UI.deckClick);
@@ -1382,7 +1397,21 @@ class UI {
       return;
     UI.moveCard(UI.cardAddressFromElement(ev.target), UI.nextDestination);
   }
-
+  static async share() {
+    let url = new URL(window.location.toString());
+    url.hash = UI.model.toHashString();
+    if (navigator.share) {
+      const shareData = {
+        title: "Poker hand",
+        text: "Examine the hand in a poker simulator",
+        url: url.toString()
+      };
+      await navigator.share(shareData);
+    } else if (navigator.clipboard) {
+      await navigator.clipboard.writeText(url.toString());
+      console.log("url copied to clipboard")
+    }
+  }
   static preventDefault(ev) {
     if (ev.cancelable)
       ev.preventDefault();
