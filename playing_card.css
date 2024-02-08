@@ -1,210 +1,210 @@
 :root {
-	--card-width: 72px;
-	--mini-card-width: 36px;
-	--mini-card-rotation: 36;
+  --card-width: 72px;
+  --mini-card-width: 36px;
+  --mini-card-rotation: 36;
 }
 /* playing-card, playing-hand styles */
-	playing-card {
-	  display: inline-block;
-	  position: relative;
-	  width: var(--card-width);
-	  /* min-width: 36px; */
-	  border: 1px solid #000;
-	  border-radius: 8px;
-	  aspect-ratio: 1 / 1.4;
-		line-height:normal;
-	  background: repeating-linear-gradient(45deg,
-	      /* https://css-tricks.com/stripes-css/ */
-	      #606dbc,
-	      #606dbc 10px,
-	      #465298 10px,
-	      #465298 20px);
-	}
+  playing-card {
+    display: inline-block;
+    position: relative;
+    width: var(--card-width);
+    /* min-width: 36px; */
+    border: 1px solid #000;
+    border-radius: 8px;
+    aspect-ratio: 1 / 1.4;
+    line-height:normal;
+    background: repeating-linear-gradient(45deg,
+        /* https://css-tricks.com/stripes-css/ */
+        #606dbc,
+        #606dbc 10px,
+        #465298 10px,
+        #465298 20px);
+  }
 
-	playing-card.isDragged {
-	  transform: scale(1.3);
-	  box-shadow: 4px 4px 12px 0px rgba(0, 0, 0, 0.57);
-	}
+  playing-card.isDragged {
+    transform: scale(1.3);
+    box-shadow: 4px 4px 12px 0px rgba(0, 0, 0, 0.57);
+  }
 
-	playing-card[data-suit] {
-	  background: white;
-	}
+  playing-card[data-suit] {
+    background: white;
+  }
 
-	playing-card[data-rank] {
-	  background: white;
-	}
+  playing-card[data-rank] {
+    background: white;
+  }
 
-	playing-card::before {
-	  position: absolute;
-	  bottom: 0;
-	  display: block;
-	  width: 100%;
-	  text-align: center;
-	  font-size: 24px;
-	  content: '';
-	}
+  playing-card::before {
+    position: absolute;
+    bottom: 0;
+    display: block;
+    width: 100%;
+    text-align: center;
+    font-size: 24px;
+    content: '';
+  }
 
-	playing-card[data-suit="♠"]::before {
-	  content: "♠";
-	}
+  playing-card[data-suit="♠"]::before {
+    content: "♠";
+  }
 
-	playing-card[data-suit="♥"]::before {
-	  color: red;
-	  content: "♥";
-	}
+  playing-card[data-suit="♥"]::before {
+    color: red;
+    content: "♥";
+  }
 
-	playing-card[data-suit="♦"]::before {
-	  color: red;
-	  content: "♦";
-	}
+  playing-card[data-suit="♦"]::before {
+    color: red;
+    content: "♦";
+  }
 
-	playing-card[data-suit="♣"]::before {
-	  content: "♣";
-	}
+  playing-card[data-suit="♣"]::before {
+    content: "♣";
+  }
 
-	playing-card::after {
-	  position: absolute;
-	  top: 0;
-	  display: block;
-	  width: 100%;
-	  text-align: center;
-	  font-size: 24px;
-	  content: '';
-	}
+  playing-card::after {
+    position: absolute;
+    top: 0;
+    display: block;
+    width: 100%;
+    text-align: center;
+    font-size: 24px;
+    content: '';
+  }
 
-	playing-card[data-rank="2"]::after {
-	  content: "2";
-	}
+  playing-card[data-rank="2"]::after {
+    content: "2";
+  }
 
-	playing-card[data-rank="3"]::after {
-	  content: "3";
-	}
+  playing-card[data-rank="3"]::after {
+    content: "3";
+  }
 
-	playing-card[data-rank="4"]::after {
-	  content: "4";
-	}
+  playing-card[data-rank="4"]::after {
+    content: "4";
+  }
 
-	playing-card[data-rank="5"]::after {
-	  content: "5";
-	}
+  playing-card[data-rank="5"]::after {
+    content: "5";
+  }
 
-	playing-card[data-rank="6"]::after {
-	  content: "6";
-	}
+  playing-card[data-rank="6"]::after {
+    content: "6";
+  }
 
-	playing-card[data-rank="7"]::after {
-	  content: "7";
-	}
+  playing-card[data-rank="7"]::after {
+    content: "7";
+  }
 
-	playing-card[data-rank="8"]::after {
-	  content: "8";
-	}
+  playing-card[data-rank="8"]::after {
+    content: "8";
+  }
 
-	playing-card[data-rank="9"]::after {
-	  content: "9";
-	}
+  playing-card[data-rank="9"]::after {
+    content: "9";
+  }
 
-	playing-card[data-rank="10"]::after {
-	  content: "10";
-	}
+  playing-card[data-rank="10"]::after {
+    content: "10";
+  }
 
-	playing-card[data-rank="J"]::after {
-	  content: "J";
-	}
+  playing-card[data-rank="J"]::after {
+    content: "J";
+  }
 
-	playing-card[data-rank="Q"]::after {
-	  content: "Q";
-	}
+  playing-card[data-rank="Q"]::after {
+    content: "Q";
+  }
 
-	playing-card[data-rank="K"]::after {
-	  content: "K";
-	}
+  playing-card[data-rank="K"]::after {
+    content: "K";
+  }
 
-	playing-card[data-rank="A"]::after {
-	  content: "A";
-	}
+  playing-card[data-rank="A"]::after {
+    content: "A";
+  }
 
-	playing-card.inUse {
-	  opacity: 0.3;
-	}
+  playing-card.inUse {
+    opacity: 0.3;
+  }
 
-	/* 
-	Player hand positioning 
-	10 fixed positions around the table.
-	/-3-2-4
+  /* 
+  Player hand positioning 
+  10 fixed positions around the table.
+  /-3-2-4
   5     6
-	7     8
-	9     10
-	   1
+  7     8
+  9     10
+     1
 */
-	player-hand {
-		--mini-left-offset: 0.7;
-	  display: block;
-		position:relative;
-		min-width: var(--mini-card-width);
-		width:max-content;
-  	height: calc(1.4 * var(--mini-card-width));
-	  /* min-width: var(--card-width);
-	  min-height: var(--card-width); */
-		white-space-collapse: collapse;
-	}
+  player-hand {
+    --mini-left-offset: 0.7;
+    display: block;
+    position:relative;
+    min-width: var(--mini-card-width);
+    width:max-content;
+    height: calc(1.4 * var(--mini-card-width));
+    /* min-width: var(--card-width);
+    min-height: var(--card-width); */
+    white-space-collapse: collapse;
+  }
 player-hand:nth-child(1) {
-	bottom: 60px;
-	left: 50%;
-	position: absolute;
-	transform: translate(-50%);
+  bottom: 60px;
+  left: 50%;
+  position: absolute;
+  transform: translate(-50%);
 }
 player-hand:nth-child(1) playing-card:first-child {
-	transform: rotate(-3deg);
+  transform: rotate(-3deg);
 }
 player-hand:nth-child(1) playing-card:last-child {
-	transform: rotate(3deg);
+  transform: rotate(3deg);
 }
 player-hand:nth-child(2) {
-	top: 0;
-	left: 50%;
-	position: absolute;
-	transform: translate(-50%);
+  top: 0;
+  left: 50%;
+  position: absolute;
+  transform: translate(-50%);
 }
 player-hand:nth-child(3) {
-	top: 0;
-	left: calc(var(--mini-left-offset) * var(--mini-card-width));
-	position: absolute;
+  top: 0;
+  left: calc(var(--mini-left-offset) * var(--mini-card-width));
+  position: absolute;
 }
 player-hand:nth-child(4) {
-	top: 0;
-	right: calc(0.5 * var(--mini-card-width));
-	position: absolute;
+  top: 0;
+  right: calc(0.5 * var(--mini-card-width));
+  position: absolute;
 }
 player-hand:nth-child(5) {
-	top: 20%;
-	left: calc(var(--mini-left-offset) * var(--mini-card-width));
-	position: absolute;
+  top: 20%;
+  left: calc(var(--mini-left-offset) * var(--mini-card-width));
+  position: absolute;
 }
 player-hand:nth-child(6) {
-	top: 20%;
-	right: calc(0.5 * var(--mini-card-width));
-	position: absolute;
+  top: 20%;
+  right: calc(0.5 * var(--mini-card-width));
+  position: absolute;
 }
 player-hand:nth-child(7) {
-	top: 40%;
-	left: calc(var(--mini-left-offset) * var(--mini-card-width));
-	position: absolute;
+  top: 40%;
+  left: calc(var(--mini-left-offset) * var(--mini-card-width));
+  position: absolute;
 }
 player-hand:nth-child(8) {
-	top: 40%;
-	right: calc(0.5 * var(--mini-card-width));
-	position: absolute;
+  top: 40%;
+  right: calc(0.5 * var(--mini-card-width));
+  position: absolute;
 }
 player-hand:nth-child(9) {
-	top: 60%;
-	left: calc(var(--mini-left-offset) * var(--mini-card-width));
-	position: absolute;
+  top: 60%;
+  left: calc(var(--mini-left-offset) * var(--mini-card-width));
+  position: absolute;
 }
 player-hand:nth-child(10) {
-	top: 60%;
-	right: calc(0.5 * var(--mini-card-width));
-	position: absolute;
+  top: 60%;
+  right: calc(0.5 * var(--mini-card-width));
+  position: absolute;
 }
 
 /* 
@@ -212,66 +212,66 @@ Playing cards inside a mini hand.
 Cards are held naturally
 */
 player-hand.mini playing-card {
-	width: var(--mini-card-width);
-	position:absolute;
-	top: 0;
-	left:0;
+  width: var(--mini-card-width);
+  position:absolute;
+  top: 0;
+  left:0;
 }
 
 player-hand.mini>playing-card {
-	transform-origin: 50% bottom;
+  transform-origin: 50% bottom;
 }
 
 player-hand.mini.closed>playing-card {
-	transform: none !important;
+  transform: none !important;
 }
 /* 2-card hand */
 player-hand.mini[data-hole-count='2']>playing-card:nth-child(1) {
-	transform: translate(-10px) rotate(calc(-0.5deg * var(--mini-card-rotation)));
+  transform: translate(-10px) rotate(calc(-0.5deg * var(--mini-card-rotation)));
 }
 player-hand.mini[data-hole-count='2']>playing-card:nth-child(2) {
-	transform: translate(-10px) rotate(calc(0.5deg * var(--mini-card-rotation)));
+  transform: translate(-10px) rotate(calc(0.5deg * var(--mini-card-rotation)));
 }
 /* 3,4,5-card hand */
 player-hand.mini>playing-card:nth-child(1) {
-	transform: translate(-10px) rotate(calc(-1deg * var(--mini-card-rotation)));
+  transform: translate(-10px) rotate(calc(-1deg * var(--mini-card-rotation)));
 }
 
 player-hand.mini>playing-card:nth-child(2) {
-	transform: translate(-5px) rotate(calc(-0.5deg * var(--mini-card-rotation)));
+  transform: translate(-5px) rotate(calc(-0.5deg * var(--mini-card-rotation)));
 }
 
 player-hand.mini>playing-card:nth-child(3) {
-	transform: none;
+  transform: none;
 }
 
 player-hand.mini>playing-card:nth-child(4) {
-	transform: translate(5px) rotate(calc(0.5deg * var(--mini-card-rotation)));
+  transform: translate(5px) rotate(calc(0.5deg * var(--mini-card-rotation)));
 }
 
 player-hand.mini>playing-card:nth-child(5) {
-	position: absolute;
-	top: 0;
-	left: 0;
-	transform: translate(10px) rotate(calc(1deg * var(--mini-card-rotation)));
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform: translate(10px) rotate(calc(1deg * var(--mini-card-rotation)));
 }
 
 player-hand.mini playing-card::before {
-	position: absolute;
-	bottom: 0;
-	width: 50%;
-	display: block;
-	font-size: 24px;
+  position: absolute;
+  bottom: 0;
+  width: 50%;
+  display: block;
+  font-size: 24px;
 }
 
 player-hand.mini playing-card::after {
-	position: absolute;
-	top: 0;
-	width: 50%;
-	display: block;
-	font-size: 24px;
+  position: absolute;
+  top: 0;
+  width: 50%;
+  display: block;
+  font-size: 24px;
 }
 
 player-hand.mini.closed>playing-card {
-	transform: none !important;
+  transform: none !important;
 }

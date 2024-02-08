@@ -8,1748 +8,1752 @@
 <title>poker odds</title>
 <script src="pokerEngine.js"></script>
 <style>
-	:root {
-		--hilo-button-size: 40px;
-		--deck-card-width: 50px;
-		--theme-back-color: #fee4d2;
-		--felt-green: #C9EED0;
-	}
-	* {
-		box-sizing:border-box;
-	}
-	html, body {
-		margin: 0;
-		padding: 0;
-	 	min-height: 100vh;/* if body scrolls, can't do drag'n'drop on mobile */
-		/* height: 100vh; */
-  	/* overflow: hidden; */
-		user-select: none;
-	}
-	body {
-		padding-bottom: 16px;
-	}
-	.hidden {
-		display:none;
-	}
-	.dragIsActive  {
-		touch-action: none;
-	}
-	.emoji {
-		font-size: x-large;
-	}
-	.x-small {
-		font-size: x-small;
-	}
-	.red {
-		color: red;
-	}
-	.wsCollapse {
-		white-space-collapse: collapse;
-	}
-	.maxContent {
-		width: max-content;
-	}
-	.deckClickTarget {
-		box-shadow: 0px 0px 5px 0px rgba(60, 56, 47,1);
-	}
-	#main {
-		display: grid;
-		background: green;
-		grid-template-columns: 1fr;
-		grid-template-rows: minmax(max-content, 40px) 1fr minmax(max-content, max-content) max-content;
-		grid-template-areas:
-			"toolbar"
-			"table"
-			"deck"
-			"stats";
-		height:100vh;
-		max-height: 1050px;
-	}
-	@media (min-width: 780px) {
-		#main {
-			grid-template-columns: 1fr max-content;
-			grid-template-areas:
-				"toolbar stats"
-				"table stats"
-				"deck deck";
-		}		
-	}
-	#toolbar {
-		grid-area: toolbar;
-		/* padding:4px 16px 4px 16px; */
-		background: var(--theme-back-color);
-		display:flex;
-		align-items:center;
-		justify-content: center;
-		user-select: none;
-		padding: 4px;
-	}
-	#toolbar select {
-		font-size:18px;
-	}
-	#resetButton {
-		font-size:24px;
-		position:absolute;
-		left: 16px;
-		padding:8px;
-		text-decoration: none;
-	}
+  :root {
+    --hilo-button-size: 40px;
+    --deck-card-width: 50px;
+    --theme-back-color: #fee4d2;
+    --felt-green: #C9EED0;
+  }
+  * {
+    box-sizing:border-box;
+  }
+  html, body {
+    margin: 0;
+    padding: 0;
+     min-height: 100vh;/* if body scrolls, can't do drag'n'drop on mobile */
+    /* height: 100vh; */
+    /* overflow: hidden; */
+    user-select: none;
+  }
+  body {
+    padding-bottom: 16px;
+  }
+  .hidden {
+    display:none;
+  }
+  .dragIsActive  {
+    touch-action: none;
+  }
+  .emoji {
+    font-size: x-large;
+  }
+  .x-small {
+    font-size: x-small;
+  }
+  .red {
+    color: red;
+  }
+  .wsCollapse {
+    white-space-collapse: collapse;
+  }
+  .maxContent {
+    width: max-content;
+  }
+  .deckClickTarget {
+    box-shadow: 0px 0px 5px 0px rgba(60, 56, 47,1);
+  }
+  #main {
+    display: grid;
+    background: green;
+    grid-template-columns: 1fr;
+    grid-template-rows: minmax(max-content, 40px) 1fr minmax(max-content, max-content) max-content;
+    grid-template-areas:
+      "toolbar"
+      "table"
+      "deck"
+      "stats";
+    height:100vh;
+    max-height: 1050px;
+  }
+  @media (min-width: 780px) {
+    #main {
+      grid-template-columns: 1fr max-content;
+      grid-template-areas:
+        "toolbar stats"
+        "table stats"
+        "deck deck";
+    }		
+  }
+  #toolbar {
+    grid-area: toolbar;
+    /* padding:4px 16px 4px 16px; */
+    background: var(--theme-back-color);
+    display:flex;
+    align-items:center;
+    justify-content: center;
+    user-select: none;
+    padding: 4px;
+  }
+  #toolbar select {
+    font-size:18px;
+  }
+  #resetButton {
+    font-size:24px;
+    position:absolute;
+    left: 16px;
+    padding:8px;
+    text-decoration: none;
+  }
 
-	#pokerTablePanel {
-		grid-area: table;
-		padding: 16px;
-		position: relative;
-		max-height: 800px;
-		min-height: 415px;
-		user-select: none;
-	}
+  #pokerTablePanel {
+    grid-area: table;
+    padding: 16px;
+    position: relative;
+    max-height: 800px;
+    min-height: 415px;
+    user-select: none;
+  }
 
-	#tableTop {
-		display:flex;
-		justify-content: center;
-		align-items: center;
-		align-content:center;
-		flex-wrap:wrap;
-		gap:4px;
-		box-sizing:border-box;
-		width:100%;
-		max-width:1280px;
-		height: 100%;
-		max-height: 800px;
-		background: var(--felt-green);
-		border: 32px solid #F6E6C2 ;
-		border-radius:72px;
-	}
-	#flopContainer {
-		display:flex;
-		justify-content: center;
-		align-items: center;
-		align-content:center;
-		flex-wrap:wrap;
-		gap:4px;
-		padding-bottom:48px;
-	}
+  #tableTop {
+    display:flex;
+    justify-content: center;
+    align-items: center;
+    align-content:center;
+    flex-wrap:wrap;
+    gap:4px;
+    box-sizing:border-box;
+    width:100%;
+    max-width:1280px;
+    height: 100%;
+    max-height: 800px;
+    background: var(--felt-green);
+    border: 32px solid #F6E6C2 ;
+    border-radius:72px;
+  }
+  #flopContainer {
+    display:flex;
+    justify-content: center;
+    align-items: center;
+    align-content:center;
+    flex-wrap:wrap;
+    gap:4px;
+    padding-bottom:48px;
+  }
 
-	@media (min-width: 780px) {
-		#tableTop {
-			border-radius:144px;
-		}	
-	}
+  @media (min-width: 780px) {
+    #tableTop {
+      border-radius:144px;
+    }	
+  }
 
-	#deckPanel {
-		grid-area: deck;
-		user-select: none;
-		/* background: rgb(122, 122, 157); */
-		display:flex;
-		flex-wrap:wrap;
-		align-items:flex-start;
-		justify-content: center;
-		user-select: none;
-	}
-	playing-card.deck {
-		width: var(--deck-card-width); 
-		min-width: 36px;
-	}
+  #deckPanel {
+    grid-area: deck;
+    user-select: none;
+    /* background: rgb(122, 122, 157); */
+    display:flex;
+    flex-wrap:wrap;
+    align-items:flex-start;
+    justify-content: center;
+    user-select: none;
+  }
+  playing-card.deck {
+    width: var(--deck-card-width); 
+    min-width: 36px;
+  }
 
-	/* suit picker */
-	#suitPicker .wide {
-		display:none;
-	}
-	@media (min-width: 440px) {
-		#suitPicker .wide {
-			display:inline-block;
-		}	
-		#suitPicker .narrow {
-			display: none;
-		}
-	}
-	#suitPicker a {
-		text-decoration: none;
-		color: black;
-		font-size:72px;
-		display: inline-block;
-	}
-	#suitPicker a.selected {
-		transform:scale(1.2);
-	}
-	.suitPickerButton {
-		font-size:0px;
-		height: 68px;
-		width: var(--deck-card-width);
-	}
-	.suitPickerButton span {
-		font-size: 44px;
-		color:black;
-	}
-	.suitPickerButton[data-suit='♥'] span, .suitPickerButton[data-suit='♦'] span {
-		color: red;
-	}
+  /* suit picker */
+  #suitPicker .wide {
+    display:none;
+  }
+  @media (min-width: 440px) {
+    #suitPicker .wide {
+      display:inline-block;
+    }	
+    #suitPicker .narrow {
+      display: none;
+    }
+  }
+  #suitPicker a {
+    text-decoration: none;
+    color: black;
+    font-size:72px;
+    display: inline-block;
+  }
+  #suitPicker a.selected {
+    transform:scale(1.2);
+  }
+  .suitPickerButton {
+    font-size:0px;
+    height: 68px;
+    width: var(--deck-card-width);
+  }
+  .suitPickerButton span {
+    font-size: 44px;
+    color:black;
+  }
+  .suitPickerButton[data-suit='♥'] span, .suitPickerButton[data-suit='♦'] span {
+    color: red;
+  }
 
-	#statsPanel {
-		grid-area: stats;
-		background: rgb(234 254 231);
-		min-width: 300px;
-		display:flex;
-		flex-direction: column;
-	}
-	.error {
-		border: 2px solid red;
-		color: rgb(212, 26, 26);
-	}
-	#simResults {
-		overflow: auto;
-		/* max-height: 100%; */
-		flex-grow: 1;
-		background: white;
-	}
+  #statsPanel {
+    grid-area: stats;
+    background: rgb(234 254 231);
+    min-width: 300px;
+    display:flex;
+    flex-direction: column;
+  }
+  .error {
+    border: 2px solid red;
+    color: rgb(212, 26, 26);
+  }
+  #simResults {
+    overflow: auto;
+    /* max-height: 100%; */
+    flex-grow: 1;
+    background: white;
+  }
 
 
-	/* Stats table */
-	.statsTable {
-		border-collapse: collapse;
-		width:100%;
-		font-family:monospace;
-		margin-bottom: 8px;
-		border-bottom: 1px solid black;
-		border-top: 1px solid #ddd;
-		user-select: text;
-	}
-	.statsTable td {
-		padding: 1px 2px 1px 2px;
-		text-align:center;
-	}
-	.statsTable th {
-		text-align: start;
-		font-weight: normal;
-	}
-	.statsTable th hr {
-		border:none;
-		border-top:1px solid #ddd;
-		margin:2px;
-	}
-	.statsTable thead tr:nth-child(1) th:nth-child(1) {
-		vertical-align:top;
-		position: relative;
-	}
-	.statsTable thead tr {
-		vertical-align: bottom;
-	}
-	.statsTable .playerCountStats {
-		position:absolute;
-		bottom: 2px;
-		right:2px;
-	}
-	.statsTable .vsMarquee {
-		border: 1px solid #ddd;
-	}
-	.statsTable.vsTable td {
-		border-left: 1px solid #ddd;
-		border-right: 1px solid #ddd;		
-	}
-	.winColumn {
-		background-color:#e2f8df;
-	}
-	.loseColumn {
-		background-color:#ffeeec;
-	}
-	.splitColumn {
-		background-color:#eee;
-	}
-	.headerColumn {
-		max-width:50px;
-	}
-	.statsDetails {
-		font-size: 11px;
-		font-family: sans-serif;
-		border-top: 1px solid #ddd;
-	}
-	.statsDetails tr:nth-child(odd) {
- 	 background-color: rgba(220,220,220,0.5);
-	}
-	.statsTable tbody tr:nth-child(odd){
-		background-color: rgba(220,220,220,0.5);
-	}
+  /* Stats table */
+  .statsTable {
+    border-collapse: collapse;
+    width:100%;
+    font-family:monospace;
+    margin-bottom: 8px;
+    border-bottom: 1px solid black;
+    border-top: 1px solid #ddd;
+    user-select: text;
+  }
+  .statsTable td {
+    padding: 1px 2px 1px 2px;
+    text-align:center;
+  }
+  .statsTable th {
+    text-align: start;
+    font-weight: normal;
+  }
+  .statsTable th hr {
+    border:none;
+    border-top:1px solid #ddd;
+    margin:2px;
+  }
+  .statsTable thead tr:nth-child(1) th:nth-child(1) {
+    vertical-align:top;
+    position: relative;
+  }
+  .statsTable thead tr {
+    vertical-align: bottom;
+  }
+  .statsTable .playerCountStats {
+    position:absolute;
+    bottom: 2px;
+    right:2px;
+  }
+  .statsTable .vsMarquee {
+    border: 1px solid #ddd;
+  }
+  .statsTable.vsTable td {
+    border-left: 1px solid #ddd;
+    border-right: 1px solid #ddd;		
+  }
+  .winColumn {
+    background-color:#e2f8df;
+  }
+  .loseColumn {
+    background-color:#ffeeec;
+  }
+  .splitColumn {
+    background-color:#eee;
+  }
+  .headerColumn {
+    max-width:50px;
+  }
+  .statsDetails {
+    font-size: 11px;
+    font-family: sans-serif;
+    border-top: 1px solid #ddd;
+  }
+  .statsDetails tr:nth-child(odd) {
+    background-color: rgba(220,220,220,0.5);
+  }
+  .statsTable tbody tr:nth-child(odd){
+    background-color: rgba(220,220,220,0.5);
+  }
 
-	.cardTextTile {
-		font-size:13px;
-		display:inline-block;
-		border: 0.5px solid gray;
-		border-radius: 3px;
-		background-color: white;
-		padding: 0 2px 0 2px;
-	}
+  .cardTextTile {
+    font-size:13px;
+    display:inline-block;
+    border: 0.5px solid gray;
+    border-radius: 3px;
+    background-color: white;
+    padding: 0 2px 0 2px;
+  }
 
-	@keyframes dropCancel {
-		to {
-			transform: translate(0px , 0px);
-		}
-	}
-	.dropCancel {
-		animation: dropCancel;
-		animation-duration: 0.1s;
-	}
-	.isDragged {
-		opacity: 0.7;
-	}
-	#hiloCheckbox {
-		margin-left: 16px;
-		margin-right: 16px;
-		position: relative;
-		border: 1px solid black;
-		border-radius: calc(var(--hilo-button-size) / 2);
-		width: var(--hilo-button-size);
-		height: var(--hilo-button-size);
-		transform: rotateY(0deg);
-		transform-style: preserve-3d;
-		transition: transform 0.4s;
-	}
-	#hiloCheckbox.checked {
-		transform: rotateY(180deg);
-		transform-style: preserve-3d;
-		transition: transform 0.4s;
-	}
-	.hi {
-		background-color: black;
-		color: white;
-	}
-	.hilow {
-		background-color: white;
-		color: black;
-		transform: rotateY(180deg);
-	}
-	.hi, .hilow {
-		position:absolute;
-		width: var(--hilo-button-size);
-		height: var(--hilo-button-size);
-		border-radius: calc(var(--hilo-button-size) / 2);
-		backface-visibility: hidden;
-		white-space: nowrap;
-		font-family: sans-serif;
-		font-size: smaller;
-		text-align: center;
-		line-height: var(--hilo-button-size);
-		user-select:none;
-	}
+  @keyframes dropCancel {
+    to {
+      transform: translate(0px , 0px);
+    }
+  }
+  .dropCancel {
+    animation: dropCancel;
+    animation-duration: 0.1s;
+  }
+  .isDragged {
+    opacity: 0.7;
+  }
+  #hiloCheckbox {
+    margin-left: 16px;
+    margin-right: 16px;
+    position: relative;
+    border: 1px solid black;
+    border-radius: calc(var(--hilo-button-size) / 2);
+    width: var(--hilo-button-size);
+    height: var(--hilo-button-size);
+    transform: rotateY(0deg);
+    transform-style: preserve-3d;
+    transition: transform 0.4s;
+  }
+  #hiloCheckbox.checked {
+    transform: rotateY(180deg);
+    transform-style: preserve-3d;
+    transition: transform 0.4s;
+  }
+  .hi {
+    background-color: black;
+    color: white;
+  }
+  .hilow {
+    background-color: white;
+    color: black;
+    transform: rotateY(180deg);
+  }
+  .hi, .hilow {
+    position:absolute;
+    width: var(--hilo-button-size);
+    height: var(--hilo-button-size);
+    border-radius: calc(var(--hilo-button-size) / 2);
+    backface-visibility: hidden;
+    white-space: nowrap;
+    font-family: sans-serif;
+    font-size: smaller;
+    text-align: center;
+    line-height: var(--hilo-button-size);
+    user-select:none;
+  }
 </style>
 <link rel="stylesheet" href="playing_card.css">
 </head>
 <body>
 <div id="main">
-	<div id="toolbar">
-		<label title="players">👤 <select id="playerCount" >
-			<option>2</option>
-			<option>3</option>
-			<option>4</option>
-			<option>5</option>
-			<option>6</option>
-			<option>7</option>
-			<option>8</option>
-			<option>9</option>
-			<option selected>10</option>
-		</select></label>
-		<label><div id="hiloCheckbox">
-			<div class="hi">HI</div>
-			<div class="hilow">HI-LO</div>
-		</div></label>
-		<label>Hole cards<select id="holeCardCount">
-				<option selected>2</option>
-				<option>3</option>
-				<option>4</option>
-				<option>5</option>
-		</select></label>
-		<a id="resetButton" href="javascript:UI.clear()" title="clear all">❌</a>
-	</div>
-	<div id="pokerTablePanel" class="tall">
-		<player-hand><!-- 1 --></player-hand>
-		<player-hand class="mini"><!-- 2 --></player-hand>
-		<player-hand class="mini"><!-- 3 --></player-hand>
-		<player-hand class="mini"><!-- 4 --></player-hand>
-		<player-hand class="mini"><!-- 5 --></player-hand>
-		<player-hand class="mini"><!-- 6 --></player-hand>
-		<player-hand class="mini"><!-- 7 --></player-hand>
-		<player-hand class="mini"><!-- 8 --></player-hand>
-		<player-hand class="mini"><!-- 9 --></player-hand>
-		<player-hand class="mini"><!-- 10 --></player-hand>
-		<div id="tableTop">
-			<div id="flopContainer">
-				<div id="flop" style="display:flex;gap:4px">
-					<playing-card title="flop" class="community"></playing-card>
-					<playing-card title="flop" class="community"></playing-card>
-					<playing-card title="flop" class="community"></playing-card>
-				</div>
-				<div id="turn" style="line-height:0">
-					<playing-card title="turn" class="community"></playing-card>
-				</div>
-				<div id="river" style="line-height:0">
-					<playing-card title="river" class="community"></playing-card>
-				</div>
-			</div>
-		</div>
-	</div>
-	<div id="deckPanel">
-		<playing-card data-rank="2" class="deck" tabindex=0></playing-card>
-		<playing-card data-rank="3" class="deck" tabindex=0></playing-card>
-		<playing-card data-rank="4" class="deck" tabindex=0></playing-card>
-		<playing-card data-rank="5" class="deck" tabindex=0></playing-card>
-		<playing-card data-rank="6" class="deck" tabindex=0></playing-card>
-		<playing-card data-rank="7" class="deck" tabindex=0></playing-card>
-		<playing-card data-rank="8" class="deck" tabindex=0></playing-card>
-		<playing-card data-rank="9" class="deck" tabindex=0></playing-card>
-		<playing-card data-rank="10" class="deck" tabindex=0></playing-card>
-		<playing-card data-rank="J" class="deck" tabindex=0></playing-card>
-		<playing-card data-rank="Q" class="deck" tabindex=0></playing-card>
-		<playing-card data-rank="K" class="deck" tabindex=0></playing-card>	
-		<playing-card data-rank="A" class="deck" tabindex=0></playing-card>
-		<div id="suitPicker" style="display:inline-block">
-			<div class="wide">
-				<a href="javascript:UI.setDeckSuit('♠')" title="spades">♠</a>
-				<a href="javascript:UI.setDeckSuit('♥')" title="hearts" style="color:red">♥</a>
-				<a href="javascript:UI.setDeckSuit('♦')" title="diamonds" style="color:red">♦</a>
-				<a href="javascript:UI.setDeckSuit('♣')" title="clubs">♣</a>
-			</div>
-			<div class="narrow">
-				<button class="suitPickerButton"><span>♠</span></button>
-			</div>
-		</div>
+  <div id="toolbar">
+    <label title="players">👤 <select id="playerCount" >
+      <option>2</option>
+      <option>3</option>
+      <option>4</option>
+      <option>5</option>
+      <option>6</option>
+      <option>7</option>
+      <option>8</option>
+      <option>9</option>
+      <option selected>10</option>
+    </select></label>
+    <label><div id="hiloCheckbox">
+      <div class="hi">HI</div>
+      <div class="hilow">HI-LO</div>
+    </div></label>
+    <label>Hole cards<select id="holeCardCount">
+        <option selected>2</option>
+        <option>3</option>
+        <option>4</option>
+        <option>5</option>
+    </select></label>
+    <a id="resetButton" href="javascript:UI.clear()" title="clear all">❌</a>
   </div>
-	<div id="statsPanel">
-		<button id="simButton" style="font-size:large" onClick="UI.runSimulation()">Simulate</button>
-		<div class="error"></div>
-		<div id="simResults"></div>
-	</div>
+  <div id="pokerTablePanel" class="tall">
+    <player-hand><!-- 1 --></player-hand>
+    <player-hand class="mini"><!-- 2 --></player-hand>
+    <player-hand class="mini"><!-- 3 --></player-hand>
+    <player-hand class="mini"><!-- 4 --></player-hand>
+    <player-hand class="mini"><!-- 5 --></player-hand>
+    <player-hand class="mini"><!-- 6 --></player-hand>
+    <player-hand class="mini"><!-- 7 --></player-hand>
+    <player-hand class="mini"><!-- 8 --></player-hand>
+    <player-hand class="mini"><!-- 9 --></player-hand>
+    <player-hand class="mini"><!-- 10 --></player-hand>
+    <div id="tableTop">
+      <div id="flopContainer">
+        <div id="flop" style="display:flex;gap:4px">
+          <playing-card title="flop" class="community"></playing-card>
+          <playing-card title="flop" class="community"></playing-card>
+          <playing-card title="flop" class="community"></playing-card>
+        </div>
+        <div id="turn" style="line-height:0">
+          <playing-card title="turn" class="community"></playing-card>
+        </div>
+        <div id="river" style="line-height:0">
+          <playing-card title="river" class="community"></playing-card>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="deckPanel">
+    <playing-card data-rank="2" class="deck" tabindex=0></playing-card>
+    <playing-card data-rank="3" class="deck" tabindex=0></playing-card>
+    <playing-card data-rank="4" class="deck" tabindex=0></playing-card>
+    <playing-card data-rank="5" class="deck" tabindex=0></playing-card>
+    <playing-card data-rank="6" class="deck" tabindex=0></playing-card>
+    <playing-card data-rank="7" class="deck" tabindex=0></playing-card>
+    <playing-card data-rank="8" class="deck" tabindex=0></playing-card>
+    <playing-card data-rank="9" class="deck" tabindex=0></playing-card>
+    <playing-card data-rank="10" class="deck" tabindex=0></playing-card>
+    <playing-card data-rank="J" class="deck" tabindex=0></playing-card>
+    <playing-card data-rank="Q" class="deck" tabindex=0></playing-card>
+    <playing-card data-rank="K" class="deck" tabindex=0></playing-card>	
+    <playing-card data-rank="A" class="deck" tabindex=0></playing-card>
+    <div id="suitPicker" style="display:inline-block">
+      <div class="wide">
+        <a href="javascript:UI.setDeckSuit('♠')" title="spades">♠</a>
+        <a href="javascript:UI.setDeckSuit('♥')" title="hearts" style="color:red">♥</a>
+        <a href="javascript:UI.setDeckSuit('♦')" title="diamonds" style="color:red">♦</a>
+        <a href="javascript:UI.setDeckSuit('♣')" title="clubs">♣</a>
+      </div>
+      <div class="narrow">
+        <button class="suitPickerButton"><span>♠</span></button>
+      </div>
+    </div>
+  </div>
+  <div id="statsPanel">
+    <button id="simButton" style="font-size:large" onClick="UI.runSimulation()">Simulate</button>
+    <div class="error"></div>
+    <div id="simResults"></div>
+  </div>
 </div>
 
 <script>
 class PlayingCard extends HTMLElement {
-	static observedAttributes = ["data-suit", "data-rank"];
+  static observedAttributes = ["data-suit", "data-rank"];
 
-	static SuitToEmoji = new Map([
-		['S', '♠'],
-		['H', '♥'],
-		['D', '♦'],
-		['C', '♣'],
-	]);
-	static EmojiToSuit = new Map([
-		['♠', 'S'],
-		['♥', 'H'],
-		['♦', 'D'],
-		['♣', 'C']
-	]);
+  static SuitToEmoji = new Map([
+    ['S', '♠'],
+    ['H', '♥'],
+    ['D', '♦'],
+    ['C', '♣'],
+  ]);
+  static EmojiToSuit = new Map([
+    ['♠', 'S'],
+    ['♥', 'H'],
+    ['♦', 'D'],
+    ['♣', 'C']
+  ]);
 
-	constructor() {
-		super();
-	}
-	connectedCallback() {
-	}
-	attributeChangedCallback(name, oldValue, newValue) {
+  constructor() {
+    super();
+  }
+  connectedCallback() {
+  }
+  attributeChangedCallback(name, oldValue, newValue) {
 
-	}
-	clear() {
-		this.removeAttribute('data-suit');
-		this.removeAttribute('data-rank');
-	}
-	// str is in the PokerEngine card format: "2S"
-	setValueFromString(str) {
-		if (typeof str != 'string' || str.length < 2)
-			this.clear();
-		else {
-			let rank = str[0];
-			if (rank == "T")
-				rank = "10";
-			let suit = PlayingCard.SuitToEmoji.get(str[1]);
-			this.setAttribute('data-suit', suit);
-			this.setAttribute('data-rank', rank);
-		}
-	}
-	valueAsString() {
-		let rank = this.getAttribute('data-rank');
-		let suit = this.getAttribute('data-suit');
-		if (!rank && !suit)
-			return "";
-		if (rank == "10")
-			rank = "T";
-		return `${rank}${PlayingCard.EmojiToSuit.get(suit)}`;
-	}
+  }
+  clear() {
+    this.removeAttribute('data-suit');
+    this.removeAttribute('data-rank');
+  }
+  // str is in the PokerEngine card format: "2S"
+  setValueFromString(str) {
+    if (typeof str != 'string' || str.length < 2)
+      this.clear();
+    else {
+      let rank = str[0];
+      if (rank == "T")
+        rank = "10";
+      let suit = PlayingCard.SuitToEmoji.get(str[1]);
+      this.setAttribute('data-suit', suit);
+      this.setAttribute('data-rank', rank);
+    }
+  }
+  valueAsString() {
+    let rank = this.getAttribute('data-rank');
+    let suit = this.getAttribute('data-suit');
+    if (!rank && !suit)
+      return "";
+    if (rank == "10")
+      rank = "T";
+    return `${rank}${PlayingCard.EmojiToSuit.get(suit)}`;
+  }
 }
 customElements.define("playing-card", PlayingCard);
 
 class PlayerHand extends HTMLElement {
-	static observedAttributes = ["data-hole-count"]
-	connectedCallback() {
-	}
-	setHoleCardCount(count) {
-		let playingCards = Array.from(this.querySelectorAll('playing-card'));
-		let currentCards = playingCards.length;
-		while (currentCards > count) {
-			let el = playingCards.pop();
-			el.remove();
-			--currentCards;
-		}
-		while (currentCards < count) {
-			this.append(document.createElement('playing-card'));
-			++currentCards;
-		}
-	}
-	attributeChangedCallback(name, oldValue, newValue) {
-		if (name == 'data-hole-count')
-			this.setHoleCardCount(Number.parseInt(newValue));
-		else
-			console.warn(`Attribute ${name} not handled`);
-	}
+  static observedAttributes = ["data-hole-count"]
+  connectedCallback() {
+  }
+  setHoleCardCount(count) {
+    let playingCards = Array.from(this.querySelectorAll('playing-card'));
+    let currentCards = playingCards.length;
+    while (currentCards > count) {
+      let el = playingCards.pop();
+      el.remove();
+      --currentCards;
+    }
+    while (currentCards < count) {
+      this.append(document.createElement('playing-card'));
+      ++currentCards;
+    }
+  }
+  attributeChangedCallback(name, oldValue, newValue) {
+    if (name == 'data-hole-count')
+      this.setHoleCardCount(Number.parseInt(newValue));
+    else
+      console.warn(`Attribute ${name} not handled`);
+  }
 }
 customElements.define("player-hand", PlayerHand);
 
 class UIModel {
-	communityCards = [];
-	playerCards = [];
-	holeCardCount = 2;
-	playerCount = 10;
-	holeCardRules = 'atMost2';
-	scoring = 'high';
-	reset() {
-		this.communityCards = [];
-		this.playerCards = [];
-	}
-	validate() {
-		if (!Array.isArray(this.communityCards))
-			throw "communityCards must be an array";
-		if (!Array.isArray(this.playerCards))
-			throw "playerCards must be an array";
-		for (let p of this.playerCards) {
-			if (!Array.isArray(p))
-				throw "playerCard must be an array " + p.toString();
-		}
-		if (this.holeCardCount < 2 || this.holeCardCount > 5)
-			throw "bad holeCardCount " + this.holeCardCount;
-		if (this.playerCount < 2 || this.playerCount > 10)
-			throw "bad playerCount " + this.playerCount;
-		if (this.holeCardRules != 'atMost2' && this.holeCardRules != 'exactly2')
-			throw "bad holeCardRules " + this.holeCardRules;
-		if (this.scoring != 'high' && this.scoring != 'highlow')
-			throw "bad scoring " + this.scoring;
-		}
+  communityCards = [];
+  playerCards = [];
+  holeCardCount = 2;
+  playerCount = 10;
+  holeCardRules = 'atMost2';
+  scoring = 'high';
+  reset() {
+    this.communityCards = [];
+    this.playerCards = [];
+  }
+  validate() {
+    if (!Array.isArray(this.communityCards))
+      throw "communityCards must be an array";
+    if (!Array.isArray(this.playerCards))
+      throw "playerCards must be an array";
+    for (let p of this.playerCards) {
+      if (!Array.isArray(p))
+        throw "playerCard must be an array " + p.toString();
+    }
+    if (this.holeCardCount < 2 || this.holeCardCount > 5)
+      throw "bad holeCardCount " + this.holeCardCount;
+    if (this.playerCount < 2 || this.playerCount > 10)
+      throw "bad playerCount " + this.playerCount;
+    if (this.holeCardRules != 'atMost2' && this.holeCardRules != 'exactly2')
+      throw "bad holeCardRules " + this.holeCardRules;
+    if (this.scoring != 'high' && this.scoring != 'highlow')
+      throw "bad scoring " + this.scoring;
+    }
 
-	toHashString() {
-		let s = '';
-		s += `cc=${JSON.stringify(this.communityCards)}&`;
-		s += `players=${JSON.stringify(this.playerCards)}&`;
-		if (this.holeCardCount != 2)
-			s += `hole=${this.holeCardCount}&`;
-		if (this.playerCount != 10)
-			s += `pc=${this.playerCount}&`;
-		if (this.holeCardRules != 'atMost2')
-			s += `rules=${this.holeCardRules}&`;
-		if (this.scoring != 'high')
-			s += `scoring=${this.scoring}`;
-		if (s.charAt(s.length -1) == '&')	// trim &
-			s = s.substring(0, s.length -1);
-		s = s.replaceAll('[', '(').replaceAll(']',')');
-		return s;
-	}
-	// return UIModel
-	static fromHashString(hash) {
-		try {
-			let m = new UIModel();
-			hash = hash.replaceAll('(', '[').replaceAll(')', ']');
-			let keyValues = new Map(hash.split('&').map( x => x.split('=')));
-			for (let kv of keyValues) {
-				switch(kv[0]) {
-					case 'cc':
-						m.communityCards = JSON.parse(kv[1]);
-						break;
-					case 'players':
-						m.playerCards = JSON.parse(kv[1]);
-						break;
-					case 'hole':
-						m.holeCardCount = parseInt(kv[1]);
-						break;
-					case 'pc':
-						m.playerCount = parseInt(kv[1]);
-						break;
-					case 'rules':
-						m.holeCardRules = kv[1];
-						break;
-					case 'scoring':
-						m.scoring = kv[1];
-						break;
-					default:
-						console.warn("bad entry", kv[0], kv[1]);
-				}
-			}
-			m.validate();
-			return m;
-		} catch(err) {
-			console.error(`Error decoding ${hash} ${err}`);
-			return new UIModel();
-		}
-	}
+  toHashString() {
+    let s = '';
+    s += `cc=${JSON.stringify(this.communityCards)}&`;
+    s += `players=${JSON.stringify(this.playerCards)}&`;
+    if (this.holeCardCount != 2)
+      s += `hole=${this.holeCardCount}&`;
+    if (this.playerCount != 10)
+      s += `pc=${this.playerCount}&`;
+    if (this.holeCardRules != 'atMost2')
+      s += `rules=${this.holeCardRules}&`;
+    if (this.scoring != 'high')
+      s += `scoring=${this.scoring}`;
+    if (s.charAt(s.length -1) == '&')	// trim &
+      s = s.substring(0, s.length -1);
+    s = s.replaceAll('[', '(').replaceAll(']',')');
+    return s;
+  }
+  // return UIModel
+  static fromHashString(hash) {
+    try {
+      let m = new UIModel();
+      hash = hash.replaceAll('(', '[').replaceAll(')', ']');
+      let keyValues = new Map(hash.split('&').map( x => x.split('=')));
+      for (let kv of keyValues) {
+        switch(kv[0]) {
+          case 'cc':
+            m.communityCards = JSON.parse(kv[1]);
+            break;
+          case 'players':
+            m.playerCards = JSON.parse(kv[1]);
+            break;
+          case 'hole':
+            m.holeCardCount = parseInt(kv[1]);
+            break;
+          case 'pc':
+            m.playerCount = parseInt(kv[1]);
+            break;
+          case 'rules':
+            m.holeCardRules = kv[1];
+            break;
+          case 'scoring':
+            m.scoring = kv[1];
+            break;
+          default:
+            console.warn("bad entry", kv[0], kv[1]);
+        }
+      }
+      m.validate();
+      return m;
+    } catch(err) {
+      console.error(`Error decoding ${hash} ${err}`);
+      return new UIModel();
+    }
+  }
 
-	setPlayerCount(count) {
-		this.playerCount = parseInt(count);
-		let discards = this.playerCards.splice(count);
-		// If cards were dealt to players being removed,
-		// try to reassign cards to other players that had no cards.
-		discards = discards.filter(cards => cards.length > 0);
-		let pc = -1;
-		while (discards.length > 0 && ++pc < this.playerCards.length) {
-			if (this.playerCards[pc].length == 0) {
-				this.playerCards[pc] = discards.shift();
-			}
-		}
-	}
-	setHoleCardCount(count) {
-		this.holeCardCount = parseInt(count);
-		for (let p of this.playerCards) 
-			p.splice(count);
-	}
-	setScoring(scoring) {
-		if (scoring != 'high' && scoring != 'highlow')
-			throw `Illegal scoring value ${scoring}`;
-		this.scoring = scoring;
-		if (this.scoring == 'high')
-			this.holeCardRules = 'atMost2';
-		else
-			this.holeCardRules = 'exactly2';
-	}
-
-	getAllCardsInUse() {
-		return new Array(...this.communityCards, ...this.playerCards.flat(2));
-	}
-	removeCommunityCard(c) {
-		let i = this.communityCards.indexOf(c);
-		if (i == -1) {
-			console.error(`Community card not found ${c} ${this.communityCards}`);
-			return;
-		}
-		this.communityCards.splice(i, 1);
-	}
-	// except player specified by index
-	removeFromPlayers(c, except=-1) {
-		for (let i=0; i<this.playerCards.length; ++i) {
-			if (i == except)
-				continue;
-			let ci = this.playerCards[i].indexOf(c);
-			if (ci != -1)
-				this.playerCards[i].splice(ci,1);
-		}
-	}
-	// Enforces consistent state by removing card from players
-	addCommunityCard(card, cardIndex) {
-		if (!card) {
-			console.error(`null community card ${card}`);
-			return;
-		}
-		let i = this.communityCards.indexOf(card);
-		if (i == -1) {	
-			// Card not in community
-			if (this.communityCards.length <= cardIndex)
-				this.communityCards.push(card);
-			else
-				this.communityCards.splice(cardIndex, 1, card);
-		} else { 
-			// Card in community, reorder
-			this.communityCards.splice(i, 1);
-			this.communityCards.splice(cardIndex, 0, card);
-		}
-		this.removeFromPlayers(card);
-	}
-	removeCommunityCard(card) {
-		if (!card) {
-			console.error(`null community card ${card}`);
-			return;
-		}
-		let i = this.communityCards.indexOf(card);
-		if (i == -1)
-			return; // not there
-		this.communityCards.splice(i,1);
-	}
-	// Enforces consistent state by removing card from other players + community
-	// return: cardIndex card was moved to (can be different from cardIndex)
-	addPlayerCard(card, playerIndex, cardIndex) {
-		while (this.playerCards.length <= playerIndex)
-			this.playerCards.push([]);
-		let cards = this.playerCards[playerIndex];
-		let ci = cards.indexOf(card);
-		let cardDestination = cardIndex;
-		if (ci == -1) {
-			if (cards.length <= cardIndex) {
-				cards.push(card);
-				cardDestination = cards.length - 1;
-			}
-			else {
-				cards.splice(cardIndex, 1, card);
-			}
-		} else { // card moved within a hand
-			cards.splice(ci, 1);
-			cards.splice(cardIndex, 0, card);
-		}
-		this.removeFromPlayers(card, playerIndex);
-		this.removeCommunityCard(card);
-		return cardDestination;
-	}
-	removePlayerCard(card, playerIndex) {
-		if (!this.playerCards[playerIndex])
-			return;
-		let ci = this.playerCards[playerIndex].indexOf(card);
-		if (ci == -1) {
-			console.warn(`removePlayerCard ${card} not there`);
-			return;
-		}
-		this.playerCards[playerIndex].splice(ci, 1);
-	}
-	updateFromSimStat(stat) {
-		for (let p of ["playerCount","holeCardCount", "scoring", "holeCardRules"]) {
-			if (stat[p] === undefined)
-				console.error("Stats missing property", p);
-			this[p] = stat[p];
-		}
-		// playerCards array is 2-deep, need deeper clone
-		this.playerCards = Array.from(stat.playerCards).map( a => Array.from(a));
-		this.communityCards = Array.from(stat.communityCards)
-	}
+  setPlayerCount(count) {
+    this.playerCount = parseInt(count);
+    let discards = this.playerCards.splice(count);
+    // If cards were dealt to players being removed,
+    // try to reassign cards to other players that had no cards.
+    discards = discards.filter(cards => cards.length > 0);
+    let pc = -1;
+    while (discards.length > 0 && ++pc < this.playerCards.length) {
+      if (this.playerCards[pc].length == 0) {
+        this.playerCards[pc] = discards.shift();
+      }
+    }
+  }
+  updateHoleCardRules() {
+    // Omaha is exactly 2
+    if (this.holeCardCount > 3 || this.scoring =='highlow')
+      this.holeCardRules = 'exactly2';
+    else
+      this.holeCardRules = 'atMost2';
+  }
+  setHoleCardCount(count) {
+    this.holeCardCount = parseInt(count);
+    for (let p of this.playerCards) 
+      p.splice(count);
+    this.updateHoleCardRules();
+  }
+  setScoring(scoring) {
+    if (scoring != 'high' && scoring != 'highlow')
+      throw `Illegal scoring value ${scoring}`;
+    this.scoring = scoring;
+    this.updateHoleCardRules();
+  }
+  getAllCardsInUse() {
+    return new Array(...this.communityCards, ...this.playerCards.flat(2));
+  }
+  removeCommunityCard(c) {
+    let i = this.communityCards.indexOf(c);
+    if (i == -1) {
+      console.error(`Community card not found ${c} ${this.communityCards}`);
+      return;
+    }
+    this.communityCards.splice(i, 1);
+  }
+  // except player specified by index
+  removeFromPlayers(c, except=-1) {
+    for (let i=0; i<this.playerCards.length; ++i) {
+      if (i == except)
+        continue;
+      let ci = this.playerCards[i].indexOf(c);
+      if (ci != -1)
+        this.playerCards[i].splice(ci,1);
+    }
+  }
+  // Enforces consistent state by removing card from players
+  addCommunityCard(card, cardIndex) {
+    if (!card) {
+      console.error(`null community card ${card}`);
+      return;
+    }
+    let i = this.communityCards.indexOf(card);
+    if (i == -1) {	
+      // Card not in community
+      if (this.communityCards.length <= cardIndex)
+        this.communityCards.push(card);
+      else
+        this.communityCards.splice(cardIndex, 1, card);
+    } else { 
+      // Card in community, reorder
+      this.communityCards.splice(i, 1);
+      this.communityCards.splice(cardIndex, 0, card);
+    }
+    this.removeFromPlayers(card);
+  }
+  removeCommunityCard(card) {
+    if (!card) {
+      console.error(`null community card ${card}`);
+      return;
+    }
+    let i = this.communityCards.indexOf(card);
+    if (i == -1)
+      return; // not there
+    this.communityCards.splice(i,1);
+  }
+  // Enforces consistent state by removing card from other players + community
+  // return: cardIndex card was moved to (can be different from cardIndex)
+  addPlayerCard(card, playerIndex, cardIndex) {
+    while (this.playerCards.length <= playerIndex)
+      this.playerCards.push([]);
+    let cards = this.playerCards[playerIndex];
+    let ci = cards.indexOf(card);
+    let cardDestination = cardIndex;
+    if (ci == -1) {
+      if (cards.length <= cardIndex) {
+        cards.push(card);
+        cardDestination = cards.length - 1;
+      }
+      else {
+        cards.splice(cardIndex, 1, card);
+      }
+    } else { // card moved within a hand
+      cards.splice(ci, 1);
+      cards.splice(cardIndex, 0, card);
+    }
+    this.removeFromPlayers(card, playerIndex);
+    this.removeCommunityCard(card);
+    return cardDestination;
+  }
+  removePlayerCard(card, playerIndex) {
+    if (!this.playerCards[playerIndex])
+      return;
+    let ci = this.playerCards[playerIndex].indexOf(card);
+    if (ci == -1) {
+      console.warn(`removePlayerCard ${card} not there`);
+      return;
+    }
+    this.playerCards[playerIndex].splice(ci, 1);
+  }
+  updateFromSimStat(stat) {
+    for (let p of ["playerCount","holeCardCount", "scoring", "holeCardRules"]) {
+      if (stat[p] === undefined)
+        console.error("Stats missing property", p);
+      this[p] = stat[p];
+    }
+    // playerCards array is 2-deep, need deeper clone
+    this.playerCards = Array.from(stat.playerCards).map( a => Array.from(a));
+    this.communityCards = Array.from(stat.communityCards)
+  }
 }
 
 class PlayerStats {
-	player;
-	// accumulated statistics
-	hi = { win: 0, lose: 0, split: 0};
-	low = { 
-		winTotal: 0,	// How much money made after splits, etc. Ex: winning only high is 0.5 win.
-		winAll:  0, 
-		winOnlyHigh: 0, 
-		winOnlyLow: 0,
-		splitLow: 0,
-		splitHigh: 0,
-		lose: 0
-	};
+  player;
+  // accumulated statistics
+  hi = { win: 0, lose: 0, split: 0};
+  low = { 
+    winTotal: 0,	// How much money made after splits, etc. Ex: winning only high is 0.5 win.
+    winAll:  0, 
+    winOnlyHigh: 0, 
+    winOnlyLow: 0,
+    splitLow: 0,
+    splitHigh: 0,
+    lose: 0
+  };
 
-	winningHandStats = new Map();
-	losingHandStats = new Map();
-	splitHandStats = new Map();
+  winningHandStats = new Map();
+  losingHandStats = new Map();
+  splitHandStats = new Map();
 
-	constructor(player, scoring) {
-		this.player = player;
-		this.scoring = scoring;
+  constructor(player, scoring) {
+    this.player = player;
+    this.scoring = scoring;
 
-		for (let k of PokerEngine.HandRank.keys()) {
-			this.losingHandStats.set(k, 0);
-			this.winningHandStats.set(k, 0);
-			this.splitHandStats.set(k, 0);
-		}
-	}
+    for (let k of PokerEngine.HandRank.keys()) {
+      this.losingHandStats.set(k, 0);
+      this.winningHandStats.set(k, 0);
+      this.splitHandStats.set(k, 0);
+    }
+  }
 
-	recordGame(game) {
-		let didWinHigh = false;
-		let didLoseHigh = false;
-		let didSplitHigh = false;
-		if (game.highWinners.indexOf(this.player) == -1) {
-			// If player is not the winner
-			let t = game.bestHands[0].bestHighHand.type;
-			this.losingHandStats.set(t, this.losingHandStats.get(t) + 1);
-			++this.hi.lose;
-			didLoseHigh = true;
-		} else if (game.highWinners.length > 1) {
-			// There is more than one winner
-			let t = game.bestHands[0].bestHighHand.type;
-			this.splitHandStats.set(t, this.splitHandStats.get(t) + 1);
-			++this.hi.split;
-			didSplitHigh = true;
-			didWinHigh = true;
-		} else {
-			// Player is the only winner
-			let t = game.bestHands[0].bestHighHand.type;
-			this.winningHandStats.set(t, this.winningHandStats.get(t) + 1);
-			++this.hi.win;
-			didWinHigh = true;
-		}
-		if (this.scoring == "highlow") {
-			let hasLow = game.lowWinners && game.lowWinners.length > 0;
-			let didWinLow = false;
-			let didLoseLow = false;
-			let didSplitLow = false;
-			if (hasLow) {
-				if(game.lowWinners.indexOf(this.player) == -1) {
-					didLoseLow = true;
-				} else if (game.lowWinners.length > 1) {
-					didSplitLow = true;
-					didWinLow = true;
-				} else {
-					didWinLow = true;
-				}
-			}
-			let winHighWorth = (hasLow ? 0.5 : 1) * 1/game.highWinners.length;
-			let winLowWorth = (hasLow ? 0.5 : 0) * 1 / game.lowWinners.length;
-			let myWinWorth = (didWinLow ? winLowWorth : 0) + (didWinHigh ? winHighWorth : 0);
-			this.low.winTotal += myWinWorth;
-			if (didWinHigh && (didWinLow || !hasLow))
-				this.low.winAll++;
-			if (didWinHigh && (hasLow && !didWinLow))
-				this.low.winOnlyHigh++;
-			if (didWinLow && !didWinHigh)
-				this.low.winOnlyLow++;
-			if (didSplitHigh)
-				this.low.splitHigh++;
-			if (didSplitLow)
-				this.low.splitLow++;
-			if (!didWinHigh && (!hasLow || !didWinLow))
-				this.low.lose++;
-		}
-	}
+  recordGame(game) {
+    let didWinHigh = false;
+    let didLoseHigh = false;
+    let didSplitHigh = false;
+    if (game.highWinners.indexOf(this.player) == -1) {
+      // If player is not the winner
+      let t = game.bestHands[0].bestHighHand.type;
+      this.losingHandStats.set(t, this.losingHandStats.get(t) + 1);
+      ++this.hi.lose;
+      didLoseHigh = true;
+    } else if (game.highWinners.length > 1) {
+      // There is more than one winner
+      let t = game.bestHands[0].bestHighHand.type;
+      this.splitHandStats.set(t, this.splitHandStats.get(t) + 1);
+      ++this.hi.split;
+      didSplitHigh = true;
+      didWinHigh = true;
+    } else {
+      // Player is the only winner
+      let t = game.bestHands[0].bestHighHand.type;
+      this.winningHandStats.set(t, this.winningHandStats.get(t) + 1);
+      ++this.hi.win;
+      didWinHigh = true;
+    }
+    if (this.scoring == "highlow") {
+      let hasLow = game.lowWinners && game.lowWinners.length > 0;
+      let didWinLow = false;
+      let didLoseLow = false;
+      let didSplitLow = false;
+      if (hasLow) {
+        if(game.lowWinners.indexOf(this.player) == -1) {
+          didLoseLow = true;
+        } else if (game.lowWinners.length > 1) {
+          didSplitLow = true;
+          didWinLow = true;
+        } else {
+          didWinLow = true;
+        }
+      }
+      let winHighWorth = (hasLow ? 0.5 : 1) * 1/game.highWinners.length;
+      let winLowWorth = (hasLow ? 0.5 : 0) * 1 / game.lowWinners.length;
+      let myWinWorth = (didWinLow ? winLowWorth : 0) + (didWinHigh ? winHighWorth : 0);
+      this.low.winTotal += myWinWorth;
+      if (didWinHigh && (didWinLow || !hasLow))
+        this.low.winAll++;
+      if (didWinHigh && (hasLow && !didWinLow))
+        this.low.winOnlyHigh++;
+      if (didWinLow && !didWinHigh)
+        this.low.winOnlyLow++;
+      if (didSplitHigh)
+        this.low.splitHigh++;
+      if (didSplitLow)
+        this.low.splitLow++;
+      if (!didWinHigh && (!hasLow || !didWinLow))
+        this.low.lose++;
+    }
+  }
 }
 // Odds testing:
 // https://homes.luddy.indiana.edu/kapadia/nofoldem/10_wins.stats
 class SimStats {
-	// Hand rules
-	holeCardCount;
-	holeCardRules;
-	playerCount;
-	scoring;
+  // Hand rules
+  holeCardCount;
+  holeCardRules;
+  playerCount;
+  scoring;
 
-	// cards
-	communityCards;
-	playerCards;
+  // cards
+  communityCards;
+  playerCards;
 
-	playerStats = []; // An array of PlayerStats
-	vsMode = false;
-	totalGames = 0;
+  playerStats = []; // An array of PlayerStats
+  vsMode = false;
+  totalGames = 0;
 
-	dbId = Math.random().toString(36).slice(2, 7);
+  dbId = Math.random().toString(36).slice(2, 7);
 
-	static fromJson(json){
-		let o = JSON.parse(json, (key, value) => {
-			if(typeof value === 'object' && value !== null) {
-				if (value.dataType === 'Map') {
-					return new Map(value.value);
-				}
-			}
-			return value;
-		});
-		// Caution: this.playerStats is 
-		return Object.assign(new SimStats(), o);
-	}
-	
-	// https://stackoverflow.com/questions/29085197/how-do-you-json-stringify-an-es6-map
-	toJson() {
-		return JSON.stringify(this, (key, value) => {
-			if(value instanceof Map)
-    		return {
-      		dataType: 'Map',
-      		value: Array.from(value.entries()), // or with spread: value: [...value]
-    		};
-    	return value;
-		});
-	}
+  static fromJson(json){
+    let o = JSON.parse(json, (key, value) => {
+      if(typeof value === 'object' && value !== null) {
+        if (value.dataType === 'Map') {
+          return new Map(value.value);
+        }
+      }
+      return value;
+    });
+    // Caution: this.playerStats is 
+    return Object.assign(new SimStats(), o);
+  }
+  
+  // https://stackoverflow.com/questions/29085197/how-do-you-json-stringify-an-es6-map
+  toJson() {
+    return JSON.stringify(this, (key, value) => {
+      if(value instanceof Map)
+        return {
+          dataType: 'Map',
+          value: Array.from(value.entries()), // or with spread: value: [...value]
+        };
+      return value;
+    });
+  }
 
-	// in vsMode, stats are collected for all players whose cards
-	// are already assigned.
-	constructor(pokerEngine, communityCards, playerCards, activePlayers) {
-		if (pokerEngine) {
-			for (let p of ["holeCardCount", "holeCardRules", "playerCount", "scoring" ])
-				this[p] = pokerEngine[p];
-		}
-		this.communityCards = Array.from(communityCards || []);
-		this.playerCards = Array.from(playerCards || []);
-		this.playerStats = new Array(this.playerCount);
-		this.activePlayers = Array.from(activePlayers || []);
-		this.vsMode = this.activePlayers.length > 1;
-		this.playerStats[0] = new PlayerStats(0, this.scoring);
-		if (this.vsMode) {
-			for (let p of this.activePlayers)
-				this.playerStats[p] = new PlayerStats(p, this.scoring);
-		}
-	}
+  // in vsMode, stats are collected for all players whose cards
+  // are already assigned.
+  constructor(pokerEngine, communityCards, playerCards, activePlayers) {
+    if (pokerEngine) {
+      for (let p of ["holeCardCount", "holeCardRules", "playerCount", "scoring" ])
+        this[p] = pokerEngine[p];
+    }
+    this.communityCards = Array.from(communityCards || []);
+    this.playerCards = Array.from(playerCards || []);
+    this.playerStats = new Array(this.playerCount);
+    this.activePlayers = Array.from(activePlayers || []);
+    this.vsMode = this.activePlayers.length > 1;
+    this.playerStats[0] = new PlayerStats(0, this.scoring);
+    if (this.vsMode) {
+      for (let p of this.activePlayers)
+        this.playerStats[p] = new PlayerStats(p, this.scoring);
+    }
+  }
 
-	recordGame(game) {
-		++this.totalGames;
-		for (let s of this.playerStats) {
-			if (s)
-				s.recordGame(game);
-		}
-	}
+  recordGame(game) {
+    ++this.totalGames;
+    for (let s of this.playerStats) {
+      if (s)
+        s.recordGame(game);
+    }
+  }
 
-	asPercent(count, hideZeros=true) {
-		let percent = Math.round((100*count / this.totalGames)).toFixed();
-		if (hideZeros && percent == 0)
-			return "";
-		return `${percent}`;
-	}
+  asPercent(count, hideZeros=true) {
+    let percent = Math.round((100*count / this.totalGames)).toFixed();
+    if (hideZeros && percent == 0)
+      return "";
+    return `${percent}`;
+  }
 
-	// Returns array of cards filled in to hole count.
-	fillCardsToCount(playerCards, count) {
-		if (playerCards && playerCards.length == count)
-			return playerCards;
-		playerCards = Array.from(playerCards || []);
-		while (playerCards.length < count)
-			playerCards.push("??");
-		return playerCards;
-	}
+  // Returns array of cards filled in to hole count.
+  fillCardsToCount(playerCards, count) {
+    if (playerCards && playerCards.length == count)
+      return playerCards;
+    playerCards = Array.from(playerCards || []);
+    while (playerCards.length < count)
+      playerCards.push("??");
+    return playerCards;
+  }
 
-	getPlayerCommunityCardsAsHtml() {
-		let EMPTY_CARDS_HTML = "<div class='cardTextTile'>?</div>";
-		let playerCards = this.fillCardsToCount(this.playerCards[0], this.holeCardCount);
-		let playerCardsHtml = UI.cardsToHtml(playerCards) || SimStats.EMPTY_CARDS_HTML;
-		let communityCardsHtml = UI.cardsToHtml(this.communityCards);
-		if (communityCardsHtml != "")
-			communityCardsHtml = "<hr>" + communityCardsHtml;
-		return playerCardsHtml + communityCardsHtml;
-	}
+  getPlayerCommunityCardsAsHtml() {
+    let EMPTY_CARDS_HTML = "<div class='cardTextTile'>?</div>";
+    let playerCards = this.fillCardsToCount(this.playerCards[0], this.holeCardCount);
+    let playerCardsHtml = UI.cardsToHtml(playerCards) || SimStats.EMPTY_CARDS_HTML;
+    let communityCardsHtml = UI.cardsToHtml(this.communityCards);
+    if (communityCardsHtml != "")
+      communityCardsHtml = "<hr>" + communityCardsHtml;
+    return playerCardsHtml + communityCardsHtml;
+  }
 
-	renderPlayerCount() {
-		if (this.playerCount == 10)
-			return "";
-		else
-			return `<div class='playerCountStats'>${this.playerCount}👤</div>`;
-	}
-	
-	render() {
-		if (this.vsMode) {
-			return this.scoring == 'highlow' ? this.renderVsHighLow() : this.renderVsHigh();
-		}
-		return this.scoring == 'highlow' ? this.renderHighLow() : this.renderHigh();
-	}
-	// returns HTML string
-	renderHigh() {
-		let html = `
+  renderPlayerCount() {
+    if (this.playerCount == 10)
+      return "";
+    else
+      return `<div class='playerCountStats'>${this.playerCount}👤</div>`;
+  }
+  
+  render() {
+    if (this.vsMode) {
+      return this.scoring == 'highlow' ? this.renderVsHighLow() : this.renderVsHigh();
+    }
+    return this.scoring == 'highlow' ? this.renderHighLow() : this.renderHigh();
+  }
+  // returns HTML string
+  renderHigh() {
+    let html = `
 <table class="statsTable">
-	<colgroup></colgroup>
+  <colgroup></colgroup>
   <colgroup class="winColumn" style="width:35%"></colgroup>
-	<colgroup class="loseColumn" style="width:35%"></colgroup>
-	<colgroup class="splitColumn" style="width:25%"></colgroup>
-	<thead>
-		<tr>
-			<th rowspan="2" onclick="javascript:UI.showStatsHand('${this.dbId}')">
-				${this.getPlayerCommunityCardsAsHtml()}
-				${this.renderPlayerCount()}</th>
-			<td>win<span class="x-small">%</span></td>
-			<td>lose</td>
-			<td>split</td>
-		</tr>
-		<tr>
-			<td>${this.asPercent(this.playerStats[0].hi.win)}</td>
-			<td>${this.asPercent(this.playerStats[0].hi.lose)}</td>
-			<td>${this.asPercent(this.playerStats[0].hi.split)}</td>
-		</tr>
-	</thead>
-	<tbody class="statsDetails">							
+  <colgroup class="loseColumn" style="width:35%"></colgroup>
+  <colgroup class="splitColumn" style="width:25%"></colgroup>
+  <thead>
+    <tr>
+      <th rowspan="2" onclick="javascript:UI.showStatsHand('${this.dbId}')">
+        ${this.getPlayerCommunityCardsAsHtml()}
+        ${this.renderPlayerCount()}</th>
+      <td>win<span class="x-small">%</span></td>
+      <td>lose</td>
+      <td>split</td>
+    </tr>
+    <tr>
+      <td>${this.asPercent(this.playerStats[0].hi.win)}</td>
+      <td>${this.asPercent(this.playerStats[0].hi.lose)}</td>
+      <td>${this.asPercent(this.playerStats[0].hi.split)}</td>
+    </tr>
+  </thead>
+  <tbody class="statsDetails">							
 `;
-		for (let k of PokerEngine.HandRank.keys()) {
-			let wins = this.playerStats[0].winningHandStats.get(k);
-			let losses = this.playerStats[0].losingHandStats.get(k);
-			let splits = this.playerStats[0].splitHandStats.get(k);
-			let total = wins + losses + splits;
-			if (this.asPercent(total) == "")
-				continue;
-			html += `<tr>
-				<th>${k}</th>
-				<td>${this.asPercent(wins)}</td>
-				<td>${this.asPercent(losses)}</td>
-				<td>${this.asPercent(splits)}</td>
-			</tr>`;
-		}
-		html += `
-	</tbody>
+    for (let k of PokerEngine.HandRank.keys()) {
+      let wins = this.playerStats[0].winningHandStats.get(k);
+      let losses = this.playerStats[0].losingHandStats.get(k);
+      let splits = this.playerStats[0].splitHandStats.get(k);
+      let total = wins + losses + splits;
+      if (this.asPercent(total) == "")
+        continue;
+      html += `<tr>
+        <th>${k}</th>
+        <td>${this.asPercent(wins)}</td>
+        <td>${this.asPercent(losses)}</td>
+        <td>${this.asPercent(splits)}</td>
+      </tr>`;
+    }
+    html += `
+  </tbody>
 </table>
 `;
-		return html;
-	}
+    return html;
+  }
 
-	renderHighLow() {
-		let html = `
+  renderHighLow() {
+    let html = `
 <table class="statsTable vsTable">
-	<colgroup class="headerColumn"></colgroup>
-	<thead>
-		<tr style="height:4ex">
-			<th class="" rowspan="1" onclick="javascript:UI.showStatsHand('${this.dbId}')">
-				hi-low<br>${UI.cardsToHtml(this.communityCards)}
-				${this.renderPlayerCount()}</th>
-			<td>win%</td>
-			<td>high/split</td>
-			<td>low/split</td>
-		</tr>
-	</thead><tbody>
-	`;
-		html += "<tr>";
-		let splitHighStr = this.asPercent(this.playerStats[0].low.splitHigh);
-		let splitLowStr = this.asPercent(this.playerStats[0].low.splitLow);
-		if (splitHighStr != "")
-			splitHighStr = "/" + splitHighStr;
-		if (splitLowStr != "")
-			splitLowStr ="/" + splitLowStr;
-		let playerCards = this.fillCardsToCount(this.playerCards[0], this.holeCardCount);
-		html += `<th onclick="javascript:UI.showStatsHand('${this.dbId}')"><div class="maxContent">${UI.cardsToHtml(playerCards) || SimStats.EMPTY_CARDS_HTML}</div></th>`;
-		html += `<td style="width:33%">${this.asPercent(this.playerStats[0].low.winTotal, false)}</td>`;
-		html += `<td style="width:33%">${this.asPercent(this.playerStats[0].low.winOnlyHigh, false) + splitHighStr}</td>`;
-		html += `<td style="width:33%">${this.asPercent(this.playerStats[0].low.winOnlyLow, false) + splitLowStr}</td>`;
-		html += "</tr>";
-		html += `</tbody>
-		</table>`;
-		return html;
-	}
-	
-	renderVsHigh() {
-		let html = `
+  <colgroup class="headerColumn"></colgroup>
+  <thead>
+    <tr style="height:4ex">
+      <th class="" rowspan="1" onclick="javascript:UI.showStatsHand('${this.dbId}')">
+        hi-low<br>${UI.cardsToHtml(this.communityCards)}
+        ${this.renderPlayerCount()}</th>
+      <td>win%</td>
+      <td>high/split</td>
+      <td>low/split</td>
+    </tr>
+  </thead><tbody>
+  `;
+    html += "<tr>";
+    let splitHighStr = this.asPercent(this.playerStats[0].low.splitHigh);
+    let splitLowStr = this.asPercent(this.playerStats[0].low.splitLow);
+    if (splitHighStr != "")
+      splitHighStr = "/" + splitHighStr;
+    if (splitLowStr != "")
+      splitLowStr ="/" + splitLowStr;
+    let playerCards = this.fillCardsToCount(this.playerCards[0], this.holeCardCount);
+    html += `<th onclick="javascript:UI.showStatsHand('${this.dbId}')"><div class="maxContent">${UI.cardsToHtml(playerCards) || SimStats.EMPTY_CARDS_HTML}</div></th>`;
+    html += `<td style="width:33%">${this.asPercent(this.playerStats[0].low.winTotal, false)}</td>`;
+    html += `<td style="width:33%">${this.asPercent(this.playerStats[0].low.winOnlyHigh, false) + splitHighStr}</td>`;
+    html += `<td style="width:33%">${this.asPercent(this.playerStats[0].low.winOnlyLow, false) + splitLowStr}</td>`;
+    html += "</tr>";
+    html += `</tbody>
+    </table>`;
+    return html;
+  }
+  
+  renderVsHigh() {
+    let html = `
 <table class="statsTable vsTable">
-	<thead>
-		<tr>
-			<th class="vsMarquee" rowspan="2" onclick="javascript:UI.showStatsHand('${this.dbId}')">
-				vs<br>${UI.cardsToHtml(this.communityCards)}
-				${this.renderPlayerCount()}</th>
-	`;
-	// 1st row are each player's cards
-	for (let p of this.activePlayers) {
-		html += "<td>";
-		let splitStr = this.asPercent(this.playerStats[p].hi.split) == "" ? "" : `<span class="x-small">/split</span>`;
-		let playerCards = this.fillCardsToCount(this.playerCards[p], this.holeCardCount);
-		html += UI.cardsToHtml(playerCards) || SimStats.EMPTY_CARDS_HTML;
-		html += `<br>win${splitStr}`;
-		html += "</td>";
-	}
-	html += "</tr><tr>";
-	// 2nd row are player's win percentages
-	let tdWidth = Math.floor(100/this.activePlayers);
-	for (let p of this.activePlayers) {
-		let wins = this.playerStats[p].hi.win;
-		let splitStr = this.asPercent(this.playerStats[p].hi.split);
-		if (splitStr != "")
-			splitStr = `/${splitStr}`;
-		html += `<td style="width:${tdWidth}%">${this.asPercent(wins)}${splitStr}</td>`;
-	}
-	html += `</tr>
-		</thead><tbody class="statsDetails">`;
-	for (let k of PokerEngine.HandRank.keys()) {
-		let self = this;
-		let hasValue = this.activePlayers.filter( p => {
-			return self.asPercent(self.playerStats[p].winningHandStats.get(k)) != "";
-		});
-		if (hasValue.length == 0)
-			continue;
-		html += `<tr><th>${k}</th>`;
-		for (let p of this.activePlayers) {
-			let wins = this.playerStats[p].winningHandStats.get(k);
-			html += `<td>${this.asPercent(wins)}</td>`;
-		}
-		html += "</tr>";
-	}
-	html += `</tbody>
-	</table>`;
-	return html;
-	}
+  <thead>
+    <tr>
+      <th class="vsMarquee" rowspan="2" onclick="javascript:UI.showStatsHand('${this.dbId}')">
+        vs<br>${UI.cardsToHtml(this.communityCards)}
+        ${this.renderPlayerCount()}</th>
+  `;
+  // 1st row are each player's cards
+  for (let p of this.activePlayers) {
+    html += "<td>";
+    let splitStr = this.asPercent(this.playerStats[p].hi.split) == "" ? "" : `<span class="x-small">/split</span>`;
+    let playerCards = this.fillCardsToCount(this.playerCards[p], this.holeCardCount);
+    html += UI.cardsToHtml(playerCards) || SimStats.EMPTY_CARDS_HTML;
+    html += `<br>win${splitStr}`;
+    html += "</td>";
+  }
+  html += "</tr><tr>";
+  // 2nd row are player's win percentages
+  let tdWidth = Math.floor(100/this.activePlayers);
+  for (let p of this.activePlayers) {
+    let wins = this.playerStats[p].hi.win;
+    let splitStr = this.asPercent(this.playerStats[p].hi.split);
+    if (splitStr != "")
+      splitStr = `/${splitStr}`;
+    html += `<td style="width:${tdWidth}%">${this.asPercent(wins)}${splitStr}</td>`;
+  }
+  html += `</tr>
+    </thead><tbody class="statsDetails">`;
+  for (let k of PokerEngine.HandRank.keys()) {
+    let self = this;
+    let hasValue = this.activePlayers.filter( p => {
+      return self.asPercent(self.playerStats[p].winningHandStats.get(k)) != "";
+    });
+    if (hasValue.length == 0)
+      continue;
+    html += `<tr><th>${k}</th>`;
+    for (let p of this.activePlayers) {
+      let wins = this.playerStats[p].winningHandStats.get(k);
+      html += `<td>${this.asPercent(wins)}</td>`;
+    }
+    html += "</tr>";
+  }
+  html += `</tbody>
+  </table>`;
+  return html;
+  }
 
-	renderVsHighLow() {
-		let html = `
+  renderVsHighLow() {
+    let html = `
 <table class="statsTable vsTable">
-	<thead>
-		<tr style="height:4ex">
-			<th class="vsMarquee" rowspan="1" onclick="javascript:UI.showStatsHand('${this.dbId}')">
-				vs hi-low<br>${UI.cardsToHtml(this.communityCards)}
-				${this.renderPlayerCount()}</th>
-				<td>win%</td>
-				<td>high/split</td>
-				<td>low/split</td>
-		</tr>
-	</thead><tbody>
-	`;
-		// 1st row are each player's cards
-		for (let p of this.activePlayers) {
-			html += "<tr>";
-			let splitHighStr = this.asPercent(this.playerStats[p].low.splitHigh);
-			let splitLowStr = this.asPercent(this.playerStats[p].low.splitLow);
-			if (splitHighStr != "")
-				splitHighStr = "/" + splitHighStr;
-			if (splitLowStr != "")
-				splitLowStr ="/" + splitLowStr;
-			let playerCards = this.fillCardsToCount(this.playerCards[p], this.holeCardCount);
-			html += `<th onclick="javascript:UI.showStatsHand('${this.dbId}')">${UI.cardsToHtml(playerCards) || SimStats.EMPTY_CARDS_HTML}</th>`;
-			html += `<td>${this.asPercent(this.playerStats[p].low.winTotal, false)}</td>`;
-			html += `<td>${this.asPercent(this.playerStats[p].low.winOnlyHigh, false) + splitHighStr}</td>`;
-			html += `<td>${this.asPercent(this.playerStats[p].low.winOnlyLow, false) + splitLowStr}</td>`;
-			html += "</tr>";
-		}
-		html += `</tbody>
-	</table>`;
-		return html;
-	}
+  <thead>
+    <tr style="height:4ex">
+      <th class="vsMarquee" rowspan="1" onclick="javascript:UI.showStatsHand('${this.dbId}')">
+        vs hi-low<br>${UI.cardsToHtml(this.communityCards)}
+        ${this.renderPlayerCount()}</th>
+        <td>win%</td>
+        <td>high/split</td>
+        <td>low/split</td>
+    </tr>
+  </thead><tbody>
+  `;
+    // 1st row are each player's cards
+    for (let p of this.activePlayers) {
+      html += "<tr>";
+      let splitHighStr = this.asPercent(this.playerStats[p].low.splitHigh);
+      let splitLowStr = this.asPercent(this.playerStats[p].low.splitLow);
+      if (splitHighStr != "")
+        splitHighStr = "/" + splitHighStr;
+      if (splitLowStr != "")
+        splitLowStr ="/" + splitLowStr;
+      let playerCards = this.fillCardsToCount(this.playerCards[p], this.holeCardCount);
+      html += `<th onclick="javascript:UI.showStatsHand('${this.dbId}')">${UI.cardsToHtml(playerCards) || SimStats.EMPTY_CARDS_HTML}</th>`;
+      html += `<td>${this.asPercent(this.playerStats[p].low.winTotal, false)}</td>`;
+      html += `<td>${this.asPercent(this.playerStats[p].low.winOnlyHigh, false) + splitHighStr}</td>`;
+      html += `<td>${this.asPercent(this.playerStats[p].low.winOnlyLow, false) + splitLowStr}</td>`;
+      html += "</tr>";
+    }
+    html += `</tbody>
+  </table>`;
+    return html;
+  }
 }
 
 class PokerStorage {
-	static STAT_PREFIX = "STAT_";
-	static NEXT_STAT_SAVE_INDEX = 1;
-	static MAX_STATS = 200;
-	static simStatList = []; // List of current SimStats
+  static STAT_PREFIX = "STAT_";
+  static NEXT_STAT_SAVE_INDEX = 1;
+  static MAX_STATS = 200;
+  static simStatList = []; // List of current SimStats
 
-	// returns an array of SimStats
-	static loadStats() {
-		let stats = [];
-		let statToKeyMap = new Map();	// Used to sort entries by key
-		for (let i=0; i<window.localStorage.length; ++i) {
-			let key = window.localStorage.key(i);
-			if (!key.startsWith(PokerStorage.STAT_PREFIX))
-				continue;
-			try {
-				// Update next 
-				let match = key.match(/STAT_(\d+)/);
-				let keyIndex = 0;
-				if (match) {
-					keyIndex = parseInt(match[1]);
-					if (keyIndex != NaN && keyIndex >= PokerStorage.NEXT_STAT_SAVE_INDEX)
-						PokerStorage.NEXT_STAT_SAVE_INDEX = keyIndex+1;
-				} 
-				else {
-					console.error("could not parse key", key);
-					continue;
-				}
-				let stat = SimStats.fromJson(window.localStorage.getItem(key));
-				statToKeyMap.set(stat, keyIndex);
-				stats.push(stat);
-			} catch(e) {
-				console.error(`Error decoding Json ${key}`);
-			}
-		}
-		stats.sort((a , b) => {
-			let aKey = statToKeyMap.get(a);
-			let bKey = statToKeyMap.get(b);
-			if (aKey < bKey)
-				return -1;
-			else if (bKey < aKey)
-				return 1;
-			return 0;
-		});
-		if (stats.length > PokerStorage.MAX_STATS)
-			console.warn("Removing simulations, limited to ", PokerStorage.MAX_STATS);
-		while (stats.length > PokerStorage.MAX_STATS) {
-			let removeMe = stats.shift();
-			let key = `${PokerStorage.STAT_PREFIX}${statToKeyMap.get(removeMe)}`;
-			window.localStorage.removeItem(key);
-		}
-		PokerStorage.simStatList = stats;
-		return stats;
-	}
+  // returns an array of SimStats
+  static loadStats() {
+    let stats = [];
+    let statToKeyMap = new Map();	// Used to sort entries by key
+    for (let i=0; i<window.localStorage.length; ++i) {
+      let key = window.localStorage.key(i);
+      if (!key.startsWith(PokerStorage.STAT_PREFIX))
+        continue;
+      try {
+        // Update next 
+        let match = key.match(/STAT_(\d+)/);
+        let keyIndex = 0;
+        if (match) {
+          keyIndex = parseInt(match[1]);
+          if (keyIndex != NaN && keyIndex >= PokerStorage.NEXT_STAT_SAVE_INDEX)
+            PokerStorage.NEXT_STAT_SAVE_INDEX = keyIndex+1;
+        } 
+        else {
+          console.error("could not parse key", key);
+          continue;
+        }
+        let stat = SimStats.fromJson(window.localStorage.getItem(key));
+        statToKeyMap.set(stat, keyIndex);
+        stats.push(stat);
+      } catch(e) {
+        console.error(`Error decoding Json ${key}`);
+      }
+    }
+    stats.sort((a , b) => {
+      let aKey = statToKeyMap.get(a);
+      let bKey = statToKeyMap.get(b);
+      if (aKey < bKey)
+        return -1;
+      else if (bKey < aKey)
+        return 1;
+      return 0;
+    });
+    if (stats.length > PokerStorage.MAX_STATS)
+      console.warn("Removing simulations, limited to ", PokerStorage.MAX_STATS);
+    while (stats.length > PokerStorage.MAX_STATS) {
+      let removeMe = stats.shift();
+      let key = `${PokerStorage.STAT_PREFIX}${statToKeyMap.get(removeMe)}`;
+      window.localStorage.removeItem(key);
+    }
+    PokerStorage.simStatList = stats;
+    return stats;
+  }
 
-	static saveSimStat(stat) {
-		let key = PokerStorage.STAT_PREFIX + PokerStorage.NEXT_STAT_SAVE_INDEX;
-		while (window.localStorage.getItem(key)) {
-			key = PokerStorage.STAT_PREFIX + ++PokerStorage.NEXT_STAT_SAVE_INDEX;
-		}
-		window.localStorage.setItem(key, stat.toJson());
-		PokerStorage.simStatList.push(JSON.parse(JSON.stringify(stat)));
-	}
+  static saveSimStat(stat) {
+    let key = PokerStorage.STAT_PREFIX + PokerStorage.NEXT_STAT_SAVE_INDEX;
+    while (window.localStorage.getItem(key)) {
+      key = PokerStorage.STAT_PREFIX + ++PokerStorage.NEXT_STAT_SAVE_INDEX;
+    }
+    window.localStorage.setItem(key, stat.toJson());
+    PokerStorage.simStatList.push(JSON.parse(JSON.stringify(stat)));
+  }
 
-	static getStat(statId) {
-		for (let s of PokerStorage.simStatList) {
-			if (s.dbId == statId)
-				return Object.freeze(s);	// Freeze to ensure we do not modify the stat
-		}
-	}
+  static getStat(statId) {
+    for (let s of PokerStorage.simStatList) {
+      if (s.dbId == statId)
+        return Object.freeze(s);	// Freeze to ensure we do not modify the stat
+    }
+  }
 }
 
 // Thorough DnD tutorial, not used here
 // https://www.redblobgames.com/making-of/draggable/
 class DragDrop {
-	static dragSource;	// element
-	static dragStartX;
-	static dragStartY;
-	static dropTarget; // element
-	static dropTargetOldSuit;
-	static dropTargetOldRank;
+  static dragSource;	// element
+  static dragStartX;
+  static dragStartY;
+  static dropTarget; // element
+  static dropTargetOldSuit;
+  static dropTargetOldRank;
 
-	static initDragAndDrop() {
-		document.body.addEventListener('pointerdown', DragDrop.handlePointerDown);
-		// do setPointerCapture here?
-		document.body.addEventListener('pointerup', DragDrop.handlePointerUp);
-		document.body.addEventListener('pointerleave', DragDrop.handlePointerLeave);
-		window.addEventListener("contextmenu", ev => {
-			// On mobilie, long touch during drag will trigger context menu.
-			if (DragDrop.isDragging())
-				ev.preventDefault();
-		});
-	}
-	static handlePointerDown(ev) {
-		// console.log('pointerdown', ev);
-		// Because player-hands might overlap cards, need to search 
-		let dragSource = DragDrop.getDragSource(ev);
-		if (!dragSource)
-			return;
-		DragDrop.startDrag(ev, dragSource);
-	}
-	static handlePointerUp(ev) {
-		// console.log('pointerup');
-		DragDrop.endDrag(ev);
-	}
-	static handlePointerLeave(ev) {
-		// console.log('pointerleave');
-		DragDrop.endDrag(ev);
-	}
-	static handlePointerMove(ev) {
-		// console.log('pointermove', ev);
-		DragDrop.dragMove(ev);
-	}
-	static isDragging() {
-		return DragDrop.dragSource != null;
-	}
-	static getDragSource(ev) {
-		// All playing cards can be dragged
-		if (ev.target.tagName == 'PLAYING-CARD' &&
-			ev.target.valueAsString() != "")
-			return ev.target;
-		// Find them even when obscured
-		let candidates = document.elementsFromPoint(ev.clientX, ev.clientY);
-		for (let c of candidates)
-			if (c.tagName == 'PLAYING-CARD' && c.valueAsString() != "")
-				return c;
-		return null;
-	}
-	static getDropTarget(ev) {
-		let candidates = document.elementsFromPoint(ev.clientX, ev.clientY);
-		// console.log(candidates);
-		for (let c of candidates)
-			if (c.tagName == 'PLAYING-CARD' && c != DragDrop.dragSource) {
-				// console.log(c);
-				return c;
-			}
-		return null;
-	}
+  static initDragAndDrop() {
+    document.body.addEventListener('pointerdown', DragDrop.handlePointerDown);
+    // do setPointerCapture here?
+    document.body.addEventListener('pointerup', DragDrop.handlePointerUp);
+    document.body.addEventListener('pointerleave', DragDrop.handlePointerLeave);
+    window.addEventListener("contextmenu", ev => {
+      // On mobilie, long touch during drag will trigger context menu.
+      if (DragDrop.isDragging())
+        ev.preventDefault();
+    });
+  }
+  static handlePointerDown(ev) {
+    // console.log('pointerdown', ev);
+    // Because player-hands might overlap cards, need to search 
+    let dragSource = DragDrop.getDragSource(ev);
+    if (!dragSource)
+      return;
+    DragDrop.startDrag(ev, dragSource);
+  }
+  static handlePointerUp(ev) {
+    // console.log('pointerup');
+    DragDrop.endDrag(ev);
+  }
+  static handlePointerLeave(ev) {
+    // console.log('pointerleave');
+    DragDrop.endDrag(ev);
+  }
+  static handlePointerMove(ev) {
+    // console.log('pointermove', ev);
+    DragDrop.dragMove(ev);
+  }
+  static isDragging() {
+    return DragDrop.dragSource != null;
+  }
+  static getDragSource(ev) {
+    // All playing cards can be dragged
+    if (ev.target.tagName == 'PLAYING-CARD' &&
+      ev.target.valueAsString() != "")
+      return ev.target;
+    // Find them even when obscured
+    let candidates = document.elementsFromPoint(ev.clientX, ev.clientY);
+    for (let c of candidates)
+      if (c.tagName == 'PLAYING-CARD' && c.valueAsString() != "")
+        return c;
+    return null;
+  }
+  static getDropTarget(ev) {
+    let candidates = document.elementsFromPoint(ev.clientX, ev.clientY);
+    // console.log(candidates);
+    for (let c of candidates)
+      if (c.tagName == 'PLAYING-CARD' && c != DragDrop.dragSource) {
+        // console.log(c);
+        return c;
+      }
+    return null;
+  }
 
-	static isDroppable(el) {
-		if (el.nodeName != 'PLAYING-CARD')
-			return false;
-	}
-	static startDrag(ev, dragSource) {
-		document.body.addEventListener('pointermove', DragDrop.handlePointerMove);
-		document.body.addEventListener('touchmove', UI.preventDefault, { passive: false });
-		DragDrop.dragSource = dragSource;
-		DragDrop.dragSource.classList.add("isDragged");
-		DragDrop.dragStartX = ev.screenX;
-		DragDrop.dragStartY = ev.screenY;
-		DragDrop.dragSource.style.zIndex = "1";
-	}
-	static endDrag(ev) {
-		document.body.removeEventListener('pointermove', DragDrop.handlePointerMove);
-		document.body.removeEventListener('touchmove', UI.preventDefault);
-		if (!DragDrop.dragSource)
-			return;
-		DragDrop.dragSource.classList.remove("isDragged");
-		// Workaround for bug with drag'n'drop and click handling
-		// Dragged card will also receive a click event because
-		// there was a mousedown+mouseup on it.
-		// There is no way to prevent 'click' from firing.
-		// Therefore, click handler must ignore click if
-		// element was just dragged.
-		// We signal that element was dragged by setting "wasDragged" class
-		if (DragDrop.dropTarget) {
-			DragDrop.dragSource.classList.add("wasDragged");
-			let dragSource = DragDrop.dragSource;
-			window.setTimeout(_ => dragSource.classList.remove("wasDragged"), 0);
-		}
-		if (DragDrop.dropTarget) {
-			UI.moveCardFromElements(DragDrop.dragSource, DragDrop.dropTarget);
-			DragDrop.dropTarget = null;
-			DragDrop.dropTargetOldSuit = null;
-			DragDrop.dropTargetOldRank = null;
-			DragDrop.dragSource.style.transform = '';
-		} else {
-			DragDrop.dragSource.addEventListener('animationend', DragDrop.endDragAnimationEnd);
-			DragDrop.dragSource.classList.add("dropCancel");
-		}
-		// DragDrop.dragSource.style.transform = "";
-		DragDrop.dragSource.style.zIndex = "";
-		DragDrop.dragSource = undefined;
-		DragDrop.dragStartX = undefined;
-		DragDrop.dragStartY = undefined;
-	}
-	static dragMove(ev) {
-		if (!DragDrop.dragSource)
-			console.error("dragMove, no target!");
-		let x = ev.screenX - DragDrop.dragStartX;
-		let y = ev.screenY - DragDrop.dragStartY;
-		DragDrop.dragSource.style.transform = `translate(${x}px , ${y}px) scale(1.3)`;
-		DragDrop.showDropTarget(ev, DragDrop.getDropTarget(ev));
-	}
-	static showDropTarget(ev, dropTarget) {
-		if (dropTarget == DragDrop.dropTarget || dropTarget == DragDrop.dragSource)
-			return;
-		if (DragDrop.dropTarget) {	// restore old state
-			if (!DragDrop.dropTargetOldRank)
-				DragDrop.dropTarget.removeAttribute('data-rank');
-			else
-				DragDrop.dropTarget.setAttribute('data-rank', DragDrop.dropTargetOldRank);
-			if (!DragDrop.dropTargetOldSuit)
-				DragDrop.dropTarget.removeAttribute('data-suit');
-			else
-				DragDrop.dropTarget.setAttribute('data-suit', DragDrop.dropTargetOldSuit);
-			DragDrop.dropTarget = null;
-		}
-		if (dropTarget) {
-			DragDrop.dropTargetOldRank = dropTarget.getAttribute('data-rank');
-			DragDrop.dropTargetOldSuit = dropTarget.getAttribute('data-suit');
-			DragDrop.dropTarget = dropTarget;
-			let srcRank = DragDrop.dragSource.getAttribute('data-rank');
-			let srcSuit = DragDrop.dragSource.getAttribute('data-suit');
-			if (!srcRank || !srcSuit) {
-				console.error(`dragSource missing attributes ${srcRank} ${srcSuit}`);
-				return;
-			}
-			if (!dropTarget.classList.contains("deck")) {
-				DragDrop.dropTarget.setAttribute('data-rank', srcRank);
-				DragDrop.dropTarget.setAttribute('data-suit', srcSuit);
-			}
-		}
-	}
-	static endDragAnimationEnd(ev) {
-		// console.log("Animation ended", ev);
-		ev.target.style.transform = '';
-		ev.target.classList.remove('dropCancel');
-	}
+  static isDroppable(el) {
+    if (el.nodeName != 'PLAYING-CARD')
+      return false;
+  }
+  static startDrag(ev, dragSource) {
+    document.body.addEventListener('pointermove', DragDrop.handlePointerMove);
+    document.body.addEventListener('touchmove', UI.preventDefault, { passive: false });
+    DragDrop.dragSource = dragSource;
+    DragDrop.dragSource.classList.add("isDragged");
+    DragDrop.dragStartX = ev.screenX;
+    DragDrop.dragStartY = ev.screenY;
+    DragDrop.dragSource.style.zIndex = "1";
+  }
+  static endDrag(ev) {
+    document.body.removeEventListener('pointermove', DragDrop.handlePointerMove);
+    document.body.removeEventListener('touchmove', UI.preventDefault);
+    if (!DragDrop.dragSource)
+      return;
+    DragDrop.dragSource.classList.remove("isDragged");
+    // Workaround for bug with drag'n'drop and click handling
+    // Dragged card will also receive a click event because
+    // there was a mousedown+mouseup on it.
+    // There is no way to prevent 'click' from firing.
+    // Therefore, click handler must ignore click if
+    // element was just dragged.
+    // We signal that element was dragged by setting "wasDragged" class
+    if (DragDrop.dropTarget) {
+      DragDrop.dragSource.classList.add("wasDragged");
+      let dragSource = DragDrop.dragSource;
+      window.setTimeout(_ => dragSource.classList.remove("wasDragged"), 0);
+    }
+    if (DragDrop.dropTarget) {
+      UI.moveCardFromElements(DragDrop.dragSource, DragDrop.dropTarget);
+      DragDrop.dropTarget = null;
+      DragDrop.dropTargetOldSuit = null;
+      DragDrop.dropTargetOldRank = null;
+      DragDrop.dragSource.style.transform = '';
+    } else {
+      DragDrop.dragSource.addEventListener('animationend', DragDrop.endDragAnimationEnd);
+      DragDrop.dragSource.classList.add("dropCancel");
+    }
+    // DragDrop.dragSource.style.transform = "";
+    DragDrop.dragSource.style.zIndex = "";
+    DragDrop.dragSource = undefined;
+    DragDrop.dragStartX = undefined;
+    DragDrop.dragStartY = undefined;
+  }
+  static dragMove(ev) {
+    if (!DragDrop.dragSource)
+      console.error("dragMove, no target!");
+    let x = ev.screenX - DragDrop.dragStartX;
+    let y = ev.screenY - DragDrop.dragStartY;
+    DragDrop.dragSource.style.transform = `translate(${x}px , ${y}px) scale(1.3)`;
+    DragDrop.showDropTarget(ev, DragDrop.getDropTarget(ev));
+  }
+  static showDropTarget(ev, dropTarget) {
+    if (dropTarget == DragDrop.dropTarget || dropTarget == DragDrop.dragSource)
+      return;
+    if (DragDrop.dropTarget) {	// restore old state
+      if (!DragDrop.dropTargetOldRank)
+        DragDrop.dropTarget.removeAttribute('data-rank');
+      else
+        DragDrop.dropTarget.setAttribute('data-rank', DragDrop.dropTargetOldRank);
+      if (!DragDrop.dropTargetOldSuit)
+        DragDrop.dropTarget.removeAttribute('data-suit');
+      else
+        DragDrop.dropTarget.setAttribute('data-suit', DragDrop.dropTargetOldSuit);
+      DragDrop.dropTarget = null;
+    }
+    if (dropTarget) {
+      DragDrop.dropTargetOldRank = dropTarget.getAttribute('data-rank');
+      DragDrop.dropTargetOldSuit = dropTarget.getAttribute('data-suit');
+      DragDrop.dropTarget = dropTarget;
+      let srcRank = DragDrop.dragSource.getAttribute('data-rank');
+      let srcSuit = DragDrop.dragSource.getAttribute('data-suit');
+      if (!srcRank || !srcSuit) {
+        console.error(`dragSource missing attributes ${srcRank} ${srcSuit}`);
+        return;
+      }
+      if (!dropTarget.classList.contains("deck")) {
+        DragDrop.dropTarget.setAttribute('data-rank', srcRank);
+        DragDrop.dropTarget.setAttribute('data-suit', srcSuit);
+      }
+    }
+  }
+  static endDragAnimationEnd(ev) {
+    // console.log("Animation ended", ev);
+    ev.target.style.transform = '';
+    ev.target.classList.remove('dropCancel');
+  }
 }
 
 class UI {
-	static SIM_ITERATIONS = 8000;
-	static model = new UIModel;
-	static nextDestination = UI.computeNextDestination();	// next default card destination
+  static SIM_ITERATIONS = 8000;
+  static model = new UIModel;
+  static nextDestination = UI.computeNextDestination();	// next default card destination
 
-	static init() {
-		try {
-			// window.addEventListener("error", ev => { console.log(ev.message); alert("js error"); });
-			document.querySelector("#playerCount").addEventListener('input', UI.playersChanged);
-			document.querySelector("#holeCardCount").addEventListener('input', UI.holeCardCountChanged);
-			document.querySelector("#hiloCheckbox").addEventListener("click", ev => {
-				ev.currentTarget.classList.toggle("checked");
-				if (ev.currentTarget.classList.contains("checked"))
-					ev.currentTarget.value = "highlow";
-				else
-					ev.currentTarget.value = "high";
-				UI.scoringChanged();
-			});
-			document.querySelector("#suitPicker .suitPickerButton").addEventListener('click', UI.suitPickerChanged);
-			document.querySelector("#hiloCheckbox").value = "high";
-			UI.holeCardCountChanged();
-			UI.playersChanged();
-			UI.scoringChanged();
-			UI.setDeckSuit('♥');
-			
-			DragDrop.initDragAndDrop();
-			for (let d of document.querySelectorAll("#deckPanel playing-card"))
-				d.addEventListener("click", UI.deckClick);
-			
-			UI.initServiceWorker();
+  static init() {
+    try {
+      // window.addEventListener("error", ev => { console.log(ev.message); alert("js error"); });
+      document.querySelector("#playerCount").addEventListener('input', UI.playersChanged);
+      document.querySelector("#holeCardCount").addEventListener('input', UI.holeCardCountChanged);
+      document.querySelector("#hiloCheckbox").addEventListener("click", ev => {
+        ev.currentTarget.classList.toggle("checked");
+        if (ev.currentTarget.classList.contains("checked"))
+          ev.currentTarget.value = "highlow";
+        else
+          ev.currentTarget.value = "high";
+        UI.scoringChanged();
+      });
+      document.querySelector("#suitPicker .suitPickerButton").addEventListener('click', UI.suitPickerChanged);
+      document.querySelector("#hiloCheckbox").value = "high";
+      UI.holeCardCountChanged();
+      UI.playersChanged();
+      UI.scoringChanged();
+      UI.setDeckSuit('♥');
+      
+      DragDrop.initDragAndDrop();
+      for (let d of document.querySelectorAll("#deckPanel playing-card"))
+        d.addEventListener("click", UI.deckClick);
+      
+      UI.initServiceWorker();
 
-			for (let s of PokerStorage.loadStats()) {
-				UI.showSimStat(s);
-			}
-		}
-		catch(err) {
-			console.error("unexpected error in UI.init", err);
-			UI.showError(err.toString());
-		}
-	}
-	static showError(msg) {
-		let errEl = document.querySelector("#statsPanel .error");
-		errEl.classList.remove("hidden");
-		errEl.innerText = msg;
-	}
-	static clearError() {
-		document.querySelector("#statsPanel .error").classList.add("hidden");
-	}
-	static initServiceWorker() {
-		if (!('serviceWorker' in navigator)) {
-			console.error(`navigator.serviceWorker not found`);
-			return;
-		}
-		navigator.serviceWorker.addEventListener('controllerchange', _ => {
-			console.log('event: controllerchange on navigator.serviceWorker ');
-			// window.location.reload();
-		});
+      for (let s of PokerStorage.loadStats()) {
+        UI.showSimStat(s);
+      }
+    }
+    catch(err) {
+      console.error("unexpected error in UI.init", err);
+      UI.showError(err.toString());
+    }
+  }
+  static showError(msg) {
+    let errEl = document.querySelector("#statsPanel .error");
+    errEl.classList.remove("hidden");
+    errEl.innerText = msg;
+  }
+  static clearError() {
+    document.querySelector("#statsPanel .error").classList.add("hidden");
+  }
+  static initServiceWorker() {
+    if (!('serviceWorker' in navigator)) {
+      console.error(`navigator.serviceWorker not found`);
+      return;
+    }
+    navigator.serviceWorker.addEventListener('controllerchange', _ => {
+      console.log('event: controllerchange on navigator.serviceWorker ');
+      // window.location.reload();
+    });
 
-		if (location.protocol == 'file:')	{ 
-			// No registration for localhost
-			console.error("file:// has no service worker");
-			return;
-		}
-		navigator.serviceWorker.register("serviceWorker.js")
-			.then( reg => {
-				let registration = reg;
-			})
-			.catch(err => {
-				console.error("did not register serviceWorker", err);
-			});			
-	}
-	static deckClick(ev) {
-		// if card was just dragged, ignore the click
-		if (ev.target.classList.contains("wasDragged"))
-			return;
-		UI.moveCard(UI.cardAddressFromElement(ev.target), UI.nextDestination);
-	}
+    if (location.protocol == 'file:')	{ 
+      // No registration for localhost
+      console.error("file:// has no service worker");
+      return;
+    }
+    navigator.serviceWorker.register("serviceWorker.js")
+      .then( reg => {
+        let registration = reg;
+      })
+      .catch(err => {
+        console.error("did not register serviceWorker", err);
+      });			
+  }
+  static deckClick(ev) {
+    // if card was just dragged, ignore the click
+    if (ev.target.classList.contains("wasDragged"))
+      return;
+    UI.moveCard(UI.cardAddressFromElement(ev.target), UI.nextDestination);
+  }
 
-	static preventDefault(ev) {
-		if (ev.cancelable)
-			ev.preventDefault();
-	}
- 	static playersChanged() {
-		UI.model.setPlayerCount(document.querySelector("#playerCount").value);
-		UI.syncUIToModel();
-	}
-	static holeCardCountChanged() {
-		UI.model.setHoleCardCount(document.querySelector("#holeCardCount").value);
-		if (UI.model.holeCardCount == 5 && UI.model.playerCount == 10) {
-			document.querySelector("#playerCount").value = 9;
-			UI.playersChanged();
-			return;
-		}
-		UI.syncUIToModel();
-	}
-	static scoringChanged() {
-		UI.model.setScoring(document.querySelector("#hiloCheckbox").value);
-		if (UI.model.scoring == 'highlow' && UI.model.holeCardCount < 4)
-			UI.model.setHoleCardCount(4);
-		if (UI.model.scoring == 'high' && UI.model.holeCardCount > 3)
-			UI.model.setHoleCardCount(2);
-		UI.syncUIToModel();
-	}
-	static suitPickerChanged(ev) {
-		UI.setDeckSuit(ev.currentTarget.innerText);
-	}
-	static suits = Array.from(PlayingCard.EmojiToSuit.keys());
+  static preventDefault(ev) {
+    if (ev.cancelable)
+      ev.preventDefault();
+  }
+   static playersChanged() {
+    UI.model.setPlayerCount(document.querySelector("#playerCount").value);
+    UI.syncUIToModel();
+  }
+  static holeCardCountChanged() {
+    UI.model.setHoleCardCount(document.querySelector("#holeCardCount").value);
+    if (UI.model.holeCardCount == 5 && UI.model.playerCount == 10) {
+      document.querySelector("#playerCount").value = 9;
+      UI.playersChanged();
+      return;
+    }
+    UI.syncUIToModel();
+  }
+  static scoringChanged() {
+    UI.model.setScoring(document.querySelector("#hiloCheckbox").value);
+    if (UI.model.scoring == 'highlow' && UI.model.holeCardCount < 4)
+      UI.model.setHoleCardCount(4);
+    if (UI.model.scoring == 'high' && UI.model.holeCardCount > 3)
+      UI.model.setHoleCardCount(2);
+    UI.syncUIToModel();
+  }
+  static suitPickerChanged(ev) {
+    UI.setDeckSuit(ev.currentTarget.innerText);
+  }
+  static suits = Array.from(PlayingCard.EmojiToSuit.keys());
 
-	static cardToHtml(c) {
-		if (!c || c.length < 2)
-			throw `cardToHtml got an illegal card ${c}`;
-		let rank = c[0];
-		let suit = c[1];
-		if (rank == "T")
-			rank = "10";
-		switch(suit) {
-			case 'S': 
-				suit = "♠";
-				break;
-			case 'C':
-				suit = "♣";
-				break;
-			case 'H':
-				suit = "<span class='red'>♥</span>";
-				break;
-			case 'D':
-				suit = "<span class='red'>♦</span>";
-				break;
-			default:
-				suit = '?';
-				break;
-		}
-		return `<div class='cardTextTile'>${rank}${suit}</div>`;
-	}
+  static cardToHtml(c) {
+    if (!c || c.length < 2)
+      throw `cardToHtml got an illegal card ${c}`;
+    let rank = c[0];
+    let suit = c[1];
+    if (rank == "T")
+      rank = "10";
+    switch(suit) {
+      case 'S': 
+        suit = "♠";
+        break;
+      case 'C':
+        suit = "♣";
+        break;
+      case 'H':
+        suit = "<span class='red'>♥</span>";
+        break;
+      case 'D':
+        suit = "<span class='red'>♦</span>";
+        break;
+      default:
+        suit = '?';
+        break;
+    }
+    return `<div class='cardTextTile'>${rank}${suit}</div>`;
+  }
 
-	static cardsToHtml(cardsArray) {
-		if (!cardsArray)
-			return "<div class='cardTextTile'>? ?</div>";
-		return cardsArray.map( c => UI.cardToHtml(c)).join('');
-	}
+  static cardsToHtml(cardsArray) {
+    if (!cardsArray)
+      return "<div class='cardTextTile'>? ?</div>";
+    return cardsArray.map( c => UI.cardToHtml(c)).join('');
+  }
 
-	static setDeckSuit(suit) {
-		for (let c of document.querySelectorAll("#deckPanel > playing-card")) {
-			c.setAttribute("data-suit", suit);
-		}
-		for (let a of document.querySelectorAll("#suitPicker a")) {
-			if (a.innerText == suit)
-				a.classList.add("selected");
-			else
-				a.classList.remove("selected");
-		}
-		// Update suitPickerButton
-		let suitIndex = UI.suits.indexOf(suit);
-		if (suitIndex != -1) {
-			if (++suitIndex == UI.suits.length)
-				suitIndex = 0;
-			let button = document.querySelector("#suitPicker .suitPickerButton");
-			let span = button.querySelector("span");
-			span.innerText = UI.suits[suitIndex];
-			button.setAttribute('data-suit', UI.suits[suitIndex]);
-		} else {
-			console.error(`unexpected suit value ${suit}`);
-		}
-		UI.syncUIToModel();
-	}
+  static setDeckSuit(suit) {
+    for (let c of document.querySelectorAll("#deckPanel > playing-card")) {
+      c.setAttribute("data-suit", suit);
+    }
+    for (let a of document.querySelectorAll("#suitPicker a")) {
+      if (a.innerText == suit)
+        a.classList.add("selected");
+      else
+        a.classList.remove("selected");
+    }
+    // Update suitPickerButton
+    let suitIndex = UI.suits.indexOf(suit);
+    if (suitIndex != -1) {
+      if (++suitIndex == UI.suits.length)
+        suitIndex = 0;
+      let button = document.querySelector("#suitPicker .suitPickerButton");
+      let span = button.querySelector("span");
+      span.innerText = UI.suits[suitIndex];
+      button.setAttribute('data-suit', UI.suits[suitIndex]);
+    } else {
+      console.error(`unexpected suit value ${suit}`);
+    }
+    UI.syncUIToModel();
+  }
 
-	static cardAddressFromElement(el) {
-		// address is one of:
-		// { location: 'deck'; value: pokerEngineCardValue }
-		// { location: 'community'; value: pokerEngineCardValue }
-		// { location: 'player'; playerIndex; cardIndex; value: pokerEngineCardValue;  }
-		if (el.tagName != 'PLAYING-CARD')
-			throw `Unknown card address ${el}`;
-		if (el.classList.contains("deck"))
-			return {
-				location: 'deck',
-				value: el.valueAsString()
-			};
-		if (el.classList.contains("community")) {
-			let communityIndex = Array.from(
-				document.querySelectorAll("#tableTop playing-card")).indexOf(el);
-			if (communityIndex == -1)
-				throw `Could not find community card index ${el}`;
-			return {
-				location: 'community',
-				value: el.valueAsString(),
-				cardIndex: communityIndex
-			};
-		}
-		// player hand
-		let hand = el.parentElement;
-		let handCards = Array.from(el.parentElement.querySelectorAll('playing-card'));
+  static cardAddressFromElement(el) {
+    // address is one of:
+    // { location: 'deck'; value: pokerEngineCardValue }
+    // { location: 'community'; value: pokerEngineCardValue }
+    // { location: 'player'; playerIndex; cardIndex; value: pokerEngineCardValue;  }
+    if (el.tagName != 'PLAYING-CARD')
+      throw `Unknown card address ${el}`;
+    if (el.classList.contains("deck"))
+      return {
+        location: 'deck',
+        value: el.valueAsString()
+      };
+    if (el.classList.contains("community")) {
+      let communityIndex = Array.from(
+        document.querySelectorAll("#tableTop playing-card")).indexOf(el);
+      if (communityIndex == -1)
+        throw `Could not find community card index ${el}`;
+      return {
+        location: 'community',
+        value: el.valueAsString(),
+        cardIndex: communityIndex
+      };
+    }
+    // player hand
+    let hand = el.parentElement;
+    let handCards = Array.from(el.parentElement.querySelectorAll('playing-card'));
 
-		let tableHands = Array.from(document.querySelectorAll('#pokerTablePanel player-hand'));
-		if (tableHands.indexOf(hand) == -1)
-			throw `Cannot find table hand ${hand}`;
-		if (handCards.indexOf(el) == -1)
-			throw `Cannot find hand card ${hand}`;
-		return {
-			location: 'player',
-			playerIndex: tableHands.indexOf(hand),
-			cardIndex: handCards.indexOf(el),
-			value: el.valueAsString()
-		}
-	}
+    let tableHands = Array.from(document.querySelectorAll('#pokerTablePanel player-hand'));
+    if (tableHands.indexOf(hand) == -1)
+      throw `Cannot find table hand ${hand}`;
+    if (handCards.indexOf(el) == -1)
+      throw `Cannot find hand card ${hand}`;
+    return {
+      location: 'player',
+      playerIndex: tableHands.indexOf(hand),
+      cardIndex: handCards.indexOf(el),
+      value: el.valueAsString()
+    }
+  }
 
-	static moveCardFromElements(srcEl, destEl) {
-		let src = UI.cardAddressFromElement(srcEl);
-		let dest = UI.cardAddressFromElement(destEl);
-		UI.moveCard(src, dest);
-	}
+  static moveCardFromElements(srcEl, destEl) {
+    let src = UI.cardAddressFromElement(srcEl);
+    let dest = UI.cardAddressFromElement(destEl);
+    UI.moveCard(src, dest);
+  }
 
-	static isNextDestination(location, cardIndex, playerIndex) {
-		return UI.nextDestination.location == location 
-			&& UI.nextDestination.cardIndex == cardIndex
-			&& UI.nextDestination.playerIndex === playerIndex;
-	}
+  static isNextDestination(location, cardIndex, playerIndex) {
+    return UI.nextDestination.location == location 
+      && UI.nextDestination.cardIndex == cardIndex
+      && UI.nextDestination.playerIndex === playerIndex;
+  }
 
-	static computeNextDestination(dest) {
-		let next;
-		if (dest) {
-			if (dest.location == 'player') {
-				next = {
-					location: 'player',
-					playerIndex: dest.playerIndex,
-					cardIndex: dest.cardIndex + 1
-				}
-				if (next.cardIndex > UI.model.holeCardCount - 1)
-					next.cardIndex = 0;
-			} else if (dest.location == 'community') {
-				next = {
-					location: 'community',
-					cardIndex: dest.cardIndex+1
-				}
-				if (next.cardIndex > 4)
-				next.cardIndex = 0;
-			}
-		}
-		return next || {
-			location: 'player',
-			playerIndex: 0,
-			cardIndex: 0
-		};
-	}
-	// src/dest are cardAddresses
-	static moveCard(src, dest) {
-		switch(src.location) {
-			case 'deck':
-				switch(dest.location) {
-					case 'deck':
-						break;	// do nothing
-					case 'community':
-						UI.model.addCommunityCard(src.value, dest.cardIndex);
-						break;
-					case 'player':
-						dest.cardIndex = UI.model.addPlayerCard(src.value, dest.playerIndex, dest.cardIndex);
-						break;
-				}
-				break;
-			case 'community':
-				switch (dest.location) {
-					case 'deck':
-						UI.model.removeCommunityCard(src.value);
-						break;
-					case 'community':
-						UI.model.addCommunityCard(src.value, dest.cardIndex);
-						break;
-					case 'player':
-						dest.cardIndex = UI.model.addPlayerCard(src.value, dest.playerIndex, dest.cardIndex);
-						break;
-				}				
-				break;
-			case 'player':
-				switch (dest.location) {
-					case 'deck':
-						UI.model.removePlayerCard(src.value, src.playerIndex);
-						break;
-					case 'community':
-						UI.model.addCommunityCard(src.value, dest.cardIndex);
-						break;
-					case 'player':
-						dest.cardIndex = UI.model.addPlayerCard(src.value, dest.playerIndex, dest.cardIndex);
-						break;
-				}
-				break;
-		}
-		UI.nextDestination = UI.computeNextDestination(dest);
-		UI.syncUIToModel();
-	}
+  static computeNextDestination(dest) {
+    let next;
+    if (dest) {
+      if (dest.location == 'player') {
+        next = {
+          location: 'player',
+          playerIndex: dest.playerIndex,
+          cardIndex: dest.cardIndex + 1
+        }
+        if (next.cardIndex > UI.model.holeCardCount - 1)
+          next.cardIndex = 0;
+      } else if (dest.location == 'community') {
+        next = {
+          location: 'community',
+          cardIndex: dest.cardIndex+1
+        }
+        if (next.cardIndex > 4)
+        next.cardIndex = 0;
+      }
+    }
+    return next || {
+      location: 'player',
+      playerIndex: 0,
+      cardIndex: 0
+    };
+  }
+  // src/dest are cardAddresses
+  static moveCard(src, dest) {
+    switch(src.location) {
+      case 'deck':
+        switch(dest.location) {
+          case 'deck':
+            break;	// do nothing
+          case 'community':
+            UI.model.addCommunityCard(src.value, dest.cardIndex);
+            break;
+          case 'player':
+            dest.cardIndex = UI.model.addPlayerCard(src.value, dest.playerIndex, dest.cardIndex);
+            break;
+        }
+        break;
+      case 'community':
+        switch (dest.location) {
+          case 'deck':
+            UI.model.removeCommunityCard(src.value);
+            break;
+          case 'community':
+            UI.model.addCommunityCard(src.value, dest.cardIndex);
+            break;
+          case 'player':
+            dest.cardIndex = UI.model.addPlayerCard(src.value, dest.playerIndex, dest.cardIndex);
+            break;
+        }				
+        break;
+      case 'player':
+        switch (dest.location) {
+          case 'deck':
+            UI.model.removePlayerCard(src.value, src.playerIndex);
+            break;
+          case 'community':
+            UI.model.addCommunityCard(src.value, dest.cardIndex);
+            break;
+          case 'player':
+            dest.cardIndex = UI.model.addPlayerCard(src.value, dest.playerIndex, dest.cardIndex);
+            break;
+        }
+        break;
+    }
+    UI.nextDestination = UI.computeNextDestination(dest);
+    UI.syncUIToModel();
+  }
 
-	static syncUIToModel() {
-		UI.clearError();
+  static syncUIToModel() {
+    UI.clearError();
 
-		// Sync toolbar
-		document.querySelector("#playerCount").value = UI.model.playerCount;
-		document.querySelector("#holeCardCount").value = UI.model.holeCardCount;
-		let hiloCheckbox = document.querySelector("#hiloCheckbox");
-		hiloCheckbox.value = UI.model.scoring;
-		if (UI.model.scoring == "highlow")
-			hiloCheckbox.classList.add("checked");
-		else
-			hiloCheckbox.classList.remove("checked");
+    // Sync toolbar
+    document.querySelector("#playerCount").value = UI.model.playerCount;
+    document.querySelector("#holeCardCount").value = UI.model.holeCardCount;
+    let hiloCheckbox = document.querySelector("#hiloCheckbox");
+    hiloCheckbox.value = UI.model.scoring;
+    if (UI.model.scoring == "highlow")
+      hiloCheckbox.classList.add("checked");
+    else
+      hiloCheckbox.classList.remove("checked");
 
-		// Only show hands in play, with correct number of hole cards
-		let i = 1;
-		for (let el of document.querySelectorAll("#pokerTablePanel > player-hand")) {
-			if (i++ <= UI.model.playerCount)
-				el.style.display = "";
-			else
-				el.style.display = "none";
-			el.setAttribute('data-hole-count', UI.model.holeCardCount);
-		}
-		// Sync community cards
-		let communityElements = document.querySelectorAll("#tableTop playing-card");
-		for (let i=0; i<communityElements.length; ++i) {
-			if (UI.model.communityCards.length <= i) {
-				communityElements[i].clear();
-			} else {
-				communityElements[i].setValueFromString(UI.model.communityCards[i]);
-			}
-			UI.isNextDestination('community', i) 
-				? communityElements[i].classList.add("deckClickTarget")
-				: communityElements[i].classList.remove("deckClickTarget");
-		}
-		// Sync player cards
-		let playerHandElements = document.querySelectorAll("#pokerTablePanel player-hand");
-		for (let h=0; h<playerHandElements.length; ++h) {
-			playerHandElements[h].setAttribute('data-hole-count', UI.model.holeCardCount);
-			let cardElements = playerHandElements[h].querySelectorAll("playing-card");
-			let cards = UI.model.playerCards[h];
-			let hasCards = false;
-			for (let c=0; c<cardElements.length; ++c) {
-				let cardValue = cards ? cards[c] : undefined;
-				if (cardValue)
-					hasCards = true;
-				cardElements[c].setValueFromString(cardValue);
-				UI.isNextDestination('player', c, h) 
-					? cardElements[c].classList.add("deckClickTarget")
-					: cardElements[c].classList.remove("deckClickTarget");
-			}
-			if (hasCards)
-				playerHandElements[h].classList.remove("closed");
-			else
-				playerHandElements[h].classList.add("closed");
-		}
-		// Gray out deck cards that are used
-		let allCards = UI.model.getAllCardsInUse();
-		for (let el of document.querySelectorAll("#deckPanel playing-card")) {
-			if (allCards.indexOf(el.valueAsString()) == -1)
-				el.classList.remove("inUse");
-			else
-				el.classList.add("inUse");
-		}
-	}
+    // Only show hands in play, with correct number of hole cards
+    let i = 1;
+    for (let el of document.querySelectorAll("#pokerTablePanel > player-hand")) {
+      if (i++ <= UI.model.playerCount)
+        el.style.display = "";
+      else
+        el.style.display = "none";
+      el.setAttribute('data-hole-count', UI.model.holeCardCount);
+    }
+    // Sync community cards
+    let communityElements = document.querySelectorAll("#tableTop playing-card");
+    for (let i=0; i<communityElements.length; ++i) {
+      if (UI.model.communityCards.length <= i) {
+        communityElements[i].clear();
+      } else {
+        communityElements[i].setValueFromString(UI.model.communityCards[i]);
+      }
+      UI.isNextDestination('community', i) 
+        ? communityElements[i].classList.add("deckClickTarget")
+        : communityElements[i].classList.remove("deckClickTarget");
+    }
+    // Sync player cards
+    let playerHandElements = document.querySelectorAll("#pokerTablePanel player-hand");
+    for (let h=0; h<playerHandElements.length; ++h) {
+      playerHandElements[h].setAttribute('data-hole-count', UI.model.holeCardCount);
+      let cardElements = playerHandElements[h].querySelectorAll("playing-card");
+      let cards = UI.model.playerCards[h];
+      let hasCards = false;
+      for (let c=0; c<cardElements.length; ++c) {
+        let cardValue = cards ? cards[c] : undefined;
+        if (cardValue)
+          hasCards = true;
+        cardElements[c].setValueFromString(cardValue);
+        UI.isNextDestination('player', c, h) 
+          ? cardElements[c].classList.add("deckClickTarget")
+          : cardElements[c].classList.remove("deckClickTarget");
+      }
+      if (hasCards)
+        playerHandElements[h].classList.remove("closed");
+      else
+        playerHandElements[h].classList.add("closed");
+    }
+    // Gray out deck cards that are used
+    let allCards = UI.model.getAllCardsInUse();
+    for (let el of document.querySelectorAll("#deckPanel playing-card")) {
+      if (allCards.indexOf(el.valueAsString()) == -1)
+        el.classList.remove("inUse");
+      else
+        el.classList.add("inUse");
+    }
+  }
 
-	static showSimStat(simStat) {
-		if (!simStat) {
-			console.error("syncUIToStats has no stats")
-			return;
-		}
-		if (simStat) {
-			let d = document.createElement("div");
-			d.classList.add("statsDiv");
-			d.innerHTML = simStat.render();
-			let target = document.querySelector("#simResults");
-			//target.innerHTML = "";
-			target.prepend(d);
-		}
-	}
-	
-	static showStatsHand(statsId) {
-		let stats = PokerStorage.getStat(statsId);
-		if (!stats) {
-			console.error("Could not show stats ", statsId);
-			return;
-		}
-		UI.model.updateFromSimStat(stats);
-		UI.syncUIToModel();
-	}
+  static showSimStat(simStat) {
+    if (!simStat) {
+      console.error("syncUIToStats has no stats")
+      return;
+    }
+    if (simStat) {
+      let d = document.createElement("div");
+      d.classList.add("statsDiv");
+      d.innerHTML = simStat.render();
+      let target = document.querySelector("#simResults");
+      //target.innerHTML = "";
+      target.prepend(d);
+    }
+  }
+  
+  static showStatsHand(statsId) {
+    let stats = PokerStorage.getStat(statsId);
+    if (!stats) {
+      console.error("Could not show stats ", statsId);
+      return;
+    }
+    UI.model.updateFromSimStat(stats);
+    UI.syncUIToModel();
+  }
 
-	static indicateSimulationStarted() {
-		let simButton = document.querySelector("#simButton");
-		simButton.setAttribute('disabled', true);
-		simButton.innerText = `Playing ${UI.SIM_ITERATIONS} games`;
-	}
-	static indicateSimulationEnded() {
-		let simButton = document.querySelector("#simButton");
-		simButton.removeAttribute('disabled');
-		simButton.innerText = `Simulate`;
-	}
+  static indicateSimulationStarted() {
+    let simButton = document.querySelector("#simButton");
+    simButton.setAttribute('disabled', true);
+    simButton.innerText = `Playing ${UI.SIM_ITERATIONS} games`;
+  }
+  static indicateSimulationEnded() {
+    let simButton = document.querySelector("#simButton");
+    simButton.removeAttribute('disabled');
+    simButton.innerText = `Simulate`;
+  }
 
-	static runSimulation() {
-		console.log("Run simulation");
-		for (let s of document.querySelectorAll(".stat"))
-			s.innerText = "";
-		let engine = new PokerEngine({ 
-			playerCount: UI.model.playerCount,
-			holeCardCount: UI.model.holeCardCount,
-			holeCardRules: UI.model.holeCardRules,
-			scoring: UI.model.scoring
-		});
-		UI.indicateSimulationStarted();
-		window.setTimeout( _ => {
-			let count = 8000;
-			let activePlayers = [];
-			for (let i=0; i<UI.model.playerCards.length; ++i) {
-				if (UI.model.playerCards[i] && UI.model.playerCards[i].length > 0)
-					activePlayers.push(i);
-			}
-			if (activePlayers.length > 0 && activePlayers.indexOf(0) == -1)
-				activePlayers.unshift(0);
-			// score all players if only active player is 0
-			if (activePlayers.length < 2)
-				activePlayers = [];
+  static runSimulation() {
+    console.log("Run simulation");
+    for (let s of document.querySelectorAll(".stat"))
+      s.innerText = "";
+    let engine = new PokerEngine({ 
+      playerCount: UI.model.playerCount,
+      holeCardCount: UI.model.holeCardCount,
+      holeCardRules: UI.model.holeCardRules,
+      scoring: UI.model.scoring
+    });
+    UI.indicateSimulationStarted();
+    window.setTimeout( _ => {
+      let count = 8000;
+      let activePlayers = [];
+      for (let i=0; i<UI.model.playerCards.length; ++i) {
+        if (UI.model.playerCards[i] && UI.model.playerCards[i].length > 0)
+          activePlayers.push(i);
+      }
+      if (activePlayers.length > 0 && activePlayers.indexOf(0) == -1)
+        activePlayers.unshift(0);
+      // score all players if only active player is 0
+      if (activePlayers.length < 2)
+        activePlayers = [];
 
-			let stats = new SimStats(
-				engine, UI.model.communityCards, UI.model.playerCards, activePlayers);
-			let start = Date.now();
-		
-			try {
-				for (let i = 0; i < count; i++) {
-					let results = engine.playGame(
-						UI.model.playerCards, UI.model.communityCards, activePlayers);
-					stats.recordGame(results);
-				}
-			} catch(err) {
-				UI.showError(err);
-				console.error(err);
-				return;
-			}
-			let elapsed = Date.now() - start;
-			let gameTime = elapsed / count;
-			UI.indicateSimulationEnded();
-			console.log(`${count} games took ${elapsed}ms; ${gameTime}ms per game`);
-			UI.showSimStat(stats);
-			PokerStorage.saveSimStat(stats);
-		}, 0);
+      let stats = new SimStats(
+        engine, UI.model.communityCards, UI.model.playerCards, activePlayers);
+      let start = Date.now();
+    
+      try {
+        for (let i = 0; i < count; i++) {
+          let results = engine.playGame(
+            UI.model.playerCards, UI.model.communityCards, activePlayers);
+          stats.recordGame(results);
+        }
+      } catch(err) {
+        UI.showError(err);
+        console.error(err);
+        return;
+      }
+      let elapsed = Date.now() - start;
+      let gameTime = elapsed / count;
+      UI.indicateSimulationEnded();
+      console.log(`${count} games took ${elapsed}ms; ${gameTime}ms per game`);
+      UI.showSimStat(stats);
+      PokerStorage.saveSimStat(stats);
+    }, 0);
 
-	}
+  }
 
-	static clear() {
-		UI.model.reset();
-		UI.nextDestination = UI.computeNextDestination();
-		UI.syncUIToModel();
-		window.localStorage.clear();
-		for (let el of document.querySelectorAll(".statsDiv"))
-			el.remove();
-	}
+  static clear() {
+    UI.model.reset();
+    UI.nextDestination = UI.computeNextDestination();
+    UI.syncUIToModel();
+    window.localStorage.clear();
+    for (let el of document.querySelectorAll(".statsDiv"))
+      el.remove();
+  }
 }
-	UI.init();
+  UI.init();
 </script>
 </body>

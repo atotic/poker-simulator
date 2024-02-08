@@ -121,8 +121,8 @@ Is there a hidden cache?
       log(ev.data, true);
     });
     navigator.serviceWorker.addEventListener('controllerchange', _ => {
-			log('serviceWorker controllerchange event');
-		});
+      log('serviceWorker controllerchange event');
+    });
     return await navigator.serviceWorker.register("./debugSW.js");
   }
   
