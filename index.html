@@ -6,10 +6,6 @@
 <link rel="apple-touch-startup-image" src="icons/512.png"/>
 <link rel="apple-touch-icon">
 <title>poker odds</title>
-<!--
-	Coding style:
-		- fatal errors throw
--->
 <script src="pokerEngine.js"></script>
 <style>
 	:root {
@@ -32,9 +28,6 @@
 	body {
 		padding-bottom: 16px;
 	}
-	/* body {
-		background: yellow;
-	} */
 	.hidden {
 		display:none;
 	}
@@ -92,7 +85,7 @@
 		padding: 4px;
 	}
 	#toolbar select {
-	font-size:18px;
+		font-size:18px;
 	}
 	#resetButton {
 		font-size:24px;
@@ -517,6 +510,80 @@ class UIModel {
 		this.communityCards = [];
 		this.playerCards = [];
 	}
+	validate() {
+		if (!Array.isArray(this.communityCards))
+			throw "communityCards must be an array";
+		if (!Array.isArray(this.playerCards))
+			throw "playerCards must be an array";
+		for (let p of this.playerCards) {
+			if (!Array.isArray(p))
+				throw "playerCard must be an array " + p.toString();
+		}
+		if (this.holeCardCount < 2 || this.holeCardCount > 5)
+			throw "bad holeCardCount " + this.holeCardCount;
+		if (this.playerCount < 2 || this.playerCount > 10)
+			throw "bad playerCount " + this.playerCount;
+		if (this.holeCardRules != 'atMost2' && this.holeCardRules != 'exactly2')
+			throw "bad holeCardRules " + this.holeCardRules;
+		if (this.scoring != 'high' && this.scoring != 'highlow')
+			throw "bad scoring " + this.scoring;
+		}
+
+	toHashString() {
+		let s = '';
+		s += `cc=${JSON.stringify(this.communityCards)}&`;
+		s += `players=${JSON.stringify(this.playerCards)}&`;
+		if (this.holeCardCount != 2)
+			s += `hole=${this.holeCardCount}&`;
+		if (this.playerCount != 10)
+			s += `pc=${this.playerCount}&`;
+		if (this.holeCardRules != 'atMost2')
+			s += `rules=${this.holeCardRules}&`;
+		if (this.scoring != 'high')
+			s += `scoring=${this.scoring}`;
+		if (s.charAt(s.length -1) == '&')	// trim &
+			s = s.substring(0, s.length -1);
+		s = s.replaceAll('[', '(').replaceAll(']',')');
+		return s;
+	}
+	// return UIModel
+	static fromHashString(hash) {
+		try {
+			let m = new UIModel();
+			hash = hash.replaceAll('(', '[').replaceAll(')', ']');
+			let keyValues = new Map(hash.split('&').map( x => x.split('=')));
+			for (let kv of keyValues) {
+				switch(kv[0]) {
+					case 'cc':
+						m.communityCards = JSON.parse(kv[1]);
+						break;
+					case 'players':
+						m.playerCards = JSON.parse(kv[1]);
+						break;
+					case 'hole':
+						m.holeCardCount = parseInt(kv[1]);
+						break;
+					case 'pc':
+						m.playerCount = parseInt(kv[1]);
+						break;
+					case 'rules':
+						m.holeCardRules = kv[1];
+						break;
+					case 'scoring':
+						m.scoring = kv[1];
+						break;
+					default:
+						console.warn("bad entry", kv[0], kv[1]);
+				}
+			}
+			m.validate();
+			return m;
+		} catch(err) {
+			console.error(`Error decoding ${hash} ${err}`);
+			return new UIModel();
+		}
+	}
+
 	setPlayerCount(count) {
 		this.playerCount = parseInt(count);
 		let discards = this.playerCards.splice(count);

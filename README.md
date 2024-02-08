@@ -3,9 +3,9 @@
 TODO
   - Usability
 	  - share a hand with others
+		- process localstorage events
   	- shake to undo?z
 		- click on X twice to remove saved simulations (toaster shows this)
-		- process localstorage events
 	- drag to delete stat
 	- drag to reorder stat
 	- better layout (iPhone curvature)
