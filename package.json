@@ -5,6 +5,9 @@
     "gencert": "openssl req -newkey rsa:2048 -new -nodes -x509 -days 3650 -keyout key.pem -out cert.pem"
   },
   "devDependencies": {
-    "http-server": "^14.1.1"
+    "http-server": "^14.1.1",
+    "toastify-js": "^1.12.0"
+  },
+  "dependencies": {
   }
 }

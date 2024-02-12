@@ -1,13 +1,14 @@
 # poker-simulator
 
 ## TODO
+  - need toast element https://duckduckgo.com/?q=javascript+toast+message&t=iphone&ia=web 
   - Usability
     - share a hand with others
     - process localstorage events
     - shake to undo?z
     - click on X twice to remove saved simulations (toaster shows this)
-  - need toaster element
-  - drag to delete stat
+  - drag to delete stat 
+    - Using view transitions for animation? https://codepen.io/dannymoerkerke/pen/ExMEPaW
   - drag to reorder stat
   - better layout (iPhone curvature)
   - run stats as a thread

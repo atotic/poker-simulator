@@ -13,11 +13,14 @@ async function precacheResources() {
   let cache = await caches.open(CACHE_NAME);
   // Cache all static resources.
   return cache.addAll([
+    "./",
     "index.html", 
     "playing_card.css", 
     "pokerEngine.js", 
     "favicon.ico", 
-    "icons/512.png"
+    "icons/512.png",
+    "lib/toastify.min.css",
+    "lib/toastify.js"
   ]);
 }
 

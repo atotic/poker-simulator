@@ -5,6 +5,8 @@
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-startup-image" src="icons/512.png"/>
 <link rel="apple-touch-icon">
+<link rel="stylesheet" type="text/css" href="lib/toastify.min.css">
+<script type="text/javascript" src="lib/toastify.js" defer></script>
 <title>poker odds</title>
 <script src="pokerEngine.js"></script>
 <style>
@@ -1333,8 +1335,6 @@ class UI {
       document.querySelector("#suitPicker .suitPickerButton").addEventListener('click', UI.suitPickerChanged);
       document.querySelector("#hiloCheckbox").value = "high";
 
-      if (!navigator.share && !navigator.clipboard)
-        document.querySelector("#shareIcon").classList.add("hidden");
       UI.holeCardCountChanged();
       UI.playersChanged();
       UI.scoringChanged();
@@ -1409,8 +1409,18 @@ class UI {
       await navigator.share(shareData);
     } else if (navigator.clipboard) {
       await navigator.clipboard.writeText(url.toString());
-      console.log("url copied to clipboard")
+      Toastify({
+        text: "Link has been copied to clipboard.",
+        duration: 2000,
+        style: {
+          background: "var(--felt-green)",
+          color: "black",
+          fontFamily: "sans-serif"
+        },
+      }).showToast();
+      console.log("Link copied to clipboard")
     }
+    window.location.hash = url.hash;
   }
   static preventDefault(ev) {
     if (ev.cancelable)
@@ -1783,6 +1793,7 @@ class UI {
       el.remove();
   }
 }
-  UI.init();
+UI.init();
+console.log("Loaded", Date.now());
 </script>
 </body>
