@@ -1,17 +1,22 @@
 # poker-simulator
 
 ## TODO
-  - need toast element https://duckduckgo.com/?q=javascript+toast+message&t=iphone&ia=web 
+  - Local storage sync among windows
+    - animation 
+      https://codepen.io/felipefialho/pen/AwYmMe
+  - PokerStorage: Implement full-on sync with PokerStorage.simStatList
+    - remove dbId silliness
   - Usability
-    - share a hand with others
     - process localstorage events
-    - shake to undo?z
+    - shake to undo?
     - click on X twice to remove saved simulations (toaster shows this)
   - drag to delete stat 
     - Using view transitions for animation? https://codepen.io/dannymoerkerke/pen/ExMEPaW
   - drag to reorder stat
   - better layout (iPhone curvature)
   - run stats as a thread
+  - Should hashes be removed after a while, so that reload gives us a clean sheet?
+  https://developer.mozilla.org/en-US/docs/Web/API/Window/pagehide_event
   - Chromium: cannot create max-content size column. Is this because table_layout_types.cc:InlineLayoutFromStyle is setting CellInlineConstraint::is_constrained to false?
   - lets build and debug chromium. Set the breakpoint for max-content
   - typescript usage
@@ -48,6 +53,9 @@ https://www.runitonce.com/
 Now defunct simulator manual http://propokertools.com/oracle_help/main
 
 ## DONE
+
+12-Feb-24
+- share a hand with others
 
 7-Feb-24
 - default target should be marked

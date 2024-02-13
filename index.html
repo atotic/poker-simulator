@@ -22,7 +22,7 @@
   html, body {
     margin: 0;
     padding: 0;
-     min-height: 100vh;/* if body scrolls, can't do drag'n'drop on mobile */
+    min-height: 100vh;/* if body scrolls, can't do drag'n'drop on mobile */
     /* height: 100vh; */
     /* overflow: hidden; */
     user-select: none;
@@ -812,6 +812,7 @@ class PlayerStats {
 // Odds testing:
 // https://homes.luddy.indiana.edu/kapadia/nofoldem/10_wins.stats
 class SimStats {
+  id;
   // Hand rules
   holeCardCount;
   holeCardRules;
@@ -828,7 +829,7 @@ class SimStats {
 
   dbId = Math.random().toString(36).slice(2, 7);
 
-  static fromJson(json){
+  static fromJson(json, id){
     let o = JSON.parse(json, (key, value) => {
       if(typeof value === 'object' && value !== null) {
         if (value.dataType === 'Map') {
@@ -837,7 +838,9 @@ class SimStats {
       }
       return value;
     });
-    // Caution: this.playerStats is 
+    // Caution: this.playerStats is not an array of PlayerStats
+    // This works as long as playerStats are read-only
+    o.id = id;
     return Object.assign(new SimStats(), o);
   }
   
@@ -1090,10 +1093,43 @@ class PokerStorage {
   static MAX_STATS = 200;
   static simStatList = []; // List of current SimStats
 
+  static init() {
+    window.addEventListener('storage', ev => {
+      // https://developer.mozilla.org/en-US/docs/Web/API/Window/storage_event
+      if (ev.storageArea != window.localStorage)
+        return;
+      if (ev.key && !ev.key.startsWith(PokerStorage.STAT_PREFIX))
+        return;
+      if (!ev.newValue) {
+        if (!ev.key) {
+          // Key is null if all eleemnts were removed
+          PokerStorage.simStatList = []; 
+        } else  {
+          // Single element removal
+          let i = PokerStorage.simStatList.findIndex(simStat => simStat.id == key);
+          if (i == -1) {
+            console.warn("Removed element not found", ev.key);
+          } else {
+            PokerStorage.simStatList.splice(i, 1);
+          }
+        }
+        UI.remoteSimStatRemoved(ev.key || 'all');
+      }
+      else {
+        try {
+          let stat = SimStats.fromJson(ev.newValue, ev.key);
+          PokerStorage.simStatList.unshift(stat);
+          UI.remoteSimStatAdded(stat);
+        } catch(err) {
+          console.error("Error decoding simStat in storage event", err, ev.newValue);
+        }
+      }
+    });
+  }
   // returns an array of SimStats
   static loadStats() {
     let stats = [];
-    let statToKeyMap = new Map();	// Used to sort entries by key
+    let statToKeyMap = new Map();	// simStat => key numeric value; Used for sorting
     for (let i=0; i<window.localStorage.length; ++i) {
       let key = window.localStorage.key(i);
       if (!key.startsWith(PokerStorage.STAT_PREFIX))
@@ -1111,7 +1147,7 @@ class PokerStorage {
           console.error("could not parse key", key);
           continue;
         }
-        let stat = SimStats.fromJson(window.localStorage.getItem(key));
+        let stat = SimStats.fromJson(window.localStorage.getItem(key), key);
         statToKeyMap.set(stat, keyIndex);
         stats.push(stat);
       } catch(e) {
@@ -1139,9 +1175,13 @@ class PokerStorage {
   }
 
   static saveSimStat(stat) {
-    let key = PokerStorage.STAT_PREFIX + PokerStorage.NEXT_STAT_SAVE_INDEX;
-    while (window.localStorage.getItem(key)) {
-      key = PokerStorage.STAT_PREFIX + ++PokerStorage.NEXT_STAT_SAVE_INDEX;
+    let key = stat.id;
+    if (!key) {
+      key = PokerStorage.STAT_PREFIX + PokerStorage.NEXT_STAT_SAVE_INDEX;
+      while (window.localStorage.getItem(key)) {
+        key = PokerStorage.STAT_PREFIX + ++PokerStorage.NEXT_STAT_SAVE_INDEX;
+      }
+      stat.id = key;
     }
     window.localStorage.setItem(key, stat.toJson());
     PokerStorage.simStatList.push(JSON.parse(JSON.stringify(stat)));
@@ -1154,6 +1194,8 @@ class PokerStorage {
     }
   }
 }
+PokerStorage.init();
+
 
 // Thorough DnD tutorial, not used here
 // https://www.redblobgames.com/making-of/draggable/
@@ -1707,11 +1749,32 @@ class UI {
     if (simStat) {
       let d = document.createElement("div");
       d.classList.add("statsDiv");
+      if (simStat.id)
+        d.setAttribute("data-stat-id", simStat.id);
+      else
+        console.warn("showing stat without an id?");
       d.innerHTML = simStat.render();
       let target = document.querySelector("#simResults");
       //target.innerHTML = "";
       target.prepend(d);
     }
+  }
+
+  static remoteSimStatRemoved(statKey) {
+    if (statKey == 'all') {
+      for (let el of document.querySelectorAll(".statsDiv"))
+        el.remove();
+      return;
+    }
+    let el = document.querySelector(`[data-stat-id=${statKey}]`);
+    if (!el)
+      return console.warn("Did not find stat in DOM", statKey);
+    el.remove();
+  }
+
+  static remoteSimStatAdded(simStat) {
+    UI.showSimStat(simStat);
+    console.warn("How about an animation here");
   }
   
   static showStatsHand(statsId) {
@@ -1778,8 +1841,8 @@ class UI {
       let gameTime = elapsed / count;
       UI.indicateSimulationEnded();
       console.log(`${count} games took ${elapsed}ms; ${gameTime}ms per game`);
-      UI.showSimStat(stats);
       PokerStorage.saveSimStat(stats);
+      UI.showSimStat(stats);
     }, 0);
 
   }
