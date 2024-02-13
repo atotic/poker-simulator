@@ -1,11 +1,6 @@
 # poker-simulator
 
 ## TODO
-  - Local storage sync among windows
-    - animation 
-      https://codepen.io/felipefialho/pen/AwYmMe
-  - PokerStorage: Implement full-on sync with PokerStorage.simStatList
-    - remove dbId silliness
   - Usability
     - process localstorage events
     - shake to undo?
@@ -53,6 +48,12 @@ https://www.runitonce.com/
 Now defunct simulator manual http://propokertools.com/oracle_help/main
 
 ## DONE
+
+13-Feb-24  
+- Local storage sync among windows
+  - animation https://codepen.io/felipefialho/pen/AwYmMe
+  - PokerStorage: Implement full-on sync with PokerStorage.simStatList
+  - remove dbId silliness
 
 12-Feb-24
 - share a hand with others
