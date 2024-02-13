@@ -15,6 +15,7 @@
     --deck-card-width: 50px;
     --theme-back-color: #fee4d2;
     --felt-green: #C9EED0;
+    --error-background: #fe3939;
   }
   * {
     box-sizing:border-box;
@@ -193,10 +194,6 @@
     min-width: 300px;
     display:flex;
     flex-direction: column;
-  }
-  .error {
-    border: 2px solid red;
-    color: rgb(212, 26, 26);
   }
   #simResults {
     overflow: auto;
@@ -418,7 +415,6 @@
   </div>
   <div id="statsPanel">
     <button id="simButton" style="font-size:large" onClick="UI.runSimulation()">Simulate</button>
-    <div class="error"></div>
     <div id="simResults"></div>
   </div>
 </div>
@@ -443,11 +439,11 @@ class PlayingCard extends HTMLElement {
   constructor() {
     super();
   }
-  connectedCallback() {
-  }
-  attributeChangedCallback(name, oldValue, newValue) {
+  // connectedCallback() {
+  // }
+  // attributeChangedCallback(name, oldValue, newValue) {
 
-  }
+  // }
   clear() {
     this.removeAttribute('data-suit');
     this.removeAttribute('data-rank');
@@ -1385,7 +1381,7 @@ class UI {
       if (window.location.hash) {
         let hashModel = UIModel.fromHashString(window.location.hash);
         UI.model = hashModel;
-        UI.syncUIToModel();
+        UI.setNeedsUpdate(UI.UPDATE_TABLE);
       }
       DragDrop.initDragAndDrop();
       for (let d of document.querySelectorAll("#deckPanel playing-card"))
@@ -1403,12 +1399,16 @@ class UI {
     }
   }
   static showError(msg) {
-    let errEl = document.querySelector("#statsPanel .error");
-    errEl.classList.remove("hidden");
-    errEl.innerText = msg;
-  }
-  static clearError() {
-    document.querySelector("#statsPanel .error").classList.add("hidden");
+    Toastify({
+        text: msg,
+        duration: -1,
+        close: true,
+        style: {
+          background: "var( --error-background)",
+          color: "white",
+          fontFamily: "sans-serif"
+        },
+      }).showToast();
   }
   static initServiceWorker() {
     if (!('serviceWorker' in navigator)) {
@@ -1432,6 +1432,27 @@ class UI {
       .catch(err => {
         console.error("did not register serviceWorker", err);
       });			
+  }
+  static UPDATE_TABLE = 0b1;
+  static UPDATE_STATS = 0b10;
+  static updateCb = 0;
+  static needsUpdate = 0;
+
+  static setNeedsUpdate(updateWhat) {
+    if (!UI.updateCb) {
+      UI.updateCb = window.requestAnimationFrame(UI.updateUI)
+    }
+    UI.needsUpdate |= updateWhat;
+  }
+  static updateUI() {
+    UI.updateCb = 0;
+    if (UI.needsUpdate & UI.UPDATE_TABLE) {
+      UI.syncUIToModel();
+    }
+    if (UI.needsUpdate & UI.UPDATE_STATS) {
+      UI.updateStatsDOM();
+    }
+    UI.needsUpdate = 0;
   }
   static deckClick(ev) {
     // if card was just dragged, ignore the click
@@ -1470,7 +1491,7 @@ class UI {
   }
    static playersChanged() {
     UI.model.setPlayerCount(document.querySelector("#playerCount").value);
-    UI.syncUIToModel();
+    UI.setNeedsUpdate(UI.UPDATE_TABLE);
   }
   static holeCardCountChanged() {
     UI.model.setHoleCardCount(document.querySelector("#holeCardCount").value);
@@ -1479,7 +1500,7 @@ class UI {
       UI.playersChanged();
       return;
     }
-    UI.syncUIToModel();
+    UI.setNeedsUpdate(UI.UPDATE_TABLE);
   }
   static scoringChanged() {
     UI.model.setScoring(document.querySelector("#hiloCheckbox").value);
@@ -1487,7 +1508,7 @@ class UI {
       UI.model.setHoleCardCount(4);
     if (UI.model.scoring == 'high' && UI.model.holeCardCount > 3)
       UI.model.setHoleCardCount(2);
-    UI.syncUIToModel();
+    UI.setNeedsUpdate(UI.UPDATE_TABLE);
   }
   static suitPickerChanged(ev) {
     UI.setDeckSuit(ev.currentTarget.innerText);
@@ -1549,7 +1570,7 @@ class UI {
     } else {
       console.error(`unexpected suit value ${suit}`);
     }
-    UI.syncUIToModel();
+    UI.setNeedsUpdate(UI.UPDATE_TABLE);
   }
 
   static cardAddressFromElement(el) {
@@ -1673,12 +1694,10 @@ class UI {
         break;
     }
     UI.nextDestination = UI.computeNextDestination(dest);
-    UI.syncUIToModel();
+    UI.setNeedsUpdate(UI.UPDATE_TABLE);
   }
 
   static syncUIToModel() {
-    UI.clearError();
-
     // Sync toolbar
     document.querySelector("#playerCount").value = UI.model.playerCount;
     document.querySelector("#holeCardCount").value = UI.model.holeCardCount;
@@ -1741,6 +1760,10 @@ class UI {
     }
   }
 
+  static updateStatsDOM() {
+    console.error("TODO");
+  }
+
   static showSimStat(simStat) {
     if (!simStat) {
       console.error("syncUIToStats has no stats")
@@ -1784,7 +1807,7 @@ class UI {
       return;
     }
     UI.model.updateFromSimStat(stats);
-    UI.syncUIToModel();
+    UI.setNeedsUpdate(UI.UPDATE_TABLE);
   }
 
   static indicateSimulationStarted() {
@@ -1850,7 +1873,7 @@ class UI {
   static clear() {
     UI.model.reset();
     UI.nextDestination = UI.computeNextDestination();
-    UI.syncUIToModel();
+    UI.setNeedsUpdate(UI.UPDATE_TABLE);
     window.localStorage.clear();
     for (let el of document.querySelectorAll(".statsDiv"))
       el.remove();
