@@ -1,22 +1,36 @@
 <!doctype html>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- <meta name="viewport" content="width=device-width, initial-scale=1"> -->
 <title>Event.ScreenX bug</title>
 <body>
 <pre>
-Chrome only, works in Safari/Firefox.
-MouseEvent.ScreenX/ScreenY are sometimes in a different resolution
-from PageX, PageY.
-I've noticed this while dragging cards at
-my <a href="https://atotic.github.io/poker-simulator/">poker simulator</a>
-Same page served from localhost did not exibit this behavior.
+Weird MouseEvent.screenX/Y bug.
+It seems that screenX/Y resolution is sometimes twice as high as 
+pageX/Y resolution.
+This happens only in Chrome, and I only see it when my test page is served
+from https://atotic.github.io/poker-simulator/test/testScreenXYDelta.html
 
-To test, drag the mouse from Start to End
+I've observed this when implementing drag'n'drop.
+
+If you:
+- detect pointerdown at location A
+- drag a mouse to location B
+- detect pointerup at location B
+I thought that the "distance" measured in screen coordinates, and page
+coordinates would be the same:
+pointerdown.screenX - pointerup.screenX ~= pointerdown.pageX - pointerup.pageX 
+
+Sometimes, this is not true in Chrome.
+
+
+
 </pre>
 <div style="position:relative;height:100px; ">
   <div id="start" style="background:lightgreen;user-select: none;position:absolute;left:0;top:0;min-width:200px;height:100px">
   Click here and mouse around to display screen/page coordinates.<br>
-  Screen-page difference should be less than 1px</div>
+  Screen-page difference should be less than 1px.
+  Red message will appear if there  is a bug.
+</div>
 </div>
 <pre id="output" style="border:1px solid black; min-height:300px"></pre>
 <script>
@@ -46,6 +60,10 @@ page:   ${down.pageX}, ${down.pageY}`;
       screenY: up.screenY - down.screenY,
       pageX: up.pageX - down.pageX,
       pageY: up.pageY - down.pageY};
+    let deltaScreenMinusPage = {
+      X: delta.screenX - delta.pageX,
+      Y: delta.screenY - delta.pageY
+    }
     let message = downMessage + `
 
 Current location:
@@ -56,10 +74,10 @@ Drag distance:
 Screen: ${delta.screenX}, ${delta.screenY}
 Page: ${delta.pageX}, ${delta.pageY}
 
-Screen-page difference:
+Screen-page difference: ${deltaScreenMinusPage.X < 2 ? '' : '<span style="color:red">Screen/page resolution mismatch</span>'}
 X: ${(delta.screenX - delta.pageX).toFixed(2)}px, Y: ${(delta.screenY - delta.pageY).toFixed(2)}px
 `;
-    document.querySelector("#output").innerText = message;
+    document.querySelector("#output").innerHTML = message;
   });
 }
 setup();
