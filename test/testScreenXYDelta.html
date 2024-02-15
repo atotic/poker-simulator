@@ -1,0 +1,66 @@
+<!doctype html>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Event.ScreenX bug</title>
+<body>
+<pre>
+Chrome only, works in Safari/Firefox.
+MouseEvent.ScreenX/ScreenY are sometimes in a different resolution
+from PageX, PageY.
+I've noticed this while dragging cards at
+my <a href="https://atotic.github.io/poker-simulator/">poker simulator</a>
+Same page served from localhost did not exibit this behavior.
+
+To test, drag the mouse from Start to End
+</pre>
+<div style="position:relative;height:100px; ">
+  <div id="start" style="background:lightgreen;user-select: none;position:absolute;left:0;top:0;min-width:200px;height:100px">
+  Click here and mouse around to display screen/page coordinates.<br>
+  Screen-page difference should be less than 1px</div>
+</div>
+<pre id="output" style="border:1px solid black; min-height:300px"></pre>
+<script>
+
+function setup() {
+  var down = undefined;
+  var up = undefined;
+  let downMessage;
+  document.querySelector("#start").addEventListener("pointerdown", ev => {
+    let {screenX, screenY, pageX, pageY} = ev;
+    down = { screenX: screenX, screenY: screenY, pageX: pageX, pageY: pageY};
+    up = undefined;
+    downMessage = `Drag started;
+screen: ${down.screenX}, ${down.screenY}
+page:   ${down.pageX}, ${down.pageY}`;
+    document.querySelector("#output").innerText = downMessage;
+
+  });
+
+  document.body.addEventListener("pointermove", ev => {
+    if (!down)
+      return;
+    let {screenX, screenY, pageX, pageY} = ev;
+    let up = { screenX: screenX, screenY: screenY, pageX: pageX, pageY: pageY};
+    let delta = {
+      screenX: up.screenX - down.screenX, 
+      screenY: up.screenY - down.screenY,
+      pageX: up.pageX - down.pageX,
+      pageY: up.pageY - down.pageY};
+    let message = downMessage + `
+
+Current location:
+Screen: ${up.screenX}, ${up.screenY}
+Page: ${up.pageX}, ${up.pageY}
+
+Drag distance:
+Screen: ${delta.screenX}, ${delta.screenY}
+Page: ${delta.pageX}, ${delta.pageY}
+
+Screen-page difference:
+X: ${(delta.screenX - delta.pageX).toFixed(2)}px, Y: ${(delta.screenY - delta.pageY).toFixed(2)}px
+`;
+    document.querySelector("#output").innerText = message;
+  });
+}
+setup();
+</script>

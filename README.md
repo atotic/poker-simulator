@@ -1,28 +1,44 @@
 # poker-simulator
 
 ## TODO
-  - Usability
-    - process localstorage events
-    - shake to undo?
-    - click on X twice to remove saved simulations (toaster shows this)
-  - drag to delete stat 
-    - Using view transitions for animation? https://codepen.io/dannymoerkerke/pen/ExMEPaW
-  - drag to reorder stat
-  - better layout (iPhone curvature)
-  - run stats as a thread
-  - Should hashes be removed after a while, so that reload gives us a clean sheet?
-  https://developer.mozilla.org/en-US/docs/Web/API/Window/pagehide_event
-  - Chromium: cannot create max-content size column. Is this because table_layout_types.cc:InlineLayoutFromStyle is setting CellInlineConstraint::is_constrained to false?
-  - lets build and debug chromium. Set the breakpoint for max-content
-  - typescript usage
-  - a11y
-  - use state? https://sqlsync.dev/posts/stop-building-databases/
-  - Reimplement using different frameworks:
-    - React https://lwc.dev/
-    - Vue.js 
-    - Lighting Web Components https://lwc.dev/. Noah Lawson
-  - prompt user to install offline if they use app offline
-    https://stackoverflow.com/questions/51160348/pwa-how-to-programmatically-trigger-add-to-homescreen-on-ios-safari
+- drag to delete stat 
+  - Using view transitions for animation? https://codepen.io/dannymoerkerke/pen/ExMEPaW
+- drag to reorder stat
+- when loading hash link, simulate right away or scroll to existing simulation?
+
+- Usability
+  - click on X twice to remove saved simulations (toaster shows this)
+- better layout (iPhone curvature)
+- run stats as a thread
+- Should hashes be removed after a while, so that reload gives us a clean sheet?
+https://developer.mozilla.org/en-US/docs/Web/API/Window/pagehide_event
+- Chromium: cannot create max-content size column. Is this because table_layout_types.cc:InlineLayoutFromStyle is setting CellInlineConstraint::is_constrained to false?
+- lets build and debug chromium. Set the breakpoint for max-content
+  - https://chromium.googlesource.com/chromium/src/+/main/docs/mac/debugging.md
+  - https://search.brave.com/search?q=make+table+column+max-width&source=desktop
+  - https://source.chromium.org/chromium/chromium/src/+/main:third_party/blink/renderer/core/layout/table/table_layout_algorithm_types.cc;l=121;drc=3cc22c22d7637bc5604e8fef3b0882b51a762901
+  file:///Users/atotic/chromium/src/third_party/blink/web_tests/external/wpt/css/css-tables/tentative/table-width-redistribution.html
+  - https://www.w3.org/TR/css-tables-3/#computing-the-table-width
+  - <div style="border:1px solid black">
+<table>
+  <tr>
+    <td style="width:max-content;min-width:100px">s h o r t</td>
+    <td class="other">win lose</td>
+    <td class="other">win lose</td>
+  </tr>
+</table>
+</div>
+<div style="width:10px;min-width:max-content;border:5px solid brown">s h o r t</div>
+  -
+- typescript usage
+- a11y
+- use state? https://sqlsync.dev/posts/stop-building-databases/
+- Reimplement using different frameworks:
+  - React https://lwc.dev/
+  - Vue.js 
+  - Lighting Web Components https://lwc.dev/. Noah Lawson
+- prompt user to install offline if they use app offline
+  https://stackoverflow.com/questions/51160348/pwa-how-to-programmatically-trigger-add-to-homescreen-on-ios-safari
 
 ## INTERESTING
 

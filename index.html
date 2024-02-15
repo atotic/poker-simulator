@@ -7,7 +7,7 @@
 <link rel="apple-touch-icon">
 <link rel="stylesheet" type="text/css" href="lib/toastify.min.css">
 <script type="text/javascript" src="lib/toastify.js" defer></script>
-<!-- iOS sharing link preview -->
+<!-- iOS sharing link preview icon -->
 <meta property="og:title" content="PokerSim" />
 <meta property="og:image" content="icons/512.png" />
 <title>poker odds</title>
@@ -1298,8 +1298,8 @@ class DragDrop {
     document.body.addEventListener('touchmove', UI.preventDefault, { passive: false });
     DragDrop.dragSource = dragSource;
     DragDrop.dragSource.classList.add("isDragged");
-    DragDrop.dragStartX = ev.screenX;
-    DragDrop.dragStartY = ev.screenY;
+    DragDrop.dragStartX = ev.pageX;
+    DragDrop.dragStartY = ev.pageY;
     DragDrop.dragSource.style.zIndex = "1";
   }
   static endDrag(ev) {
@@ -1339,8 +1339,8 @@ class DragDrop {
   static dragMove(ev) {
     if (!DragDrop.dragSource)
       console.error("dragMove, no target!");
-    let x = ev.screenX - DragDrop.dragStartX;
-    let y = ev.screenY - DragDrop.dragStartY;
+    let x = Math.round(ev.pageX - DragDrop.dragStartX);
+    let y = Math.round(ev.pageY - DragDrop.dragStartY);
     DragDrop.dragSource.style.transform = `translate(${x}px , ${y}px) scale(1.3)`;
     DragDrop.showDropTarget(ev, DragDrop.getDropTarget(ev));
   }
